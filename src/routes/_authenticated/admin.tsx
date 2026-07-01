@@ -85,12 +85,22 @@ function AdminPage() {
   const { data: requests, isLoading } = useQuery({
     queryKey: ["admin-requests"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: reqs, error } = await supabase
         .from("requests")
-        .select("*, profiles(full_name, whatsapp)")
+        .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as AdminRequest[];
+      const ids = Array.from(new Set(reqs.map((r) => r.user_id)));
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id, full_name, whatsapp").in("id", ids)
+        : { data: [] as Array<{ id: string; full_name: string | null; whatsapp: string | null }> };
+      const map = new Map((profs ?? []).map((p) => [p.id, p]));
+      return reqs.map((r) => ({
+        ...r,
+        profiles: map.get(r.user_id)
+          ? { full_name: map.get(r.user_id)!.full_name, whatsapp: map.get(r.user_id)!.whatsapp }
+          : null,
+      })) as AdminRequest[];
     },
   });
 
