@@ -128,6 +128,18 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
           return Response.json({ ok: true, replied: "greeting" });
         }
 
+        // Pedidos pelo WhatsApp desativados no painel
+        if (row.orders_enabled === false) {
+          try {
+            await sendWhatsapp(
+              number,
+              "⚠️ Os pedidos pelo WhatsApp estão temporariamente desativados. Por favor, faça sua solicitação diretamente no nosso site. 🙂",
+              { supabase: supabase as never },
+            );
+          } catch (err) { console.error("[bot] orders-disabled reply failed", err); }
+          return Response.json({ ok: true, skipped: "orders_disabled" });
+        }
+
         // Tenta criar o pedido
         const { data: result, error: rpcErr } = await supabase.rpc("bot_create_request", {
           _secret: providedSecret,

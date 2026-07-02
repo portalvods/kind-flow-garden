@@ -40,17 +40,19 @@ function BotPage() {
   });
 
   const [enabled, setEnabled] = useState(false);
+  const [ordersEnabled, setOrdersEnabled] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (data) {
       setEnabled(data.enabled);
+      setOrdersEnabled(data.ordersEnabled);
       setMessage(data.message);
     }
   }, [data]);
 
   const save = useMutation({
-    mutationFn: () => saveFn({ data: { enabled, message } }),
+    mutationFn: () => saveFn({ data: { enabled, ordersEnabled, message } }),
     onSuccess: () => {
       toast.success("Bot atualizado.");
       qc.invalidateQueries({ queryKey: ["bot-config"] });
@@ -101,6 +103,16 @@ function BotPage() {
                 </p>
               </div>
               <Switch checked={enabled} onCheckedChange={setEnabled} />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/40">
+              <div>
+                <Label className="text-base font-semibold">Aceitar pedidos pelo WhatsApp</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Quando desligado, o bot avisa o cliente que os pedidos por aqui estão desativados e ele deve usar o site.
+                </p>
+              </div>
+              <Switch checked={ordersEnabled} onCheckedChange={setOrdersEnabled} />
             </div>
 
             <div className="space-y-2">
