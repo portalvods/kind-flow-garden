@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -28,6 +28,7 @@ import {
   saveWhatsappConfig,
   clearWhatsappConfig,
   getAdminWhatsappSetting,
+  getWhatsappSavedConfig,
   type WhatsappStatus,
 } from "@/lib/whatsapp.functions";
 import { Button } from "@/components/ui/button";
@@ -107,12 +108,31 @@ function WhatsappAdminPage() {
   const saveCfgFn = useServerFn(saveWhatsappConfig);
   const clearCfgFn = useServerFn(clearWhatsappConfig);
   const fetchAdminNumber = useServerFn(getAdminWhatsappSetting);
+  const fetchSavedConfig = useServerFn(getWhatsappSavedConfig);
 
   const [panelConfig, setPanelConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [appliedConfig, setAppliedConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [testNumber, setTestNumber] = useState("");
   const [testMessage, setTestMessage] = useState("Olá! Esta é uma mensagem de teste do Portal VOD. ✅");
   const [adminNumber, setAdminNumber] = useState("");
+
+  const savedConfigQuery = useQuery({
+    queryKey: ["whatsapp-saved-config"],
+    queryFn: () => fetchSavedConfig(),
+  });
+
+  useEffect(() => {
+    const saved = savedConfigQuery.data;
+    if (!saved) return;
+
+    const hasLocalConfig = hasCompletePanelConfig(loadPanelWhatsappConfig());
+    if (!hasLocalConfig && hasCompletePanelConfig(saved.config)) {
+      setPanelConfig(saved.config);
+      setAppliedConfig(saved.config);
+      window.localStorage.setItem(WHATSAPP_PANEL_CONFIG_KEY, JSON.stringify(saved.config));
+    }
+    if (saved.adminWhatsapp) setAdminNumber(saved.adminWhatsapp);
+  }, [savedConfigQuery.data]);
 
   useQuery({
     queryKey: ["admin-whatsapp-number"],

@@ -1,7 +1,30 @@
 // Server-side WhatsApp messaging (Evolution API) + template rendering.
 import { sanitizePhone } from "./otp.server";
-// (server publishable client not needed here; templates are read via admin client)
-import { getServerEnv } from "./env.server";
+import { getServerEnv, readLocalWhatsappConfig } from "./env.server";
+
+type SupabaseReader = {
+  from: (table: string) => {
+    select: (columns: string) => unknown;
+  };
+};
+
+type WhatsappOptions = {
+  supabase?: SupabaseReader;
+};
+
+type QueryBuilder = {
+  in?: (column: string, values: string[]) => Promise<{ data?: Array<{ key?: string; value?: string | null }> | null; error?: { message?: string } | null }>;
+  eq?: (column: string, value: string) => QueryBuilder;
+  maybeSingle?: () => Promise<{ data?: Record<string, unknown> | null; error?: { message?: string } | null }>;
+};
+
+function settingsQuery(client: SupabaseReader): QueryBuilder {
+  return client.from("site_settings").select("key, value") as QueryBuilder;
+}
+
+function templateQuery(client: SupabaseReader): QueryBuilder {
+  return client.from("message_templates").select("content") as QueryBuilder;
+}
 
 const DEFAULT_TEMPLATES: Record<string, string> = {
   received: "✅ Olá {cliente}, recebemos seu pedido: {titulo} ({tipo}).",
@@ -13,13 +36,13 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
   rejected: "❌ Olá {cliente}, seu pedido {titulo} foi recusado. Motivo: {motivo}",
 };
 
-async function readStoredConfig(): Promise<{ baseUrl: string; apiKey: string; instance: string }> {
+async function readStoredConfig(client?: SupabaseReader): Promise<{ baseUrl: string; apiKey: string; instance: string }> {
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
-      .from("site_settings")
-      .select("key, value")
-      .in("key", ["evolution_url", "evolution_api_key", "evolution_instance"]);
+    const activeClient = client ?? (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+    const query = settingsQuery(activeClient);
+    const { data } = query.in
+      ? await query.in("key", ["evolution_url", "evolution_api_key", "evolution_instance"])
+      : { data: [] };
     const map: Record<string, string> = {};
     for (const row of data ?? []) {
       if (row.value) map[row.key as string] = String(row.value);
@@ -35,11 +58,12 @@ async function readStoredConfig(): Promise<{ baseUrl: string; apiKey: string; in
   }
 }
 
-async function getConfig() {
-  const stored = await readStoredConfig();
-  const baseUrl = stored.baseUrl || getServerEnv("EVOLUTION_API_URL") || "";
-  const apiKey = stored.apiKey || getServerEnv("EVOLUTION_API_KEY") || "";
-  const instance = stored.instance || getServerEnv("EVOLUTION_INSTANCE") || "";
+async function getConfig(options?: WhatsappOptions) {
+  const stored = await readStoredConfig(options?.supabase);
+  const local = readLocalWhatsappConfig();
+  const baseUrl = stored.baseUrl || local.evolution_url || getServerEnv("EVOLUTION_API_URL") || "";
+  const apiKey = stored.apiKey || local.evolution_api_key || getServerEnv("EVOLUTION_API_KEY") || "";
+  const instance = stored.instance || local.evolution_instance || getServerEnv("EVOLUTION_INSTANCE") || "";
   return {
     baseUrl: baseUrl.replace(/\/$/, ""),
     apiKey,
@@ -48,8 +72,8 @@ async function getConfig() {
   };
 }
 
-export async function sendWhatsapp(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
-  const cfg = await getConfig();
+export async function sendWhatsapp(to: string, message: string, options?: WhatsappOptions): Promise<{ ok: boolean; error?: string }> {
+  const cfg = await getConfig(options);
   if (!cfg.configured) {
     console.info("[whatsapp] Evolution API not configured; skipping notification");
     return { ok: false, error: "not_configured" };
@@ -81,14 +105,11 @@ export async function sendWhatsapp(to: string, message: string): Promise<{ ok: b
   }
 }
 
-export async function getTemplate(key: string): Promise<string | null> {
+export async function getTemplate(key: string, client?: SupabaseReader): Promise<string | null> {
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("message_templates")
-      .select("content")
-      .eq("key", key)
-      .maybeSingle();
+    const activeClient = client ?? (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+    const query = templateQuery(activeClient).eq?.("key", key);
+    const { data, error } = query?.maybeSingle ? await query.maybeSingle() : { data: null, error: null };
     if (error) {
       console.warn(`[whatsapp] template "${key}" fetch error:`, error.message);
     }
@@ -112,15 +133,16 @@ export async function sendTemplate(
   to: string | null | undefined,
   key: string,
   vars: Record<string, string | number | null | undefined>,
+  options?: WhatsappOptions,
 ): Promise<void> {
   if (!to) return;
-  const tpl = await getTemplate(key);
+  const tpl = await getTemplate(key, options?.supabase);
   if (!tpl) {
     console.warn(`[whatsapp] template "${key}" not found`);
     return;
   }
   const message = renderTemplate(tpl, vars);
-  const result = await sendWhatsapp(to, message);
+  const result = await sendWhatsapp(to, message, options);
   if (!result.ok) {
     console.warn(`[whatsapp] template "${key}" not sent:`, result.error);
   }
@@ -133,17 +155,16 @@ export function sendOtpMessage(to: string, code: string, purpose: "signup" | "re
   return sendWhatsapp(to, msg);
 }
 
-export async function getAdminWhatsappNumber(): Promise<string | null> {
+export async function getAdminWhatsappNumber(options?: WhatsappOptions): Promise<string | null> {
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
-      .from("site_settings")
-      .select("value")
-      .eq("key", "admin_whatsapp")
-      .maybeSingle();
+    const activeClient = options?.supabase ?? (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+    const query = settingsQuery(activeClient).eq?.("key", "admin_whatsapp");
+    const { data } = query?.maybeSingle ? await query.maybeSingle() : { data: null };
     const stored = data?.value ? String(data.value) : "";
-    return stored || getServerEnv("ADMIN_WHATSAPP") || null;
+    const local = readLocalWhatsappConfig();
+    return stored || local.admin_whatsapp || getServerEnv("ADMIN_WHATSAPP") || null;
   } catch {
-    return getServerEnv("ADMIN_WHATSAPP") || null;
+    const local = readLocalWhatsappConfig();
+    return local.admin_whatsapp || getServerEnv("ADMIN_WHATSAPP") || null;
   }
 }

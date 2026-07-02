@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getServerEnv } from "./env.server";
+import { clearLocalWhatsappConfig, getServerEnv, readLocalWhatsappConfig, writeLocalWhatsappConfig } from "./env.server";
 
 // ---- Helpers ----
 
@@ -16,6 +16,8 @@ const configPayloadSchema = z.object({
 });
 
 type RuntimeConfigPayload = z.infer<typeof configPayloadSchema>;
+
+const DEFAULT_WHATSAPP_INSTANCE = "portal-vod";
 
 function getNestedString(value: unknown, path: string[]): string | null {
   let current = value;
@@ -46,11 +48,12 @@ function getConfig(payload?: RuntimeConfigPayload) {
   const overrideBaseUrl = payload?.config?.baseUrl?.trim();
   const overrideApiKey = payload?.config?.apiKey?.trim();
   const overrideInstance = payload?.config?.instance?.trim();
+  const local = readLocalWhatsappConfig();
 
   // Merge por campo: qualquer valor vindo do painel sobrescreve o env.
-  const baseUrl = overrideBaseUrl || getServerEnv("EVOLUTION_API_URL") || "";
-  const apiKey = overrideApiKey || getServerEnv("EVOLUTION_API_KEY") || "";
-  const instance = overrideInstance || getServerEnv("EVOLUTION_INSTANCE") || "";
+  const baseUrl = overrideBaseUrl || local.evolution_url || getServerEnv("EVOLUTION_API_URL") || "";
+  const apiKey = overrideApiKey || local.evolution_api_key || getServerEnv("EVOLUTION_API_KEY") || "";
+  const instance = overrideInstance || local.evolution_instance || getServerEnv("EVOLUTION_INSTANCE") || "";
 
   const usedPanel = !!(overrideBaseUrl || overrideApiKey || overrideInstance);
 
@@ -144,6 +147,32 @@ export type WhatsappStatus = {
 };
 
 // ---- Server Functions ----
+
+export const getWhatsappSavedConfig = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { data, error } = await context.supabase
+      .from("site_settings")
+      .select("key, value")
+      .in("key", ["evolution_url", "evolution_api_key", "evolution_instance", "admin_whatsapp"]);
+    if (error) throw new Error(error.message);
+
+    const map: Record<string, string> = {};
+    for (const row of data ?? []) {
+      if (row.value) map[row.key as string] = String(row.value);
+    }
+    const local = readLocalWhatsappConfig();
+
+    return {
+      config: {
+        baseUrl: map.evolution_url ?? local.evolution_url ?? "",
+        apiKey: map.evolution_api_key ?? local.evolution_api_key ?? "",
+        instance: map.evolution_instance ?? local.evolution_instance ?? DEFAULT_WHATSAPP_INSTANCE,
+      },
+      adminWhatsapp: map.admin_whatsapp ?? local.admin_whatsapp ?? "",
+    };
+  });
 
 export const getWhatsappStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -365,6 +394,12 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
       .from("site_settings")
       .upsert(rows);
     if (error) throw new Error((error as Error).message);
+    writeLocalWhatsappConfig({
+      evolution_url: data.baseUrl.replace(/\/$/, ""),
+      evolution_api_key: data.apiKey,
+      evolution_instance: data.instance,
+      ...(data.adminWhatsapp !== undefined ? { admin_whatsapp: data.adminWhatsapp.replace(/\D/g, "") } : {}),
+    });
     return { ok: true };
   });
 
@@ -381,6 +416,7 @@ export const clearWhatsappConfig = createServerFn({ method: "POST" })
       .delete()
       .in("key", ["evolution_url", "evolution_api_key", "evolution_instance"]);
     if (error) throw new Error((error as Error).message);
+    clearLocalWhatsappConfig();
     return { ok: true };
   });
 
@@ -393,5 +429,5 @@ export const getAdminWhatsappSetting = createServerFn({ method: "GET" })
       .select("value")
       .eq("key", "admin_whatsapp")
       .maybeSingle();
-    return { number: (data?.value as string | null) ?? "" };
+    return { number: (data?.value as string | null) ?? readLocalWhatsappConfig().admin_whatsapp ?? "" };
   });

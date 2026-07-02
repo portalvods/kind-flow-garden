@@ -136,15 +136,15 @@ export const createRequest = createServerFn({ method: "POST" })
 
     // Notify client (received)
     try {
-      await sendTemplate(profile?.whatsapp ?? null, "received", vars);
+      await sendTemplate(profile?.whatsapp ?? null, "received", vars, { supabase: supabase as never });
     } catch (err) {
       console.error("client notify received failed", err);
     }
 
     // Notify admin
     try {
-      const adminNumber = await getAdminWhatsappNumber();
-      if (adminNumber) await sendTemplate(adminNumber, "admin_new_request", vars);
+      const adminNumber = await getAdminWhatsappNumber({ supabase: supabase as never });
+      if (adminNumber) await sendTemplate(adminNumber, "admin_new_request", vars, { supabase: supabase as never });
     } catch (err) {
       console.error("admin notify failed", err);
     }
@@ -212,13 +212,18 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
 
     if (key) {
       try {
-        await sendTemplate(profile?.whatsapp ?? null, key, {
-          cliente: profile?.full_name ?? "Cliente",
-          titulo: current.title,
-          tipo: KIND_LABEL[current.request_kind as string] ?? "",
-          formato: (current.format as string | null) ?? "—",
-          motivo: data.rejection_reason ?? "—",
-        });
+        await sendTemplate(
+          profile?.whatsapp ?? null,
+          key,
+          {
+            cliente: profile?.full_name ?? "Cliente",
+            titulo: current.title,
+            tipo: KIND_LABEL[current.request_kind as string] ?? "",
+            formato: (current.format as string | null) ?? "—",
+            motivo: data.rejection_reason ?? "—",
+          },
+          { supabase: supabase as never },
+        );
       } catch (err) {
         console.error("Client notification failed", err);
       }
