@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sanitizePhone } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
 import { createServerPublicSupabase } from "./supabase-public.server";
+import { getServerEnv } from "./env.server";
 
 // ---- Signup: request OTP ----
 const startSignupSchema = z.object({
@@ -92,7 +93,7 @@ export const startPasswordReset = createServerFn({ method: "POST" })
     if (!supabasePublic) throw new Error("Backend não configurado na VPS.");
 
     const { error } = await supabasePublic.auth.resetPasswordForEmail(identifier, {
-      redirectTo: `${process.env.PUBLIC_SITE_URL ?? process.env.SITE_URL ?? ""}/auth?mode=forgot`,
+      redirectTo: `${getServerEnv("PUBLIC_SITE_URL") ?? getServerEnv("SITE_URL") ?? ""}/auth?mode=forgot`,
     });
     if (error) throw new Error(error.message);
     return { ok: true, whatsapp: identifier };

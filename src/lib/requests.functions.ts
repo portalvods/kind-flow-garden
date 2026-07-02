@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sendTemplate } from "./whatsapp.server";
 import { normalizeTitle } from "./m3u.server";
+import { getServerEnv } from "./env.server";
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -143,7 +144,7 @@ export const createRequest = createServerFn({ method: "POST" })
 
     // Notify admin
     try {
-      const adminNumber = process.env.ADMIN_WHATSAPP;
+      const adminNumber = getServerEnv("ADMIN_WHATSAPP");
       if (adminNumber) await sendTemplate(adminNumber, "admin_new_request", vars);
     } catch (err) {
       console.error("admin notify failed", err);
