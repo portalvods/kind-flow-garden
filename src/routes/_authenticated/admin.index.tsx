@@ -192,20 +192,22 @@ function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <StatCard label="Pendentes" value={stats.pending} tone="yellow" icon={<Clock className="h-4 w-4" />} />
-        <StatCard label="Em andamento" value={stats.processing} tone="blue" icon={<Play className="h-4 w-4" />} />
-        <StatCard label="Adicionados" value={stats.added} tone="emerald" icon={<Check className="h-4 w-4" />} />
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+        <StatCard label="Recebidos" value={stats.pending} tone="yellow" icon={<Clock className="h-4 w-4" />} />
+        <StatCard label="Em análise" value={stats.analyzing} tone="blue" icon={<Search className="h-4 w-4" />} />
+        <StatCard label="Aprovados" value={stats.approved} tone="blue" icon={<Play className="h-4 w-4" />} />
+        <StatCard label="Concluídos" value={stats.completed} tone="emerald" icon={<Check className="h-4 w-4" />} />
         <StatCard label="Recusados" value={stats.rejected} tone="red" icon={<X className="h-4 w-4" />} />
       </div>
 
       {/* Search + Tabs */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-          <TabsList className="bg-card/60 border border-border/60">
-            <TabsTrigger value="pending">Pendentes</TabsTrigger>
-            <TabsTrigger value="processing">Em andamento</TabsTrigger>
-            <TabsTrigger value="added">Adicionados</TabsTrigger>
+          <TabsList className="bg-card/60 border border-border/60 flex-wrap">
+            <TabsTrigger value="pending">Recebidos</TabsTrigger>
+            <TabsTrigger value="analyzing">Em análise</TabsTrigger>
+            <TabsTrigger value="approved">Aprovados</TabsTrigger>
+            <TabsTrigger value="completed">Concluídos</TabsTrigger>
             <TabsTrigger value="rejected">Recusados</TabsTrigger>
             <TabsTrigger value="all">Todos</TabsTrigger>
           </TabsList>
