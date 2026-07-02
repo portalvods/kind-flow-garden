@@ -86,11 +86,14 @@ function AutomationPage() {
       if (res.matches.length === 0) {
         toast.info("Nenhum pedido pendente corresponde a esse template.");
       } else {
-        toast.success(`${res.matches.length} pedido(s) casaram com o template.`);
+        toast.success(`${res.matches.length} pedido(s) casaram. Aplicando automaticamente...`);
+        // Auto-apply: com a IA ligada, conclui e notifica sem confirmação manual
+        apply.mutate(res.matches.map((m) => m.request_id));
       }
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao analisar"),
   });
+
 
   const apply = useMutation({
     mutationFn: (ids: string[]) => applyFn({ data: { request_ids: ids } }),
@@ -137,10 +140,11 @@ function AutomationPage() {
           Automação por IA
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Cole o template de conteúdos adicionados/atualizados. A IA identifica os títulos,
-          cruza com os pedidos em aberto, e você confirma para marcar como concluído e notificar
-          os clientes automaticamente no WhatsApp.
+          Cole o template de conteúdos adicionados/atualizados. Com a IA ligada, os pedidos
+          que corresponderem são automaticamente marcados como concluídos e os clientes
+          são notificados no WhatsApp — sem confirmação manual.
         </p>
+
       </div>
 
       {/* Toggle */}
