@@ -110,3 +110,55 @@ export const saveTemplate = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---- Daily request limit ----
+const DEFAULT_DAILY_LIMIT = 5;
+
+export const getDailyLimit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("site_settings")
+      .select("value")
+      .eq("key", "daily_request_limit")
+      .maybeSingle();
+    const limit = Number(row?.value ?? DEFAULT_DAILY_LIMIT) || DEFAULT_DAILY_LIMIT;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const { count } = await supabaseAdmin
+      .from("requests")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", context.userId)
+      .gte("created_at", startOfDay.toISOString());
+
+    const used = count ?? 0;
+    return { limit, used, remaining: Math.max(0, limit - used) };
+  });
+
+const limitSchema = z.object({ limit: z.number().int().min(1).max(500) });
+export const updateDailyLimit = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => limitSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("site_settings")
+      .upsert({ key: "daily_request_limit", value: String(data.limit), updated_at: new Date().toISOString() });
+    return { ok: true };
+  });
+
+export const getAdminDailyLimit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as never);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("site_settings")
+      .select("value")
+      .eq("key", "daily_request_limit")
+      .maybeSingle();
+    return { limit: Number(row?.value ?? DEFAULT_DAILY_LIMIT) || DEFAULT_DAILY_LIMIT };
+  });

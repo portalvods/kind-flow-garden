@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getPublicSettings, uploadLogo, clearLogo, updateSiteName } from "@/lib/settings.functions";
+import { getPublicSettings, uploadLogo, clearLogo, updateSiteName, getAdminDailyLimit, updateDailyLimit } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/aparencia")({
   ssr: false,
@@ -32,6 +32,24 @@ function AppearancePage() {
   const uploadFn = useServerFn(uploadLogo);
   const clearFn = useServerFn(clearLogo);
   const nameFn = useServerFn(updateSiteName);
+  const getLimitFn = useServerFn(getAdminDailyLimit);
+  const updLimitFn = useServerFn(updateDailyLimit);
+
+  const { data: limitData } = useQuery({
+    queryKey: ["admin-daily-limit"],
+    queryFn: () => getLimitFn(),
+  });
+  const [dailyLimit, setDailyLimit] = useState<string>("");
+
+  const saveLimit = useMutation({
+    mutationFn: async () => updLimitFn({ data: { limit: Number(dailyLimit) } }),
+    onSuccess: () => {
+      toast.success("Limite atualizado.");
+      qc.invalidateQueries({ queryKey: ["admin-daily-limit"] });
+      qc.invalidateQueries({ queryKey: ["my-daily-limit"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Erro"),
+  });
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["public-settings"],
@@ -173,6 +191,42 @@ function AppearancePage() {
                 Salvar
               </Button>
             </div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-6 space-y-4">
+            <div>
+              <h2 className="font-display font-semibold text-lg">Limite diário de pedidos</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Quantidade máxima de pedidos que cada cliente pode enviar por dia. Administradores não têm limite.
+              </p>
+            </div>
+            <div className="flex gap-2 items-end max-w-md">
+              <div className="flex-1">
+                <Label htmlFor="daily-limit">Pedidos por cliente / dia</Label>
+                <Input
+                  id="daily-limit"
+                  type="number"
+                  min={1}
+                  max={500}
+                  defaultValue={limitData?.limit ?? 5}
+                  onChange={(e) => setDailyLimit(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={() => saveLimit.mutate()}
+                disabled={!dailyLimit || Number(dailyLimit) < 1 || saveLimit.isPending}
+              >
+                {saveLimit.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Salvar
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Atual: <span className="text-primary font-semibold">{limitData?.limit ?? "—"}</span> pedidos/dia.
+            </p>
           </div>
         </>
       )}

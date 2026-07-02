@@ -7,6 +7,7 @@ import { Search, Loader2, Plus, Film, Tv, ImageOff, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { createRequest } from "@/lib/requests.functions";
+import { getDailyLimit } from "@/lib/settings.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,6 +70,12 @@ function PedidosPage() {
     },
   });
 
+  const limitFn = useServerFn(getDailyLimit);
+  const { data: quota } = useQuery({
+    queryKey: ["my-daily-limit", user.id],
+    queryFn: () => limitFn(),
+  });
+
   const filtered = (requests ?? []).filter((r) => tab === "all" || r.status === tab);
 
   return (
@@ -80,15 +87,29 @@ function PedidosPage() {
             Solicite filmes e séries e acompanhe o status.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="glow-primary">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo pedido
-            </Button>
-          </DialogTrigger>
-          <NewRequestDialog onDone={() => setDialogOpen(false)} />
-        </Dialog>
+        <div className="flex items-center gap-3">
+          {quota && (
+            <Badge
+              variant="outline"
+              className={
+                quota.remaining === 0
+                  ? "border-red-500/40 text-red-300"
+                  : "border-primary/40 text-primary"
+              }
+            >
+              {quota.used}/{quota.limit} pedidos hoje
+            </Badge>
+          )}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="glow-primary" disabled={quota?.remaining === 0}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo pedido
+              </Button>
+            </DialogTrigger>
+            <NewRequestDialog onDone={() => setDialogOpen(false)} />
+          </Dialog>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
@@ -261,6 +282,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     onSuccess: () => {
       toast.success("Pedido enviado! O administrador foi notificado.");
       qc.invalidateQueries({ queryKey: ["my-requests"] });
+      qc.invalidateQueries({ queryKey: ["my-daily-limit"] });
       onDone();
       setQuery("");
       setSelected(null);

@@ -33,6 +33,32 @@ export const createRequest = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
+    // Enforce daily request limit (admins are exempt)
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (!isAdmin) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: limitRow } = await supabaseAdmin
+        .from("site_settings")
+        .select("value")
+        .eq("key", "daily_request_limit")
+        .maybeSingle();
+      const dailyLimit = Number(limitRow?.value ?? 5) || 5;
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const { count } = await supabaseAdmin
+        .from("requests")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", startOfDay.toISOString());
+      if ((count ?? 0) >= dailyLimit) {
+        throw new Error(`Limite diário atingido (${dailyLimit} pedidos/dia). Tente novamente amanhã.`);
+      }
+    }
+
+
     const { data: request, error } = await supabase
       .from("requests")
       .insert({
