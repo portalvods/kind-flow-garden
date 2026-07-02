@@ -134,7 +134,7 @@ function UsersPage() {
     setBusy("delete");
     try {
       await deleteFn({ data: { userId: deletingUser.id } });
-      toast.success("Usuário excluído.");
+      toast.success("Usuário removido da lista.");
       setDeletingUser(null);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     } catch (e) {
@@ -241,7 +241,7 @@ function UsersPage() {
                           size="sm"
                           variant="ghost"
                           onClick={() => setDeletingUser(u)}
-                          title="Excluir"
+                          title="Remover"
                         >
                           <Trash2 className="h-4 w-4 text-red-400" />
                         </Button>
@@ -290,17 +290,17 @@ function UsersPage() {
       <AlertDialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+            <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação é permanente. A conta de <b>{deletingUser?.full_name ?? deletingUser?.email}</b> será removida
-              junto com seus dados.
+              A conta de <b>{deletingUser?.full_name ?? deletingUser?.email}</b> será bloqueada e removida da lista de
+              usuários cadastrados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} disabled={busy === "delete"}>
               {busy === "delete" && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Excluir
+              Remover
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
