@@ -40,17 +40,19 @@ function BotPage() {
   });
 
   const [enabled, setEnabled] = useState(false);
+  const [ordersEnabled, setOrdersEnabled] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (data) {
       setEnabled(data.enabled);
+      setOrdersEnabled(data.ordersEnabled);
       setMessage(data.message);
     }
   }, [data]);
 
   const save = useMutation({
-    mutationFn: () => saveFn({ data: { enabled, message } }),
+    mutationFn: () => saveFn({ data: { enabled, ordersEnabled, message } }),
     onSuccess: () => {
       toast.success("Bot atualizado.");
       qc.invalidateQueries({ queryKey: ["bot-config"] });
