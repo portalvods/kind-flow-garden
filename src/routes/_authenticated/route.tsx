@@ -1,9 +1,11 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getPublicSettings } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
