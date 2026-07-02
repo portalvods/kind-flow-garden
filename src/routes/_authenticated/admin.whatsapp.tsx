@@ -104,11 +104,24 @@ function WhatsappAdminPage() {
   const restart = useServerFn(restartWhatsapp);
   const deleteInst = useServerFn(deleteWhatsappInstance);
   const sendTest = useServerFn(sendWhatsappTest);
+  const saveCfgFn = useServerFn(saveWhatsappConfig);
+  const clearCfgFn = useServerFn(clearWhatsappConfig);
+  const fetchAdminNumber = useServerFn(getAdminWhatsappSetting);
 
   const [panelConfig, setPanelConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [appliedConfig, setAppliedConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [testNumber, setTestNumber] = useState("");
   const [testMessage, setTestMessage] = useState("Olá! Esta é uma mensagem de teste do Portal VOD. ✅");
+  const [adminNumber, setAdminNumber] = useState("");
+
+  useQuery({
+    queryKey: ["admin-whatsapp-number"],
+    queryFn: async () => {
+      const res = await fetchAdminNumber();
+      setAdminNumber(res.number ?? "");
+      return res;
+    },
+  });
 
   const whatsappPayload = buildWhatsappPayload(appliedConfig);
 
@@ -121,6 +134,7 @@ function WhatsappAdminPage() {
       if (!s?.configured) return false;
       if (s.state === "open") return 15000;
       return 4000;
+
     },
   });
 
