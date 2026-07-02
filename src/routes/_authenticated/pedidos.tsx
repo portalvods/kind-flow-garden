@@ -282,6 +282,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     onSuccess: () => {
       toast.success("Pedido enviado! O administrador foi notificado.");
       qc.invalidateQueries({ queryKey: ["my-requests"] });
+      qc.invalidateQueries({ queryKey: ["my-daily-limit"] });
       onDone();
       setQuery("");
       setSelected(null);
