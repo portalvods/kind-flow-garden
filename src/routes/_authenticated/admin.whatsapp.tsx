@@ -204,7 +204,7 @@ function WhatsappAdminPage() {
               WhatsApp
             </h1>
             <p className="text-sm text-muted-foreground">
-              Conecte o WhatsApp que enviará as notificações automáticas.
+              Recomendado: deixe o site no Lovable e use a VPS apenas para a Evolution API.
             </p>
           </div>
         </div>
@@ -387,10 +387,10 @@ function NotConfiguredCard({ message }: { message?: string }) {
             </p>
           </div>
           <div className="rounded-lg bg-muted/30 border border-border/40 p-4 space-y-2 text-sm">
-            <p className="font-medium">Agora você pode configurar de 2 formas:</p>
+            <p className="font-medium">Use a forma mais simples:</p>
             <ul className="space-y-1 text-muted-foreground font-mono text-xs">
-              <li>• Preencher os campos acima e clicar em <code className="text-foreground">Aplicar configuração</code></li>
-              <li>• Ou manter as variáveis <code className="text-foreground">EVOLUTION_API_URL</code>, <code className="text-foreground">EVOLUTION_API_KEY</code> e <code className="text-foreground">EVOLUTION_INSTANCE</code> no servidor</li>
+              <li>• Preencha os campos acima e clique em <code className="text-foreground">Aplicar e conectar</code></li>
+              <li>• Se aparecer erro, ele vai mostrar se é URL, chave, instância ou conexão</li>
             </ul>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -474,6 +474,20 @@ function StatusCard({ status }: { status: WhatsappStatus }) {
           {status.message}
         </p>
       )}
+      <div className="mt-4 grid gap-2 text-xs text-muted-foreground md:grid-cols-3">
+        <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+          <span className="block uppercase tracking-wider mb-1">Origem</span>
+          <strong className="text-foreground">{status.configSource === "panel" ? "Painel" : "Servidor"}</strong>
+        </div>
+        <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+          <span className="block uppercase tracking-wider mb-1">URL</span>
+          <strong className="text-foreground break-all">{status.endpoint ?? "Não informada"}</strong>
+        </div>
+        <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+          <span className="block uppercase tracking-wider mb-1">Instância</span>
+          <strong className="text-foreground break-all">{status.instance || "Não informada"}</strong>
+        </div>
+      </div>
     </div>
   );
 }
