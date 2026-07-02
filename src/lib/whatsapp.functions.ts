@@ -335,3 +335,63 @@ export const sendWhatsappTest = createServerFn({ method: "POST" })
     if (!res.ok) throw new Error(formatEvoError(res.status, res.text));
     return { ok: true };
   });
+
+// Persist the WhatsApp panel config to the database so server-side notifications
+// (novo pedido, aprovado, rejeitado, etc.) usem as mesmas credenciais.
+const saveConfigSchema = z.object({
+  baseUrl: z.string().trim().min(1),
+  apiKey: z.string().trim().min(1),
+  instance: z.string().trim().min(1),
+  adminWhatsapp: z.string().trim().max(30).optional(),
+});
+
+export const saveWhatsappConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => saveConfigSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const now = new Date().toISOString();
+    const rows = [
+      { key: "evolution_url", value: data.baseUrl.replace(/\/$/, ""), updated_at: now },
+      { key: "evolution_api_key", value: data.apiKey, updated_at: now },
+      { key: "evolution_instance", value: data.instance, updated_at: now },
+    ];
+    if (data.adminWhatsapp !== undefined) {
+      rows.push({ key: "admin_whatsapp", value: data.adminWhatsapp.replace(/\D/g, ""), updated_at: now });
+    }
+    const { error } = await (context.supabase as never as {
+      from: (t: string) => { upsert: (rows: unknown) => Promise<{ error: unknown }> };
+    })
+      .from("site_settings")
+      .upsert(rows);
+    if (error) throw new Error((error as Error).message);
+    return { ok: true };
+  });
+
+export const clearWhatsappConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { error } = await (context.supabase as never as {
+      from: (t: string) => {
+        delete: () => { in: (col: string, vals: string[]) => Promise<{ error: unknown }> };
+      };
+    })
+      .from("site_settings")
+      .delete()
+      .in("key", ["evolution_url", "evolution_api_key", "evolution_instance"]);
+    if (error) throw new Error((error as Error).message);
+    return { ok: true };
+  });
+
+export const getAdminWhatsappSetting = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { data } = await context.supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "admin_whatsapp")
+      .maybeSingle();
+    return { number: (data?.value as string | null) ?? "" };
+  });

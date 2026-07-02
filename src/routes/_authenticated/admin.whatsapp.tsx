@@ -25,6 +25,9 @@ import {
   restartWhatsapp,
   deleteWhatsappInstance,
   sendWhatsappTest,
+  saveWhatsappConfig,
+  clearWhatsappConfig,
+  getAdminWhatsappSetting,
   type WhatsappStatus,
 } from "@/lib/whatsapp.functions";
 import { Button } from "@/components/ui/button";
@@ -101,11 +104,24 @@ function WhatsappAdminPage() {
   const restart = useServerFn(restartWhatsapp);
   const deleteInst = useServerFn(deleteWhatsappInstance);
   const sendTest = useServerFn(sendWhatsappTest);
+  const saveCfgFn = useServerFn(saveWhatsappConfig);
+  const clearCfgFn = useServerFn(clearWhatsappConfig);
+  const fetchAdminNumber = useServerFn(getAdminWhatsappSetting);
 
   const [panelConfig, setPanelConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [appliedConfig, setAppliedConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [testNumber, setTestNumber] = useState("");
   const [testMessage, setTestMessage] = useState("Olá! Esta é uma mensagem de teste do Portal VOD. ✅");
+  const [adminNumber, setAdminNumber] = useState("");
+
+  useQuery({
+    queryKey: ["admin-whatsapp-number"],
+    queryFn: async () => {
+      const res = await fetchAdminNumber();
+      setAdminNumber(res.number ?? "");
+      return res;
+    },
+  });
 
   const whatsappPayload = buildWhatsappPayload(appliedConfig);
 
@@ -118,12 +134,13 @@ function WhatsappAdminPage() {
       if (!s?.configured) return false;
       if (s.state === "open") return 15000;
       return 4000;
+
     },
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["whatsapp-status"] });
 
-  const savePanelConfig = () => {
+  const savePanelConfig = async () => {
     const payload = buildWhatsappPayload(panelConfig);
     if (!hasCompletePanelConfig(panelConfig) || !payload.config) {
       toast.error("Preencha URL, chave e instância.");
@@ -133,18 +150,38 @@ function WhatsappAdminPage() {
     setPanelConfig(normalized);
     setAppliedConfig(normalized);
     window.localStorage.setItem(WHATSAPP_PANEL_CONFIG_KEY, JSON.stringify(normalized));
-    toast.success("Configuração aplicada neste painel.");
+    try {
+      await saveCfgFn({
+        data: {
+          baseUrl: normalized.baseUrl,
+          apiKey: normalized.apiKey,
+          instance: normalized.instance,
+          adminWhatsapp: adminNumber.trim(),
+        },
+      });
+      toast.success("Configuração salva. Notificações automáticas ativadas.");
+    } catch (err) {
+      toast.error(
+        "Aplicada no painel, mas não consegui salvar no servidor: " + (err as Error).message,
+      );
+    }
     invalidate();
   };
 
-  const clearPanelConfig = () => {
+  const clearPanelConfig = async () => {
     window.localStorage.removeItem(WHATSAPP_PANEL_CONFIG_KEY);
     const emptyConfig = { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
     setPanelConfig(emptyConfig);
     setAppliedConfig(emptyConfig);
-    toast.success("Configuração local removida.");
+    try {
+      await clearCfgFn();
+    } catch {
+      /* ignore */
+    }
+    toast.success("Configuração removida.");
     invalidate();
   };
+
 
   const createMut = useMutation({
     mutationFn: () => createInst({ data: buildWhatsappPayload(panelConfig) }),
@@ -226,6 +263,45 @@ function WhatsappAdminPage() {
         onSave={savePanelConfig}
         onClear={clearPanelConfig}
       />
+
+      <div className="glass-card rounded-2xl p-6 space-y-3">
+        <div>
+          <h2 className="font-display text-lg font-bold">WhatsApp do administrador</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Número que recebe a notificação toda vez que um cliente faz um novo pedido. Com DDD, só números.
+          </p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Input
+            placeholder="5511999999999"
+            value={adminNumber}
+            onChange={(e) => setAdminNumber(e.target.value.replace(/\D/g, ""))}
+            className="max-w-xs"
+          />
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                await saveCfgFn({
+                  data: {
+                    baseUrl: appliedConfig.baseUrl,
+                    apiKey: appliedConfig.apiKey,
+                    instance: appliedConfig.instance,
+                    adminWhatsapp: adminNumber.trim(),
+                  },
+                });
+                toast.success("Número do admin salvo.");
+              } catch (err) {
+                toast.error((err as Error).message);
+              }
+            }}
+            disabled={!hasCompletePanelConfig(appliedConfig)}
+          >
+            Salvar número
+          </Button>
+        </div>
+      </div>
+
 
       {isLoading ? (
         <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
