@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getServerEnv } from "./env.server";
+import { clearLocalWhatsappConfig, getServerEnv, writeLocalWhatsappConfig } from "./env.server";
 
 // ---- Helpers ----
 
@@ -392,6 +392,12 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
       .from("site_settings")
       .upsert(rows);
     if (error) throw new Error((error as Error).message);
+    writeLocalWhatsappConfig({
+      evolution_url: data.baseUrl.replace(/\/$/, ""),
+      evolution_api_key: data.apiKey,
+      evolution_instance: data.instance,
+      ...(data.adminWhatsapp !== undefined ? { admin_whatsapp: data.adminWhatsapp.replace(/\D/g, "") } : {}),
+    });
     return { ok: true };
   });
 
@@ -408,6 +414,7 @@ export const clearWhatsappConfig = createServerFn({ method: "POST" })
       .delete()
       .in("key", ["evolution_url", "evolution_api_key", "evolution_instance"]);
     if (error) throw new Error((error as Error).message);
+    clearLocalWhatsappConfig();
     return { ok: true };
   });
 

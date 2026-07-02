@@ -1,6 +1,6 @@
 // Server-side WhatsApp messaging (Evolution API) + template rendering.
 import { sanitizePhone } from "./otp.server";
-import { getServerEnv } from "./env.server";
+import { getServerEnv, readLocalWhatsappConfig } from "./env.server";
 
 type SupabaseReader = {
   from: (table: string) => {
@@ -60,9 +60,10 @@ async function readStoredConfig(client?: SupabaseReader): Promise<{ baseUrl: str
 
 async function getConfig(options?: WhatsappOptions) {
   const stored = await readStoredConfig(options?.supabase);
-  const baseUrl = stored.baseUrl || getServerEnv("EVOLUTION_API_URL") || "";
-  const apiKey = stored.apiKey || getServerEnv("EVOLUTION_API_KEY") || "";
-  const instance = stored.instance || getServerEnv("EVOLUTION_INSTANCE") || "";
+  const local = readLocalWhatsappConfig();
+  const baseUrl = stored.baseUrl || local.evolution_url || getServerEnv("EVOLUTION_API_URL") || "";
+  const apiKey = stored.apiKey || local.evolution_api_key || getServerEnv("EVOLUTION_API_KEY") || "";
+  const instance = stored.instance || local.evolution_instance || getServerEnv("EVOLUTION_INSTANCE") || "";
   return {
     baseUrl: baseUrl.replace(/\/$/, ""),
     apiKey,
@@ -160,8 +161,10 @@ export async function getAdminWhatsappNumber(options?: WhatsappOptions): Promise
     const query = settingsQuery(activeClient).eq?.("key", "admin_whatsapp");
     const { data } = query?.maybeSingle ? await query.maybeSingle() : { data: null };
     const stored = data?.value ? String(data.value) : "";
-    return stored || getServerEnv("ADMIN_WHATSAPP") || null;
+    const local = readLocalWhatsappConfig();
+    return stored || local.admin_whatsapp || getServerEnv("ADMIN_WHATSAPP") || null;
   } catch {
-    return getServerEnv("ADMIN_WHATSAPP") || null;
+    const local = readLocalWhatsappConfig();
+    return local.admin_whatsapp || getServerEnv("ADMIN_WHATSAPP") || null;
   }
 }

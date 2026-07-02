@@ -93,3 +93,52 @@ export function getServerEnv(name: string): string | undefined {
 export function getMissingServerEnv(names: string[]): string[] {
   return names.filter((name) => !getServerEnv(name));
 }
+
+export type LocalWhatsappConfig = {
+  evolution_url?: string;
+  evolution_api_key?: string;
+  evolution_instance?: string;
+  admin_whatsapp?: string;
+};
+
+function getLocalWhatsappConfigPath(): string {
+  try {
+    return join(process.cwd(), ".portal-vod-whatsapp.json");
+  } catch {
+    return ".portal-vod-whatsapp.json";
+  }
+}
+
+export function readLocalWhatsappConfig(): LocalWhatsappConfig {
+  try {
+    const path = getLocalWhatsappConfigPath();
+    if (!existsSync(path)) return {};
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as LocalWhatsappConfig;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export function writeLocalWhatsappConfig(config: LocalWhatsappConfig): boolean {
+  try {
+    const current = readLocalWhatsappConfig();
+    const next = { ...current, ...config };
+    const { writeFileSync } = require("fs") as typeof import("fs");
+    writeFileSync(getLocalWhatsappConfigPath(), JSON.stringify(next, null, 2));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function clearLocalWhatsappConfig(): boolean {
+  try {
+    const { unlinkSync } = require("fs") as typeof import("fs");
+    const path = getLocalWhatsappConfigPath();
+    if (existsSync(path)) unlinkSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
