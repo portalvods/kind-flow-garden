@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
 const WHATSAPP_PANEL_CONFIG_KEY = "portal_vod_whatsapp_panel_config";
+const DEFAULT_WHATSAPP_INSTANCE = "portal-vod";
 
 type PanelWhatsappConfig = {
   baseUrl: string;
@@ -41,27 +42,38 @@ type PanelWhatsappConfig = {
 };
 
 function loadPanelWhatsappConfig(): PanelWhatsappConfig {
-  if (typeof window === "undefined") return { baseUrl: "", apiKey: "", instance: "portal" };
+  if (typeof window === "undefined") return { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
   try {
     const saved = window.localStorage.getItem(WHATSAPP_PANEL_CONFIG_KEY);
-    if (!saved) return { baseUrl: "", apiKey: "", instance: "portal" };
+    if (!saved) return { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
     const parsed = JSON.parse(saved) as Partial<PanelWhatsappConfig>;
     return {
       baseUrl: parsed.baseUrl ?? "",
       apiKey: parsed.apiKey ?? "",
-      instance: parsed.instance ?? "portal",
+      instance: parsed.instance ?? DEFAULT_WHATSAPP_INSTANCE,
     };
   } catch {
-    return { baseUrl: "", apiKey: "", instance: "portal" };
+    return { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
   }
 }
 
+function normalizePanelWhatsappConfig(config: PanelWhatsappConfig): PanelWhatsappConfig {
+  return {
+    baseUrl: config.baseUrl.trim(),
+    apiKey: config.apiKey.trim(),
+    instance: config.instance.trim(),
+  };
+}
+
 function buildWhatsappPayload(config: PanelWhatsappConfig) {
-  const baseUrl = config.baseUrl.trim();
-  const apiKey = config.apiKey.trim();
-  const instance = config.instance.trim();
-  if (!baseUrl || !apiKey || !instance) return {};
-  return { config: { baseUrl, apiKey, instance } };
+  const normalized = normalizePanelWhatsappConfig(config);
+  if (!normalized.baseUrl && !normalized.apiKey && !normalized.instance) return {};
+  return { config: normalized };
+}
+
+function hasCompletePanelConfig(config: PanelWhatsappConfig) {
+  const normalized = normalizePanelWhatsappConfig(config);
+  return !!(normalized.baseUrl && normalized.apiKey && normalized.instance);
 }
 
 export const Route = createFileRoute("/_authenticated/admin/whatsapp")({
@@ -90,10 +102,11 @@ function WhatsappAdminPage() {
   const sendTest = useServerFn(sendWhatsappTest);
 
   const [panelConfig, setPanelConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
+  const [appliedConfig, setAppliedConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [testNumber, setTestNumber] = useState("");
   const [testMessage, setTestMessage] = useState("Olá! Esta é uma mensagem de teste do Portal VOD. ✅");
 
-  const whatsappPayload = buildWhatsappPayload(panelConfig);
+  const whatsappPayload = buildWhatsappPayload(appliedConfig);
 
   const { data: status, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["whatsapp-status", whatsappPayload],
@@ -111,18 +124,23 @@ function WhatsappAdminPage() {
 
   const savePanelConfig = () => {
     const payload = buildWhatsappPayload(panelConfig);
-    if (!payload.config) {
+    if (!hasCompletePanelConfig(panelConfig) || !payload.config) {
       toast.error("Preencha URL, chave e instância.");
       return;
     }
-    window.localStorage.setItem(WHATSAPP_PANEL_CONFIG_KEY, JSON.stringify(payload.config));
+    const normalized = payload.config;
+    setPanelConfig(normalized);
+    setAppliedConfig(normalized);
+    window.localStorage.setItem(WHATSAPP_PANEL_CONFIG_KEY, JSON.stringify(normalized));
     toast.success("Configuração aplicada neste painel.");
     invalidate();
   };
 
   const clearPanelConfig = () => {
     window.localStorage.removeItem(WHATSAPP_PANEL_CONFIG_KEY);
-    setPanelConfig({ baseUrl: "", apiKey: "", instance: "portal" });
+    const emptyConfig = { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
+    setPanelConfig(emptyConfig);
+    setAppliedConfig(emptyConfig);
     toast.success("Configuração local removida.");
     invalidate();
   };
@@ -202,7 +220,7 @@ function WhatsappAdminPage() {
 
       <PanelConfigCard
         config={panelConfig}
-        source={status?.configSource}
+        source={hasCompletePanelConfig(appliedConfig) ? "panel" : status?.configSource}
         onChange={setPanelConfig}
         onSave={savePanelConfig}
         onClear={clearPanelConfig}
@@ -291,6 +309,7 @@ function PanelConfigCard({
   onClear: () => void;
 }) {
   const hasPanelConfig = !!buildWhatsappPayload(config).config;
+  const isComplete = hasCompletePanelConfig(config);
 
   return (
     <div className="glass-card rounded-2xl p-6 space-y-4">
@@ -321,10 +340,12 @@ function PanelConfigCard({
             Chave API
           </label>
           <Input
-            type="password"
+            type="text"
             placeholder="Sua chave da Evolution"
             value={config.apiKey}
             onChange={(e) => onChange({ ...config, apiKey: e.target.value })}
+            autoComplete="off"
+            spellCheck={false}
           />
         </div>
         <div className="space-y-2">
@@ -332,7 +353,7 @@ function PanelConfigCard({
             Instância
           </label>
           <Input
-            placeholder="portal"
+            placeholder="portal-vod"
             value={config.instance}
             onChange={(e) => onChange({ ...config, instance: e.target.value })}
           />
@@ -343,7 +364,7 @@ function PanelConfigCard({
           Limpar
         </Button>
         <Button onClick={onSave}>
-          Aplicar configuração
+          {isComplete ? "Aplicar e conectar" : "Aplicar configuração"}
         </Button>
       </div>
     </div>
