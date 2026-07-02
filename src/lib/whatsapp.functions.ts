@@ -114,10 +114,13 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
     };
 
     if (!cfg.configured) {
-      const missing = getMissingConfigKeys().join(", ");
+      const missing: string[] = [];
+      if (!cfg.baseUrl) missing.push("URL");
+      if (!cfg.apiKey) missing.push("Chave API");
+      if (!cfg.instance) missing.push("Instância");
       return {
         ...base,
-        message: `Evolution API não configurada. Chaves faltando no servidor: ${missing || "EVOLUTION_*"}.`,
+        message: `Faltando: ${missing.join(", ")}. Preencha nos campos acima e clique em Aplicar configuração.`,
       };
     }
 
