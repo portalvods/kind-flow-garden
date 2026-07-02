@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getMissingServerEnv, getServerEnv } from "./env.server";
+import { getServerEnv } from "./env.server";
 
 // ---- Helpers ----
 
