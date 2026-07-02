@@ -26,16 +26,29 @@ export const Route = createFileRoute("/_authenticated/pedidos")({
 });
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "Pendente",
+  pending: "Recebido",
+  analyzing: "Em análise",
   processing: "Em andamento",
+  approved: "Aprovado",
   added: "Adicionado",
+  completed: "Concluído",
+  fixed: "Consertado",
   rejected: "Recusado",
 };
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  analyzing: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   processing: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  approved: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   added: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  completed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  fixed: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   rejected: "bg-red-500/15 text-red-400 border-red-500/30",
+};
+const KIND_LABEL: Record<string, string> = {
+  adicao: "Adição",
+  atualizacao: "Atualização",
+  conserto: "Conserto",
 };
 
 function PedidosPage() {
@@ -128,6 +141,8 @@ type RequestRow = {
   id: string;
   title: string;
   content_type: "movie" | "tv";
+  request_kind: string | null;
+  format: string | null;
   poster_path: string | null;
   year: number | null;
   status: string;
@@ -156,8 +171,8 @@ function RequestCard({ request }: { request: RequestRow }) {
           </div>
         )}
         <div className="absolute top-2 left-2">
-          <Badge className={`${STATUS_COLOR[request.status]} border`}>
-            {STATUS_LABEL[request.status]}
+          <Badge className={`${STATUS_COLOR[request.status] ?? ""} border`}>
+            {STATUS_LABEL[request.status] ?? request.status}
           </Badge>
         </div>
         <div className="absolute top-2 right-2">
@@ -173,8 +188,18 @@ function RequestCard({ request }: { request: RequestRow }) {
       <div className="p-4">
         <h3 className="font-semibold line-clamp-1">{request.title}</h3>
         <p className="text-xs text-muted-foreground mt-1">
-          {request.year ?? "—"} · pedido em {new Date(request.created_at).toLocaleDateString("pt-BR")}
+          {request.year ?? "—"} · {new Date(request.created_at).toLocaleDateString("pt-BR")}
         </p>
+        <div className="flex gap-1 flex-wrap mt-2">
+          {request.request_kind && (
+            <Badge variant="outline" className="text-[10px]">
+              {KIND_LABEL[request.request_kind] ?? request.request_kind}
+            </Badge>
+          )}
+          {request.format && (
+            <Badge variant="outline" className="text-[10px]">{request.format}</Badge>
+          )}
+        </div>
         {request.notes && (
           <p className="text-xs text-muted-foreground mt-2 line-clamp-2">📝 {request.notes}</p>
         )}
@@ -192,6 +217,8 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [selected, setSelected] = useState<TmdbResult | null>(null);
   const [manualTitle, setManualTitle] = useState("");
   const [manualType, setManualType] = useState<"movie" | "tv">("movie");
+  const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
+  const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
@@ -205,24 +232,29 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
   const create = useMutation({
     mutationFn: async () => {
+      const base = {
+        request_kind: kind,
+        format: format || null,
+        notes: notes || null,
+      };
       const payload = selected
         ? {
+            ...base,
             title: selected.title,
             content_type: selected.type,
             tmdb_id: selected.id,
             poster_path: selected.poster_path,
             year: selected.year,
             overview: selected.overview,
-            notes: notes || null,
           }
         : {
+            ...base,
             title: manualTitle,
             content_type: manualType,
             tmdb_id: null,
             poster_path: null,
             year: null,
             overview: null,
-            notes: notes || null,
           };
       return createFn({ data: payload });
     },
@@ -234,9 +266,12 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setSelected(null);
       setManualTitle("");
       setNotes("");
+      setFormat("");
+      setKind("adicao");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao enviar"),
   });
+
 
   const canSubmit = selected !== null || manualTitle.trim().length >= 2;
 
@@ -299,35 +334,37 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
           </div>
 
           {search && search.results.length > 0 && (
-            <div className="grid gap-2 max-h-72 overflow-y-auto pr-1">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-1">
               {search.results.map((r) => (
                 <button
                   key={`${r.type}-${r.id}`}
                   onClick={() => setSelected(r)}
-                  className="flex items-center gap-3 rounded-lg p-2 hover:bg-accent/10 text-left transition"
+                  className="group text-left"
                 >
-                  {r.poster_path ? (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w92${r.poster_path}`}
-                      alt=""
-                      className="w-10 h-14 object-cover rounded"
-                    />
-                  ) : (
-                    <div className="w-10 h-14 bg-muted rounded flex items-center justify-center">
-                      <ImageOff className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{r.title}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="aspect-[2/3] rounded-lg overflow-hidden bg-muted relative ring-1 ring-border/40 group-hover:ring-primary/60 transition">
+                    {r.poster_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w342${r.poster_path}`}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageOff className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Badge className="absolute top-1.5 right-1.5 bg-black/70 backdrop-blur text-[10px]">
                       {r.type === "movie" ? "Filme" : "Série"}
-                      {r.year && ` · ${r.year}`}
-                    </p>
+                    </Badge>
                   </div>
+                  <p className="text-xs font-medium truncate mt-1.5">{r.title}</p>
+                  <p className="text-[10px] text-muted-foreground">{r.year ?? ""}</p>
                 </button>
               ))}
             </div>
           )}
+
 
           {search && !search.configured && query.trim().length >= 2 && (
             <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-200">
@@ -373,17 +410,51 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         </>
       )}
 
+      <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
+        <div>
+          <Label htmlFor="kind">Tipo do pedido *</Label>
+          <select
+            id="kind"
+            value={kind}
+            onChange={(e) => setKind(e.target.value as typeof kind)}
+            className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="adicao">Adição</option>
+            <option value="atualizacao">Atualização</option>
+            <option value="conserto">Conserto</option>
+          </select>
+        </div>
+        <div>
+          <Label htmlFor="format">Formato (opcional)</Label>
+          <select
+            id="format"
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="">— Selecione —</option>
+            <option value="HD">HD</option>
+            <option value="FHD">FHD</option>
+            <option value="4K">4K</option>
+            <option value="Dublado">Dublado</option>
+            <option value="Legendado">Legendado</option>
+            <option value="Dual Áudio">Dual Áudio</option>
+          </select>
+        </div>
+      </div>
+
       <div>
         <Label htmlFor="notes">Observações (opcional)</Label>
         <Textarea
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ex: 4K, dublado, temporada específica..."
+          placeholder="Ex: temporada específica, qualidade preferida..."
           maxLength={500}
           rows={3}
         />
       </div>
+
 
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="ghost" onClick={onDone}>

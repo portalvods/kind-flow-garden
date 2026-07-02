@@ -14,27 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      message_templates: {
+        Row: {
+          content: string
+          id: string
+          key: string
+          label: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content: string
+          id?: string
+          key: string
+          label: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          key?: string
+          label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      otp_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          payload: Json | null
+          purpose: string
+          whatsapp: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          payload?: Json | null
+          purpose: string
+          whatsapp: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          payload?: Json | null
+          purpose?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           full_name: string | null
           id: string
           updated_at: string
-          whatsapp: string | null
+          whatsapp: string
         }
         Insert: {
           created_at?: string
           full_name?: string | null
           id: string
           updated_at?: string
-          whatsapp?: string | null
+          whatsapp: string
         }
         Update: {
           created_at?: string
           full_name?: string | null
           id?: string
           updated_at?: string
-          whatsapp?: string | null
+          whatsapp?: string
         }
         Relationships: []
       }
@@ -80,11 +143,13 @@ export type Database = {
         Row: {
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string
+          format: string | null
           id: string
           notes: string | null
           overview: string | null
           poster_path: string | null
           rejection_reason: string | null
+          request_kind: Database["public"]["Enums"]["request_kind"]
           status: Database["public"]["Enums"]["request_status"]
           title: string
           tmdb_id: number | null
@@ -95,11 +160,13 @@ export type Database = {
         Insert: {
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string
+          format?: string | null
           id?: string
           notes?: string | null
           overview?: string | null
           poster_path?: string | null
           rejection_reason?: string | null
+          request_kind?: Database["public"]["Enums"]["request_kind"]
           status?: Database["public"]["Enums"]["request_status"]
           title: string
           tmdb_id?: number | null
@@ -110,17 +177,37 @@ export type Database = {
         Update: {
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string
+          format?: string | null
           id?: string
           notes?: string | null
           overview?: string | null
           poster_path?: string | null
           rejection_reason?: string | null
+          request_kind?: Database["public"]["Enums"]["request_kind"]
           status?: Database["public"]["Enums"]["request_status"]
           title?: string
           tmdb_id?: number | null
           updated_at?: string
           user_id?: string
           year?: number | null
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
         }
         Relationships: []
       }
@@ -161,7 +248,16 @@ export type Database = {
     Enums: {
       app_role: "admin" | "revendedor" | "cliente"
       content_type: "movie" | "tv"
-      request_status: "pending" | "processing" | "added" | "rejected"
+      request_kind: "adicao" | "atualizacao" | "conserto"
+      request_status:
+        | "pending"
+        | "processing"
+        | "added"
+        | "rejected"
+        | "analyzing"
+        | "approved"
+        | "completed"
+        | "fixed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -291,7 +387,17 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "revendedor", "cliente"],
       content_type: ["movie", "tv"],
-      request_status: ["pending", "processing", "added", "rejected"],
+      request_kind: ["adicao", "atualizacao", "conserto"],
+      request_status: [
+        "pending",
+        "processing",
+        "added",
+        "rejected",
+        "analyzing",
+        "approved",
+        "completed",
+        "fixed",
+      ],
     },
   },
 } as const

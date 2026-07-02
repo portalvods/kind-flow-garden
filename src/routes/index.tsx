@@ -1,22 +1,35 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Film, Zap, Bell, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getPublicSettings } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/")({
   component: Landing,
 });
 
 function Landing() {
+  const settingsFn = useServerFn(getPublicSettings);
+  const { data: settings } = useQuery({
+    queryKey: ["public-settings"],
+    queryFn: () => settingsFn(),
+  });
+  const siteName = settings?.site_name ?? "Portal VOD";
   return (
     <div className="min-h-screen">
       {/* Nav */}
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/60">
         <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center glow-primary">
-              <Film className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-lg">Portal VOD</span>
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="" className="h-8 w-auto" />
+            ) : (
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center glow-primary">
+                <Film className="h-4 w-4 text-primary-foreground" />
+              </div>
+            )}
+            <span className="font-display font-bold text-lg">{siteName}</span>
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
@@ -30,6 +43,7 @@ function Landing() {
           </div>
         </div>
       </header>
+
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-4 pt-20 pb-24 text-center">
@@ -82,7 +96,7 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border/40 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Portal VOD
+        © {new Date().getFullYear()} {siteName}
       </footer>
     </div>
   );

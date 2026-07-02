@@ -15,6 +15,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
+import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
+import { Route as AuthenticatedAdminAparenciaRouteImport } from './routes/_authenticated/admin.aparencia'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -46,11 +48,25 @@ const AuthenticatedAdminWhatsappRoute =
     path: '/admin/whatsapp',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminMensagensRoute =
+  AuthenticatedAdminMensagensRouteImport.update({
+    id: '/admin/mensagens',
+    path: '/admin/mensagens',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAparenciaRoute =
+  AuthenticatedAdminAparenciaRouteImport.update({
+    id: '/admin/aparencia',
+    path: '/admin/aparencia',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
+  '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -58,6 +74,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
+  '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -67,20 +85,38 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
+  '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/pedidos' | '/admin/whatsapp' | '/admin/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/pedidos'
+    | '/admin/aparencia'
+    | '/admin/mensagens'
+    | '/admin/whatsapp'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/pedidos' | '/admin/whatsapp' | '/admin'
+  to:
+    | '/'
+    | '/auth'
+    | '/pedidos'
+    | '/admin/aparencia'
+    | '/admin/mensagens'
+    | '/admin/whatsapp'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/pedidos'
+    | '/_authenticated/admin/aparencia'
+    | '/_authenticated/admin/mensagens'
     | '/_authenticated/admin/whatsapp'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -135,17 +171,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWhatsappRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/mensagens': {
+      id: '/_authenticated/admin/mensagens'
+      path: '/admin/mensagens'
+      fullPath: '/admin/mensagens'
+      preLoaderRoute: typeof AuthenticatedAdminMensagensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/aparencia': {
+      id: '/_authenticated/admin/aparencia'
+      path: '/admin/aparencia'
+      fullPath: '/admin/aparencia'
+      preLoaderRoute: typeof AuthenticatedAdminAparenciaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
+  AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
   AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
+  AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
   AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }

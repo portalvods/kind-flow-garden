@@ -47,26 +47,51 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 });
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "Pendente",
+  pending: "Recebido",
+  analyzing: "Em análise",
   processing: "Em andamento",
+  approved: "Aprovado",
   added: "Adicionado",
+  completed: "Concluído",
+  fixed: "Consertado",
   rejected: "Recusado",
 };
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  analyzing: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   processing: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  approved: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   added: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  completed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  fixed: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   rejected: "bg-red-500/15 text-red-400 border-red-500/30",
 };
+const KIND_LABEL: Record<string, string> = {
+  adicao: "Adição",
+  atualizacao: "Atualização",
+  conserto: "Conserto",
+};
+
+type StatusKey =
+  | "pending"
+  | "analyzing"
+  | "processing"
+  | "approved"
+  | "added"
+  | "completed"
+  | "fixed"
+  | "rejected";
 
 type AdminRequest = {
   id: string;
   user_id: string;
   title: string;
   content_type: "movie" | "tv";
+  request_kind: string | null;
+  format: string | null;
   poster_path: string | null;
   year: number | null;
-  status: "pending" | "processing" | "added" | "rejected";
+  status: StatusKey;
   notes: string | null;
   rejection_reason: string | null;
   created_at: string;
@@ -75,7 +100,7 @@ type AdminRequest = {
 
 function AdminPage() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"pending" | "processing" | "added" | "rejected" | "all">("pending");
+  const [tab, setTab] = useState<"pending" | "analyzing" | "approved" | "completed" | "rejected" | "all">("pending");
   const [search, setSearch] = useState("");
   const [rejectTarget, setRejectTarget] = useState<AdminRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -106,13 +131,19 @@ function AdminPage() {
 
   const stats = {
     pending: requests?.filter((r) => r.status === "pending").length ?? 0,
-    processing: requests?.filter((r) => r.status === "processing").length ?? 0,
-    added: requests?.filter((r) => r.status === "added").length ?? 0,
+    analyzing: requests?.filter((r) => r.status === "analyzing").length ?? 0,
+    approved: requests?.filter((r) => ["approved", "processing"].includes(r.status)).length ?? 0,
+    completed: requests?.filter((r) => ["completed", "added", "fixed"].includes(r.status)).length ?? 0,
     rejected: requests?.filter((r) => r.status === "rejected").length ?? 0,
   };
 
   const filtered = (requests ?? [])
-    .filter((r) => tab === "all" || r.status === tab)
+    .filter((r) => {
+      if (tab === "all") return true;
+      if (tab === "approved") return r.status === "approved" || r.status === "processing";
+      if (tab === "completed") return r.status === "completed" || r.status === "added" || r.status === "fixed";
+      return r.status === tab;
+    })
     .filter(
       (r) =>
         !search ||
@@ -123,14 +154,14 @@ function AdminPage() {
   const changeStatus = useMutation({
     mutationFn: async (input: {
       id: string;
-      status: "pending" | "processing" | "added" | "rejected";
+      status: StatusKey;
       rejection_reason?: string | null;
     }) => updateFn({ data: input }),
     onSuccess: (_, vars) => {
       toast.success(
-        vars.status === "added"
-          ? "Marcado como adicionado. Cliente foi notificado."
-          : "Status atualizado.",
+        vars.status === "completed" || vars.status === "added"
+          ? "Marcado como concluído. Cliente foi notificado."
+          : "Status atualizado. Cliente notificado.",
       );
       qc.invalidateQueries({ queryKey: ["admin-requests"] });
       setRejectTarget(null);
@@ -161,20 +192,22 @@ function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <StatCard label="Pendentes" value={stats.pending} tone="yellow" icon={<Clock className="h-4 w-4" />} />
-        <StatCard label="Em andamento" value={stats.processing} tone="blue" icon={<Play className="h-4 w-4" />} />
-        <StatCard label="Adicionados" value={stats.added} tone="emerald" icon={<Check className="h-4 w-4" />} />
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+        <StatCard label="Recebidos" value={stats.pending} tone="yellow" icon={<Clock className="h-4 w-4" />} />
+        <StatCard label="Em análise" value={stats.analyzing} tone="blue" icon={<Search className="h-4 w-4" />} />
+        <StatCard label="Aprovados" value={stats.approved} tone="blue" icon={<Play className="h-4 w-4" />} />
+        <StatCard label="Concluídos" value={stats.completed} tone="emerald" icon={<Check className="h-4 w-4" />} />
         <StatCard label="Recusados" value={stats.rejected} tone="red" icon={<X className="h-4 w-4" />} />
       </div>
 
       {/* Search + Tabs */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-          <TabsList className="bg-card/60 border border-border/60">
-            <TabsTrigger value="pending">Pendentes</TabsTrigger>
-            <TabsTrigger value="processing">Em andamento</TabsTrigger>
-            <TabsTrigger value="added">Adicionados</TabsTrigger>
+          <TabsList className="bg-card/60 border border-border/60 flex-wrap">
+            <TabsTrigger value="pending">Recebidos</TabsTrigger>
+            <TabsTrigger value="analyzing">Em análise</TabsTrigger>
+            <TabsTrigger value="approved">Aprovados</TabsTrigger>
+            <TabsTrigger value="completed">Concluídos</TabsTrigger>
             <TabsTrigger value="rejected">Recusados</TabsTrigger>
             <TabsTrigger value="all">Todos</TabsTrigger>
           </TabsList>
@@ -227,6 +260,14 @@ function AdminPage() {
                       <><Tv className="h-3 w-3 mr-1" /> Série</>
                     )}
                   </Badge>
+                  {r.request_kind && (
+                    <Badge variant="outline" className="text-[10px]">
+                      {KIND_LABEL[r.request_kind] ?? r.request_kind}
+                    </Badge>
+                  )}
+                  {r.format && (
+                    <Badge variant="outline" className="text-[10px]">{r.format}</Badge>
+                  )}
                   {r.year && <span className="text-xs text-muted-foreground">{r.year}</span>}
                   <Badge className={`${STATUS_COLOR[r.status]} border ml-auto`}>
                     {STATUS_LABEL[r.status]}
@@ -246,26 +287,47 @@ function AdminPage() {
               </div>
 
               <div className="flex flex-wrap gap-2 items-center">
-                {r.status !== "processing" && (
+                {r.status !== "analyzing" && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "processing" })}
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "analyzing" })}
+                    disabled={changeStatus.isPending}
+                  >
+                    <Search className="h-3.5 w-3.5 mr-1" />
+                    Em análise
+                  </Button>
+                )}
+                {r.status !== "approved" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "approved" })}
                     disabled={changeStatus.isPending}
                   >
                     <Play className="h-3.5 w-3.5 mr-1" />
-                    Processar
+                    Aprovar
                   </Button>
                 )}
-                {r.status !== "added" && (
+                {r.request_kind === "conserto" ? (
                   <Button
                     size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-500"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "added" })}
+                    className="bg-teal-600 hover:bg-teal-500"
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "fixed" })}
                     disabled={changeStatus.isPending}
                   >
                     <Check className="h-3.5 w-3.5 mr-1" />
-                    Adicionado
+                    Consertado
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-500"
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "completed" })}
+                    disabled={changeStatus.isPending}
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    Concluído
                   </Button>
                 )}
                 {r.status !== "rejected" && (
