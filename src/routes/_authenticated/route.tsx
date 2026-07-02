@@ -36,6 +36,12 @@ function AuthedLayout() {
     },
   });
 
+  const settingsFn = useServerFn(getPublicSettings);
+  const { data: settings } = useQuery({
+    queryKey: ["public-settings"],
+    queryFn: () => settingsFn(),
+  });
+
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
@@ -49,10 +55,16 @@ function AuthedLayout() {
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/70">
         <div className="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between">
           <Link to="/pedidos" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center glow-primary">
-              <Film className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-lg hidden sm:inline">Portal VOD</span>
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="" className="h-8 w-auto" />
+            ) : (
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center glow-primary">
+                <Film className="h-4 w-4 text-primary-foreground" />
+              </div>
+            )}
+            <span className="font-display font-bold text-lg hidden sm:inline">
+              {settings?.site_name ?? "Portal VOD"}
+            </span>
           </Link>
 
           <nav className="flex items-center gap-1">
@@ -66,6 +78,12 @@ function AuthedLayout() {
                 </NavLink>
                 <NavLink to="/admin/whatsapp" active={pathname.startsWith("/admin/whatsapp")} icon={<MessageCircle className="h-4 w-4" />}>
                   WhatsApp
+                </NavLink>
+                <NavLink to="/admin/mensagens" active={pathname.startsWith("/admin/mensagens")} icon={<MessagesSquare className="h-4 w-4" />}>
+                  Mensagens
+                </NavLink>
+                <NavLink to="/admin/aparencia" active={pathname.startsWith("/admin/aparencia")} icon={<Palette className="h-4 w-4" />}>
+                  Aparência
                 </NavLink>
               </>
             )}
