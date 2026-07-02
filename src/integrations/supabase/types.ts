@@ -249,7 +249,15 @@ export type Database = {
       app_role: "admin" | "revendedor" | "cliente"
       content_type: "movie" | "tv"
       request_kind: "adicao" | "atualizacao" | "conserto"
-      request_status: "pending" | "processing" | "added" | "rejected"
+      request_status:
+        | "pending"
+        | "processing"
+        | "added"
+        | "rejected"
+        | "analyzing"
+        | "approved"
+        | "completed"
+        | "fixed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -380,7 +388,16 @@ export const Constants = {
       app_role: ["admin", "revendedor", "cliente"],
       content_type: ["movie", "tv"],
       request_kind: ["adicao", "atualizacao", "conserto"],
-      request_status: ["pending", "processing", "added", "rejected"],
+      request_status: [
+        "pending",
+        "processing",
+        "added",
+        "rejected",
+        "analyzing",
+        "approved",
+        "completed",
+        "fixed",
+      ],
     },
   },
 } as const
