@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { issueOtp, sanitizePhone, verifyOtp } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
+import { createServerPublicSupabase } from "./supabase-public.server";
 
 // ---- Signup: request OTP ----
 const startSignupSchema = z.object({
@@ -71,17 +72,21 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     const whatsapp = sanitizePhone(id);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profile } = await supabaseAdmin
+    const supabasePublic = createServerPublicSupabase();
+    if (!supabasePublic) throw new Error("Configuração do backend incompleta na VPS.");
+
+    const { data: rpcEmail, error: rpcError } = await (supabasePublic as never as {
+      rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: { message: string } | null }>;
+    }).rpc("email_from_whatsapp", { _whatsapp: whatsapp });
+    if (!rpcError && rpcEmail) return { email: rpcEmail };
+
+    const { data: profile } = await supabasePublic
       .from("profiles")
-      .select("id")
+      .select("email")
       .eq("whatsapp", whatsapp)
       .maybeSingle();
-    if (!profile) throw new Error("Nenhuma conta encontrada para este WhatsApp.");
-
-    const { data: userData, error } = await supabaseAdmin.auth.admin.getUserById(profile.id as string);
-    if (error || !userData.user?.email) throw new Error("Não foi possível localizar sua conta.");
-    return { email: userData.user.email };
+    if (!profile?.email) throw new Error("Nenhuma conta encontrada para este WhatsApp. Se preferir, entre com seu e-mail.");
+    return { email: profile.email };
   });
 
 // ---- Forgot password: start ----

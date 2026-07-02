@@ -40,8 +40,7 @@ export const createRequest = createServerFn({ method: "POST" })
       _role: "admin",
     });
     if (!isAdmin) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: limitRow } = await supabaseAdmin
+      const { data: limitRow } = await supabase
         .from("site_settings")
         .select("value")
         .eq("key", "daily_request_limit")
@@ -49,7 +48,7 @@ export const createRequest = createServerFn({ method: "POST" })
       const dailyLimit = Number(limitRow?.value ?? 5) || 5;
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
-      const { count } = await supabaseAdmin
+      const { count } = await supabase
         .from("requests")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
@@ -61,38 +60,22 @@ export const createRequest = createServerFn({ method: "POST" })
 
     // Availability check: block "adicao" if content already in M3U catalog
     if (data.request_kind === "adicao") {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const catalogKind = data.content_type === "tv" ? "series" : "movie";
       const norm = normalizeTitle(data.title);
       let match: { category: string | null; title: string } | null = null;
 
-      if (data.tmdb_id) {
-        const { data: byTmdb } = await supabaseAdmin
-          .from("catalog_items")
-          .select("category, title")
-          .eq("tmdb_id", data.tmdb_id)
-          .eq("kind", catalogKind)
-          .limit(1);
-        if (byTmdb && byTmdb.length) match = byTmdb[0];
-      }
-      if (!match && data.year) {
-        const { data: byBoth } = await supabaseAdmin
-          .from("catalog_items")
-          .select("category, title")
-          .eq("title_normalized", norm)
-          .eq("year", data.year)
-          .eq("kind", catalogKind)
-          .limit(1);
-        if (byBoth && byBoth.length) match = byBoth[0];
-      }
-      if (!match) {
-        const { data: byTitle } = await supabaseAdmin
-          .from("catalog_items")
-          .select("category, title")
-          .eq("title_normalized", norm)
-          .eq("kind", catalogKind)
-          .limit(1);
-        if (byTitle && byTitle.length) match = byTitle[0];
+      try {
+        const { data: found } = await (supabase as never as {
+          rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: Array<{ category: string | null; title: string }> | null }>;
+        }).rpc("check_catalog_availability", {
+          _tmdb_id: data.tmdb_id ?? null,
+          _title_normalized: norm,
+          _year: data.year ?? null,
+          _kind: catalogKind,
+        });
+        if (found && found.length) match = found[0];
+      } catch (err) {
+        console.warn("catalog availability check skipped", err);
       }
       if (match) {
         const where = match.category ? ` (categoria: ${match.category})` : "";

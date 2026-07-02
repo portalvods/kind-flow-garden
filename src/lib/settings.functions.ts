@@ -1,9 +1,8 @@
 // Settings and branding server functions.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import { createServerPublicSupabase } from "./supabase-public.server";
 
 async function assertAdmin(context: { supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> }; userId: string }) {
   const { data, error } = await context.supabase.rpc("has_role", {
@@ -14,13 +13,8 @@ async function assertAdmin(context: { supabase: { rpc: (fn: string, args: Record
 }
 
 export const getPublicSettings = createServerFn({ method: "GET" }).handler(async () => {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return { logo_url: null, site_name: "Portal VOD" };
-
-  const supabasePublic = createClient<Database>(url, key, {
-    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-  });
+  const supabasePublic = createServerPublicSupabase();
+  if (!supabasePublic) return { logo_url: null, site_name: "Portal VOD" };
   const { data } = await supabasePublic.from("site_settings").select("key, value");
   const map: Record<string, string | null> = {};
   for (const row of data ?? []) map[row.key as string] = (row.value as string | null) ?? null;
@@ -125,8 +119,7 @@ const DEFAULT_DAILY_LIMIT = 5;
 export const getDailyLimit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
+    const { data: row } = await context.supabase
       .from("site_settings")
       .select("value")
       .eq("key", "daily_request_limit")
@@ -135,7 +128,7 @@ export const getDailyLimit = createServerFn({ method: "GET" })
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const { count } = await supabaseAdmin
+    const { count } = await context.supabase
       .from("requests")
       .select("id", { count: "exact", head: true })
       .eq("user_id", context.userId)

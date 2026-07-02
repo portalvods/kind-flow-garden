@@ -1,5 +1,16 @@
 // Server-side WhatsApp messaging (Evolution API) + template rendering.
 import { sanitizePhone } from "./otp.server";
+import { createServerPublicSupabase } from "./supabase-public.server";
+
+const DEFAULT_TEMPLATES: Record<string, string> = {
+  received: "✅ Olá {cliente}, recebemos seu pedido: {titulo} ({tipo}).",
+  admin_new_request: "📥 Novo pedido recebido\nCliente: {cliente}\nWhatsApp: {whatsapp}\nTítulo: {titulo}\nTipo: {tipo}\nFormato: {formato}\nObs: {obs}",
+  analyzing: "🔎 Olá {cliente}, seu pedido {titulo} está em análise.",
+  approved: "✅ Olá {cliente}, seu pedido {titulo} foi aprovado.",
+  completed: "🎬 Olá {cliente}, seu pedido {titulo} foi concluído.",
+  fixed: "🛠️ Olá {cliente}, seu pedido {titulo} foi corrigido.",
+  rejected: "❌ Olá {cliente}, seu pedido {titulo} foi recusado. Motivo: {motivo}",
+};
 
 function getConfig() {
   const baseUrl = process.env.EVOLUTION_API_URL;
@@ -42,13 +53,15 @@ export async function sendWhatsapp(to: string, message: string): Promise<{ ok: b
 }
 
 export async function getTemplate(key: string): Promise<string | null> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
+  const supabasePublic = createServerPublicSupabase();
+  if (!supabasePublic) return DEFAULT_TEMPLATES[key] ?? null;
+
+  const { data } = await supabasePublic
     .from("message_templates")
     .select("content")
     .eq("key", key)
     .maybeSingle();
-  return (data?.content as string | undefined) ?? null;
+  return (data?.content as string | undefined) ?? DEFAULT_TEMPLATES[key] ?? null;
 }
 
 export function renderTemplate(tpl: string, vars: Record<string, string | number | null | undefined>): string {
