@@ -429,5 +429,5 @@ export const getAdminWhatsappSetting = createServerFn({ method: "GET" })
       .select("value")
       .eq("key", "admin_whatsapp")
       .maybeSingle();
-    return { number: (data?.value as string | null) ?? "" };
+    return { number: (data?.value as string | null) ?? readLocalWhatsappConfig().admin_whatsapp ?? "" };
   });
