@@ -80,8 +80,13 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     }).rpc("email_from_whatsapp", { _whatsapp: whatsapp });
     if (!rpcError && rpcEmail) return { email: rpcEmail };
 
-    const { data: profile } = await supabasePublic
-      .from("profiles")
+    const { data: profile } = await (supabasePublic.from("profiles") as never as {
+      select: (columns: string) => {
+        eq: (column: string, value: string) => {
+          maybeSingle: () => Promise<{ data: { email?: string | null } | null }>;
+        };
+      };
+    })
       .select("email")
       .eq("whatsapp", whatsapp)
       .maybeSingle();
