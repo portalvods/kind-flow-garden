@@ -85,8 +85,15 @@ function AuthPage() {
     setLoading(true);
     try {
       const { email: resolved } = await emailFromIdFn({ data: { identifier } });
-      const { error } = await supabase.auth.signInWithPassword({ email: resolved, password });
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email: resolved, password });
       if (error) throw error;
+      if (signInData.user) {
+        const { data: blocked } = await supabase.rpc("is_blocked", { _user_id: signInData.user.id });
+        if (blocked) {
+          await supabase.auth.signOut();
+          throw new Error("Sua conta está bloqueada. Fale com o administrador.");
+        }
+      }
       toast.success("Bem-vindo!");
       navigate({ to: "/pedidos" });
     } catch (err) {
