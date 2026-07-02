@@ -94,6 +94,10 @@ function AuthedLayout() {
                 <NavLink to="/admin/aparencia" active={pathname.startsWith("/admin/aparencia")} icon={<Palette className="h-4 w-4" />}>
                   Aparência
                 </NavLink>
+                <NavLink to="/admin/ferramentas" active={pathname.startsWith("/admin/ferramentas")} icon={<Wrench className="h-4 w-4" />}>
+                  Ferramentas
+                </NavLink>
+
               </>
             )}
             <Button variant="ghost" size="sm" onClick={signOut} className="ml-2">
