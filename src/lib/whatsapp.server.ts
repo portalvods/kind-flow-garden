@@ -13,20 +13,43 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
   rejected: "❌ Olá {cliente}, seu pedido {titulo} foi recusado. Motivo: {motivo}",
 };
 
-function getConfig() {
-  const baseUrl = getServerEnv("EVOLUTION_API_URL");
-  const apiKey = getServerEnv("EVOLUTION_API_KEY");
-  const instance = getServerEnv("EVOLUTION_INSTANCE");
+async function readStoredConfig(): Promise<{ baseUrl: string; apiKey: string; instance: string }> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("site_settings")
+      .select("key, value")
+      .in("key", ["evolution_url", "evolution_api_key", "evolution_instance"]);
+    const map: Record<string, string> = {};
+    for (const row of data ?? []) {
+      if (row.value) map[row.key as string] = String(row.value);
+    }
+    return {
+      baseUrl: map.evolution_url ?? "",
+      apiKey: map.evolution_api_key ?? "",
+      instance: map.evolution_instance ?? "",
+    };
+  } catch (err) {
+    console.warn("[whatsapp] could not read stored config", (err as Error).message);
+    return { baseUrl: "", apiKey: "", instance: "" };
+  }
+}
+
+async function getConfig() {
+  const stored = await readStoredConfig();
+  const baseUrl = stored.baseUrl || getServerEnv("EVOLUTION_API_URL") || "";
+  const apiKey = stored.apiKey || getServerEnv("EVOLUTION_API_KEY") || "";
+  const instance = stored.instance || getServerEnv("EVOLUTION_INSTANCE") || "";
   return {
-    baseUrl: baseUrl?.replace(/\/$/, "") ?? "",
-    apiKey: apiKey ?? "",
-    instance: instance ?? "",
+    baseUrl: baseUrl.replace(/\/$/, ""),
+    apiKey,
+    instance,
     configured: !!(baseUrl && apiKey && instance),
   };
 }
 
 export async function sendWhatsapp(to: string, message: string): Promise<{ ok: boolean; error?: string }> {
-  const cfg = getConfig();
+  const cfg = await getConfig();
   if (!cfg.configured) {
     console.info("[whatsapp] Evolution API not configured; skipping notification");
     return { ok: false, error: "not_configured" };
@@ -38,7 +61,12 @@ export async function sendWhatsapp(to: string, message: string): Promise<{ ok: b
     const url = `${cfg.baseUrl}/message/sendText/${encodeURIComponent(cfg.instance)}`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", apikey: cfg.apiKey },
+      headers: {
+        "Content-Type": "application/json",
+        apikey: cfg.apiKey,
+        "x-api-key": cfg.apiKey,
+        Authorization: `Bearer ${cfg.apiKey}`,
+      },
       body: JSON.stringify({ number, text: message }),
     });
     if (!res.ok) {
@@ -85,7 +113,10 @@ export async function sendTemplate(
     return;
   }
   const message = renderTemplate(tpl, vars);
-  await sendWhatsapp(to, message);
+  const result = await sendWhatsapp(to, message);
+  if (!result.ok) {
+    console.warn(`[whatsapp] template "${key}" not sent:`, result.error);
+  }
 }
 
 export function sendOtpMessage(to: string, code: string, purpose: "signup" | "reset"): Promise<{ ok: boolean; error?: string }> {
@@ -93,4 +124,19 @@ export function sendOtpMessage(to: string, code: string, purpose: "signup" | "re
   const msg =
     `🔐 *Portal VOD*\n\nSeu código para ${label} é:\n\n*${code}*\n\nEle expira em 10 minutos. Se não foi você, ignore esta mensagem.`;
   return sendWhatsapp(to, msg);
+}
+
+export async function getAdminWhatsappNumber(): Promise<string | null> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("site_settings")
+      .select("value")
+      .eq("key", "admin_whatsapp")
+      .maybeSingle();
+    const stored = data?.value ? String(data.value) : "";
+    return stored || getServerEnv("ADMIN_WHATSAPP") || null;
+  } catch {
+    return getServerEnv("ADMIN_WHATSAPP") || null;
+  }
 }
