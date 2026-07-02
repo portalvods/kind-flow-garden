@@ -124,13 +124,20 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => lookupSchema.parse(d))
   .handler(async ({ data }): Promise<{ email: string }> => {
     const id = data.identifier.trim();
-    // Already an email?
     if (id.includes("@")) return { email: id };
 
     const whatsapp = sanitizePhone(id);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
 
-    throw new Error("Na VPS, entre usando seu e-mail e senha. O login por WhatsApp precisa da chave administrativa do backend.");
+    const { createClient } = await import("@supabase/supabase-js");
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) throw new Error("Não foi possível validar seu acesso. Tente novamente.");
+    const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: email, error } = await sb.rpc("email_by_whatsapp", { _whatsapp: whatsapp });
+    if (error) throw new Error("Não foi possível validar seu acesso. Tente novamente.");
+    if (!email) throw new Error("Nenhuma conta encontrada com esse WhatsApp.");
+    return { email: email as string };
   });
 
 // ---- Forgot password: start (via WhatsApp OTP) ----
