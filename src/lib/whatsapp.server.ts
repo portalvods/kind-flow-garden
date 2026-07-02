@@ -82,15 +82,22 @@ export async function sendWhatsapp(to: string, message: string): Promise<{ ok: b
 }
 
 export async function getTemplate(key: string): Promise<string | null> {
-  const supabasePublic = createServerPublicSupabase();
-  if (!supabasePublic) return DEFAULT_TEMPLATES[key] ?? null;
-
-  const { data } = await supabasePublic
-    .from("message_templates")
-    .select("content")
-    .eq("key", key)
-    .maybeSingle();
-  return (data?.content as string | undefined) ?? DEFAULT_TEMPLATES[key] ?? null;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("message_templates")
+      .select("content")
+      .eq("key", key)
+      .maybeSingle();
+    if (error) {
+      console.warn(`[whatsapp] template "${key}" fetch error:`, error.message);
+    }
+    const content = (data?.content as string | undefined) ?? "";
+    if (content.trim()) return content;
+  } catch (err) {
+    console.warn(`[whatsapp] template "${key}" fetch exception:`, (err as Error).message);
+  }
+  return DEFAULT_TEMPLATES[key] ?? null;
 }
 
 export function renderTemplate(tpl: string, vars: Record<string, string | number | null | undefined>): string {
