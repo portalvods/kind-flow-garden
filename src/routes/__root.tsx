@@ -92,7 +92,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Sistema premium de solicitação e gerenciamento de conteúdos VOD.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://gpcine.shop/og-image.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "640" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://gpcine.shop/og-image.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
