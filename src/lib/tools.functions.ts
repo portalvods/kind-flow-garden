@@ -25,12 +25,13 @@ export const listDuplicateRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<DuplicateGroup[]> => {
     await assertAdmin(context as never);
-    const { data, error } = await (context.supabase as {
+    const { data, error } = await (context.supabase as unknown as {
       rpc: (fn: string) => Promise<{ data: DuplicateGroup[] | null; error: { message: string } | null }>;
     }).rpc("admin_duplicate_requests");
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
 
 // Export: returns JSON snapshot of core tables. Admins only.
 export const exportData = createServerFn({ method: "GET" })
