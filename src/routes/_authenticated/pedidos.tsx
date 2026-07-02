@@ -7,6 +7,7 @@ import { Search, Loader2, Plus, Film, Tv, ImageOff, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { createRequest } from "@/lib/requests.functions";
+import { getDailyLimit } from "@/lib/settings.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
