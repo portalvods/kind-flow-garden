@@ -17,8 +17,7 @@ export const listSources = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await context.supabase
       .from("m3u_sources")
       .select("*")
       .order("created_at", { ascending: true });
@@ -36,8 +35,7 @@ export const createSource = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin
+    const { data: row, error } = await context.supabase
       .from("m3u_sources")
       .insert({
         name: data.name,
@@ -56,8 +54,7 @@ export const deleteSource = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => idSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("m3u_sources").delete().eq("id", data.id);
+    const { error } = await context.supabase.from("m3u_sources").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -68,8 +65,7 @@ export const toggleSource = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => toggleSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
+    const { error } = await context.supabase
       .from("m3u_sources")
       .update({ active: data.active })
       .eq("id", data.id);
@@ -82,10 +78,9 @@ export const syncSource = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => idSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { parseM3u } = await import("./m3u.server");
 
-    const { data: src, error: fetchErr } = await supabaseAdmin
+    const { data: src, error: fetchErr } = await context.supabase
       .from("m3u_sources")
       .select("*")
       .eq("id", data.id)
@@ -101,18 +96,18 @@ export const syncSource = createServerFn({ method: "POST" })
       const series = items.filter((i) => i.kind === "series").length;
 
       // Replace all items for this source
-      await supabaseAdmin.from("catalog_items").delete().eq("source_id", src.id);
+      await context.supabase.from("catalog_items").delete().eq("source_id", src.id);
 
       const rows = items.map((i) => ({ ...i, source_id: src.id }));
       const CHUNK = 500;
       for (let i = 0; i < rows.length; i += CHUNK) {
-        const { error: insErr } = await supabaseAdmin
+        const { error: insErr } = await context.supabase
           .from("catalog_items")
           .insert(rows.slice(i, i + CHUNK));
         if (insErr) throw new Error(insErr.message);
       }
 
-      await supabaseAdmin
+      await context.supabase
         .from("m3u_sources")
         .update({
           last_synced_at: new Date().toISOString(),
@@ -126,7 +121,7 @@ export const syncSource = createServerFn({ method: "POST" })
       return { ok: true, movies, series, total: items.length };
     } catch (err) {
       const msg = (err as Error).message ?? "erro desconhecido";
-      await supabaseAdmin
+      await context.supabase
         .from("m3u_sources")
         .update({
           last_status: "error",
