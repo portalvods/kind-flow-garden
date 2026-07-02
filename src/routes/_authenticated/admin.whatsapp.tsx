@@ -32,6 +32,38 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
+const WHATSAPP_PANEL_CONFIG_KEY = "portal_vod_whatsapp_panel_config";
+
+type PanelWhatsappConfig = {
+  baseUrl: string;
+  apiKey: string;
+  instance: string;
+};
+
+function loadPanelWhatsappConfig(): PanelWhatsappConfig {
+  if (typeof window === "undefined") return { baseUrl: "", apiKey: "", instance: "portal" };
+  try {
+    const saved = window.localStorage.getItem(WHATSAPP_PANEL_CONFIG_KEY);
+    if (!saved) return { baseUrl: "", apiKey: "", instance: "portal" };
+    const parsed = JSON.parse(saved) as Partial<PanelWhatsappConfig>;
+    return {
+      baseUrl: parsed.baseUrl ?? "",
+      apiKey: parsed.apiKey ?? "",
+      instance: parsed.instance ?? "portal",
+    };
+  } catch {
+    return { baseUrl: "", apiKey: "", instance: "portal" };
+  }
+}
+
+function buildWhatsappPayload(config: PanelWhatsappConfig) {
+  const baseUrl = config.baseUrl.trim();
+  const apiKey = config.apiKey.trim();
+  const instance = config.instance.trim();
+  if (!baseUrl || !apiKey || !instance) return {};
+  return { config: { baseUrl, apiKey, instance } };
+}
+
 export const Route = createFileRoute("/_authenticated/admin/whatsapp")({
   ssr: false,
   beforeLoad: async () => {
@@ -57,12 +89,15 @@ function WhatsappAdminPage() {
   const deleteInst = useServerFn(deleteWhatsappInstance);
   const sendTest = useServerFn(sendWhatsappTest);
 
+  const [panelConfig, setPanelConfig] = useState<PanelWhatsappConfig>(loadPanelWhatsappConfig);
   const [testNumber, setTestNumber] = useState("");
   const [testMessage, setTestMessage] = useState("Olá! Esta é uma mensagem de teste do Portal VOD. ✅");
 
+  const whatsappPayload = buildWhatsappPayload(panelConfig);
+
   const { data: status, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["whatsapp-status"],
-    queryFn: () => fetchStatus(),
+    queryKey: ["whatsapp-status", whatsappPayload],
+    queryFn: () => fetchStatus({ data: whatsappPayload }),
     refetchInterval: (q) => {
       const s = q.state.data as WhatsappStatus | undefined;
       // Poll faster when waiting for QR scan
@@ -74,8 +109,26 @@ function WhatsappAdminPage() {
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["whatsapp-status"] });
 
+  const savePanelConfig = () => {
+    const payload = buildWhatsappPayload(panelConfig);
+    if (!payload.config) {
+      toast.error("Preencha URL, chave e instância.");
+      return;
+    }
+    window.localStorage.setItem(WHATSAPP_PANEL_CONFIG_KEY, JSON.stringify(payload.config));
+    toast.success("Configuração aplicada neste painel.");
+    invalidate();
+  };
+
+  const clearPanelConfig = () => {
+    window.localStorage.removeItem(WHATSAPP_PANEL_CONFIG_KEY);
+    setPanelConfig({ baseUrl: "", apiKey: "", instance: "portal" });
+    toast.success("Configuração local removida.");
+    invalidate();
+  };
+
   const createMut = useMutation({
-    mutationFn: () => createInst(),
+    mutationFn: () => createInst({ data: buildWhatsappPayload(panelConfig) }),
     onSuccess: () => {
       toast.success("Instância criada!");
       invalidate();
@@ -84,7 +137,7 @@ function WhatsappAdminPage() {
   });
 
   const disconnectMut = useMutation({
-    mutationFn: () => disconnect(),
+    mutationFn: () => disconnect({ data: buildWhatsappPayload(panelConfig) }),
     onSuccess: () => {
       toast.success("Desconectado");
       invalidate();
@@ -93,7 +146,7 @@ function WhatsappAdminPage() {
   });
 
   const restartMut = useMutation({
-    mutationFn: () => restart(),
+    mutationFn: () => restart({ data: buildWhatsappPayload(panelConfig) }),
     onSuccess: () => {
       toast.success("Reiniciando...");
       invalidate();
@@ -102,7 +155,7 @@ function WhatsappAdminPage() {
   });
 
   const deleteMut = useMutation({
-    mutationFn: () => deleteInst(),
+    mutationFn: () => deleteInst({ data: buildWhatsappPayload(panelConfig) }),
     onSuccess: () => {
       toast.success("Instância removida");
       invalidate();
@@ -111,7 +164,7 @@ function WhatsappAdminPage() {
   });
 
   const testMut = useMutation({
-    mutationFn: () => sendTest({ data: { number: testNumber, message: testMessage } }),
+    mutationFn: () => sendTest({ data: { number: testNumber, message: testMessage, ...buildWhatsappPayload(panelConfig) } }),
     onSuccess: () => toast.success("Mensagem enviada!"),
     onError: (e) => toast.error((e as Error).message),
   });
@@ -146,6 +199,14 @@ function WhatsappAdminPage() {
           Atualizar
         </Button>
       </div>
+
+      <PanelConfigCard
+        config={panelConfig}
+        source={status?.configSource}
+        onChange={setPanelConfig}
+        onSave={savePanelConfig}
+        onClear={clearPanelConfig}
+      />
 
       {isLoading ? (
         <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
@@ -216,6 +277,79 @@ function WhatsappAdminPage() {
   );
 }
 
+function PanelConfigCard({
+  config,
+  source,
+  onChange,
+  onSave,
+  onClear,
+}: {
+  config: PanelWhatsappConfig;
+  source?: WhatsappStatus["configSource"];
+  onChange: (config: PanelWhatsappConfig) => void;
+  onSave: () => void;
+  onClear: () => void;
+}) {
+  const hasPanelConfig = !!buildWhatsappPayload(config).config;
+
+  return (
+    <div className="glass-card rounded-2xl p-6 space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="font-display text-lg font-bold">Configuração da Evolution API</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Preencha aqui para gerar o QR Code na VPS sem depender do PM2 ler o arquivo .env.
+          </p>
+        </div>
+        <Badge variant="outline">
+          {source === "panel" ? "Usando painel" : "Usando servidor"}
+        </Badge>
+      </div>
+      <div className="grid gap-4 md:grid-cols-[1.4fr_1fr_0.7fr]">
+        <div className="space-y-2">
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            URL da API
+          </label>
+          <Input
+            placeholder="http://163.245.196.13:8080"
+            value={config.baseUrl}
+            onChange={(e) => onChange({ ...config, baseUrl: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Chave API
+          </label>
+          <Input
+            type="password"
+            placeholder="Sua chave da Evolution"
+            value={config.apiKey}
+            onChange={(e) => onChange({ ...config, apiKey: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Instância
+          </label>
+          <Input
+            placeholder="portal"
+            value={config.instance}
+            onChange={(e) => onChange({ ...config, instance: e.target.value })}
+          />
+        </div>
+      </div>
+      <div className="flex justify-end gap-2 flex-wrap">
+        <Button variant="outline" onClick={onClear} disabled={!hasPanelConfig}>
+          Limpar
+        </Button>
+        <Button onClick={onSave}>
+          Aplicar configuração
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function NotConfiguredCard({ message }: { message?: string }) {
   return (
     <div className="glass-card rounded-2xl p-8">
@@ -231,15 +365,14 @@ function NotConfiguredCard({ message }: { message?: string }) {
             </p>
           </div>
           <div className="rounded-lg bg-muted/30 border border-border/40 p-4 space-y-2 text-sm">
-            <p className="font-medium">Secrets necessários:</p>
+            <p className="font-medium">Agora você pode configurar de 2 formas:</p>
             <ul className="space-y-1 text-muted-foreground font-mono text-xs">
-              <li>• <code className="text-foreground">EVOLUTION_API_URL</code> — ex: <code>https://evo.seudominio.com</code></li>
-              <li>• <code className="text-foreground">EVOLUTION_API_KEY</code> — a chave que você definiu no docker-compose</li>
-              <li>• <code className="text-foreground">EVOLUTION_INSTANCE</code> — nome da instância (ex: <code>portal</code>)</li>
+              <li>• Preencher os campos acima e clicar em <code className="text-foreground">Aplicar configuração</code></li>
+              <li>• Ou manter as variáveis <code className="text-foreground">EVOLUTION_API_URL</code>, <code className="text-foreground">EVOLUTION_API_KEY</code> e <code className="text-foreground">EVOLUTION_INSTANCE</code> no servidor</li>
             </ul>
           </div>
           <p className="text-xs text-muted-foreground">
-            Me peça no chat para adicionar essas chaves e a página funcionará automaticamente.
+            Na VPS, a forma mais simples é preencher os campos acima com a URL, chave e instância.
           </p>
         </div>
       </div>
