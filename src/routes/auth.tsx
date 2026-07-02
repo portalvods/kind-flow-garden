@@ -215,13 +215,15 @@ function AuthPage() {
 
   const handleForgotStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!whatsapp.trim().includes("@")) return toast.error("Informe o e-mail cadastrado");
+    if (whatsapp.trim().length < 10) return toast.error("Informe seu WhatsApp com DDD.");
     setLoading(true);
     try {
       const res = await startResetFn({ data: { whatsapp } });
       setOtpWhatsapp(res.whatsapp);
-      setDevHint(null);
-      toast.success("Enviamos o link de recuperação no seu e-mail.");
+      setSignupToken(res.token);
+      setDevHint(res.devCode ? `Modo dev — código: ${res.devCode}` : null);
+      setStep("reset-password");
+      toast.success("Enviamos um código no seu WhatsApp.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro");
     } finally {
@@ -233,10 +235,11 @@ function AuthPage() {
     e.preventDefault();
     if (code.length !== 6) return toast.error("Digite o código.");
     if (newPassword.length < 6) return toast.error("Nova senha: mínimo 6 caracteres.");
+    if (!signupToken) return toast.error("Solicite um novo código.");
     setLoading(true);
     try {
       const { email: emailOut } = await completeResetFn({
-        data: { whatsapp: otpWhatsapp, code, new_password: newPassword },
+        data: { whatsapp: otpWhatsapp, code, token: signupToken, new_password: newPassword },
       });
       const { error } = await supabase.auth.signInWithPassword({
         email: emailOut,
@@ -402,18 +405,18 @@ function AuthPage() {
             <>
               <h1 className="font-display text-2xl font-bold mb-1">Esqueci minha senha</h1>
               <p className="text-sm text-muted-foreground mb-6">
-                Informe seu e-mail cadastrado para receber o link de recuperação.
+                Informe seu WhatsApp cadastrado. Enviaremos um código para você redefinir a senha.
               </p>
               <form onSubmit={handleForgotStart} className="space-y-4">
                 <div>
-                  <Label htmlFor="fwa">E-mail cadastrado</Label>
+                  <Label htmlFor="fwa">WhatsApp cadastrado (com DDD)</Label>
                   <Input
                     id="fwa"
-                    type="email"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="voce@email.com"
+                    placeholder="5511999999999"
                     required
+                    maxLength={20}
                   />
                 </div>
                 <Button type="submit" className="w-full h-11" disabled={loading}>

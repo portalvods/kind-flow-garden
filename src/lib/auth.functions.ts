@@ -3,8 +3,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { sanitizePhone } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
-import { createServerPublicSupabase } from "./supabase-public.server";
-import { getServerEnv } from "./env.server";
 
 async function isWhatsappAlreadyRegistered(whatsapp: string): Promise<boolean> {
   try {
@@ -99,39 +97,80 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     throw new Error("Na VPS, entre usando seu e-mail e senha. O login por WhatsApp precisa da chave administrativa do backend.");
   });
 
-// ---- Forgot password: start ----
+// ---- Forgot password: start (via WhatsApp OTP) ----
 const startResetSchema = z.object({
-  whatsapp: z.string().trim().email().max(150),
+  whatsapp: z.string().trim().min(8).max(20),
 });
 
 export const startPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startResetSchema.parse(d))
   .handler(async ({ data }) => {
-    const identifier = data.whatsapp.trim();
-    if (!identifier.includes("@")) {
-      throw new Error("Na VPS, a recuperação de senha precisa ser feita pelo e-mail cadastrado.");
+    const whatsapp = sanitizePhone(data.whatsapp);
+    if (whatsapp.length < 10) throw new Error("WhatsApp inválido (com DDD).");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as unknown as {
+      rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: string | null; error: { message: string } | null }>;
+    };
+    const { data: email, error } = await admin.rpc("email_by_whatsapp", { _whatsapp: whatsapp });
+    if (error) throw new Error(error.message);
+    if (!email) throw new Error("Nenhuma conta encontrada com esse WhatsApp.");
+
+    // Look up user_id via Auth Admin
+    const { data: userLookup, error: userErr } = await (supabaseAdmin as unknown as {
+      auth: { admin: { getUserByEmail?: (e: string) => Promise<{ data: { user: { id: string } | null } | null; error: { message: string } | null }> } };
+    }).auth.admin.getUserByEmail?.(email) ?? { data: null, error: null };
+
+    let userId = userLookup?.user?.id ?? "";
+    if (!userId) {
+      // Fallback: listUsers filter
+      const { data: list } = await (supabaseAdmin as unknown as {
+        auth: { admin: { listUsers: (opts?: { page?: number; perPage?: number }) => Promise<{ data: { users: Array<{ id: string; email: string | null }> }; error: { message: string } | null }> } };
+      }).auth.admin.listUsers({ perPage: 1000 });
+      userId = list?.users.find((u) => (u.email ?? "").toLowerCase() === email.toLowerCase())?.id ?? "";
+    }
+    if (!userId) {
+      if (userErr) console.warn("[reset] getUserByEmail error:", userErr.message);
+      throw new Error("Não foi possível localizar a conta. Contate o suporte.");
     }
 
-    const supabasePublic = createServerPublicSupabase();
-    if (!supabasePublic) throw new Error("Backend não configurado na VPS.");
+    const { issueResetOtp } = await import("./reset-otp.server");
+    const { code, token } = issueResetOtp({ whatsapp, email, user_id: userId });
 
-    const { error } = await supabasePublic.auth.resetPasswordForEmail(identifier, {
-      redirectTo: `${getServerEnv("PUBLIC_SITE_URL") ?? getServerEnv("SITE_URL") ?? ""}/auth?mode=forgot`,
-    });
-    if (error) throw new Error(error.message);
-    return { ok: true, whatsapp: identifier };
+    const { sendOtpMessage } = await import("./whatsapp.server");
+    const res = await sendOtpMessage(whatsapp, code, "reset");
+    if (!res.ok && res.error === "not_configured") {
+      return {
+        ok: true,
+        whatsapp,
+        token,
+        devCode: code,
+        message: "WhatsApp não conectado — código exibido apenas em modo desenvolvimento.",
+      };
+    }
+    if (!res.ok) throw new Error(`Não foi possível enviar o código (${res.error}).`);
+    return { ok: true, whatsapp, token };
   });
 
-// ---- Forgot password: verify + set new password ----
+// ---- Forgot password: verify OTP + set new password ----
 const verifyResetSchema = z.object({
   whatsapp: z.string().min(8).max(20),
   code: z.string().length(6),
+  token: z.string().min(20),
   new_password: z.string().min(6).max(72),
 });
 
 export const completePasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => verifyResetSchema.parse(d))
   .handler(async ({ data }): Promise<{ ok: true; email: string }> => {
-    void data;
-    throw new Error("Abra o link de recuperação enviado por e-mail para definir a nova senha.");
+    const { verifyResetOtp } = await import("./reset-otp.server");
+    const payload = verifyResetOtp({ token: data.token, whatsapp: data.whatsapp, code: data.code });
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as unknown as {
+      auth: { admin: { updateUserById: (id: string, attrs: { password: string }) => Promise<{ error: { message: string } | null }> } };
+    }).auth.admin.updateUserById(payload.user_id, { password: data.new_password });
+    if (error) throw new Error(error.message);
+
+    return { ok: true, email: payload.email };
   });

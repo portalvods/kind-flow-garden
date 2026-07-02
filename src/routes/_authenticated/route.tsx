@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo } from "lucide-react";
+import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -75,6 +75,9 @@ function AuthedLayout() {
               <>
                 <NavLink to="/admin" active={pathname === "/admin"} icon={<LayoutDashboard className="h-4 w-4" />}>
                   Admin
+                </NavLink>
+                <NavLink to="/admin/usuarios" active={pathname.startsWith("/admin/usuarios")} icon={<Users className="h-4 w-4" />}>
+                  Usuários
                 </NavLink>
                 <NavLink to="/admin/whatsapp" active={pathname.startsWith("/admin/whatsapp")} icon={<MessageCircle className="h-4 w-4" />}>
                   WhatsApp
