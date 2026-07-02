@@ -173,9 +173,22 @@ type RequestRow = {
   notes: string | null;
   rejection_reason: string | null;
   created_at: string;
+  rating?: number | null;
 };
 
 function RequestCard({ request }: { request: RequestRow }) {
+  const qc = useQueryClient();
+  const rateFn = useServerFn(rateRequest);
+  const rate = useMutation({
+    mutationFn: (rating: 1 | -1) => rateFn({ data: { id: request.id, rating } }),
+    onSuccess: () => {
+      toast.success("Obrigado pela avaliação!");
+      qc.invalidateQueries({ queryKey: ["my-requests"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Erro"),
+  });
+  const canRate = ["completed", "fixed", "added"].includes(request.status) && !request.rating;
+
   const poster = request.poster_path
     ? `https://image.tmdb.org/t/p/w500${request.poster_path}`
     : null;
