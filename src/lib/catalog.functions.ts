@@ -154,13 +154,12 @@ export type AvailabilityResult = {
 export const checkAvailability = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => checkSchema.parse(d))
-  .handler(async ({ data }): Promise<AvailabilityResult> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  .handler(async ({ data, context }): Promise<AvailabilityResult> => {
     const { normalizeTitle } = await import("./m3u.server");
     const norm = normalizeTitle(data.title);
 
     if (data.tmdb_id) {
-      const { data: byTmdb } = await supabaseAdmin
+      const { data: byTmdb } = await context.supabase
         .from("catalog_items")
         .select("category, title")
         .eq("tmdb_id", data.tmdb_id)
@@ -171,7 +170,7 @@ export const checkAvailability = createServerFn({ method: "GET" })
       }
     }
     if (data.year) {
-      const { data: byBoth } = await supabaseAdmin
+      const { data: byBoth } = await context.supabase
         .from("catalog_items")
         .select("category, title")
         .eq("title_normalized", norm)
@@ -182,7 +181,7 @@ export const checkAvailability = createServerFn({ method: "GET" })
         return { exists: true, category: byBoth[0].category, match: byBoth[0].title };
       }
     }
-    const { data: byTitle } = await supabaseAdmin
+    const { data: byTitle } = await context.supabase
       .from("catalog_items")
       .select("category, title")
       .eq("title_normalized", norm)

@@ -40,8 +40,7 @@ export const createRequest = createServerFn({ method: "POST" })
       _role: "admin",
     });
     if (!isAdmin) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: limitRow } = await supabaseAdmin
+      const { data: limitRow } = await supabase
         .from("site_settings")
         .select("value")
         .eq("key", "daily_request_limit")
@@ -49,7 +48,7 @@ export const createRequest = createServerFn({ method: "POST" })
       const dailyLimit = Number(limitRow?.value ?? 5) || 5;
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
-      const { count } = await supabaseAdmin
+      const { count } = await supabase
         .from("requests")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
@@ -61,13 +60,12 @@ export const createRequest = createServerFn({ method: "POST" })
 
     // Availability check: block "adicao" if content already in M3U catalog
     if (data.request_kind === "adicao") {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const catalogKind = data.content_type === "tv" ? "series" : "movie";
       const norm = normalizeTitle(data.title);
       let match: { category: string | null; title: string } | null = null;
 
       if (data.tmdb_id) {
-        const { data: byTmdb } = await supabaseAdmin
+        const { data: byTmdb } = await supabase
           .from("catalog_items")
           .select("category, title")
           .eq("tmdb_id", data.tmdb_id)
@@ -76,7 +74,7 @@ export const createRequest = createServerFn({ method: "POST" })
         if (byTmdb && byTmdb.length) match = byTmdb[0];
       }
       if (!match && data.year) {
-        const { data: byBoth } = await supabaseAdmin
+        const { data: byBoth } = await supabase
           .from("catalog_items")
           .select("category, title")
           .eq("title_normalized", norm)
@@ -86,7 +84,7 @@ export const createRequest = createServerFn({ method: "POST" })
         if (byBoth && byBoth.length) match = byBoth[0];
       }
       if (!match) {
-        const { data: byTitle } = await supabaseAdmin
+        const { data: byTitle } = await supabase
           .from("catalog_items")
           .select("category, title")
           .eq("title_normalized", norm)

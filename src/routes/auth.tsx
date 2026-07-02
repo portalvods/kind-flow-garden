@@ -151,6 +151,20 @@ function AuthPage() {
 
       const { error } = await supabase.auth.signInWithPassword({ email: verified.email, password });
       if (error) throw error;
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        await (supabase.from("profiles") as never as {
+          upsert: (values: Record<string, unknown>) => Promise<unknown>;
+        }).upsert({
+          id: userData.user.id,
+          full_name: verified.full_name,
+          whatsapp: verified.whatsapp,
+          email: verified.email,
+        });
+        await (supabase.from("user_roles") as never as {
+          insert: (values: Record<string, unknown>) => Promise<unknown>;
+        }).insert({ user_id: userData.user.id, role: "cliente" });
+      }
       toast.success("Conta criada!");
       navigate({ to: "/pedidos" });
     } catch (err) {

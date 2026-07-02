@@ -71,17 +71,7 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     const whatsapp = sanitizePhone(id);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("whatsapp", whatsapp)
-      .maybeSingle();
-    if (!profile) throw new Error("Nenhuma conta encontrada para este WhatsApp.");
-
-    const { data: userData, error } = await supabaseAdmin.auth.admin.getUserById(profile.id as string);
-    if (error || !userData.user?.email) throw new Error("Não foi possível localizar sua conta.");
-    return { email: userData.user.email };
+    throw new Error("Na VPS, entre usando seu e-mail e senha. O login por WhatsApp precisa da chave administrativa do backend.");
   });
 
 // ---- Forgot password: start ----
