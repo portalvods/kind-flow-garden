@@ -313,5 +313,24 @@ export const applyMatches = createServerFn({ method: "POST" })
         console.error("[ai-match] notify failed", err);
       }
     }
+    // Update most recent ai_analyses row with applied counts (best-effort).
+    try {
+      const { data: last } = await context.supabase
+        .from("ai_analyses")
+        .select("id")
+        .eq("admin_user_id", context.userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last?.id) {
+        await context.supabase
+          .from("ai_analyses")
+          .update({ applied_count: updated, notified_count: notified, auto_applied: true })
+          .eq("id", last.id as string);
+      }
+    } catch (err) {
+      console.warn("[ai-match] apply log failed", err);
+    }
     return { updated, notified };
   });
+
