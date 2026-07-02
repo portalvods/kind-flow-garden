@@ -85,7 +85,7 @@ function Landing() {
           <Feature
             icon={<Bell className="h-5 w-5" />}
             title="Notificações WhatsApp"
-            desc="Cliente e admin recebem alertas em tempo real via Evolution API."
+            desc="Você recebe alertas em tempo real via WhatsApp."
           />
           <Feature
             icon={<ShieldCheck className="h-5 w-5" />}
