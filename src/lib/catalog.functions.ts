@@ -158,20 +158,37 @@ export const checkAvailability = createServerFn({ method: "GET" })
     const { normalizeTitle } = await import("./m3u.server");
     const norm = normalizeTitle(data.title);
 
-    try {
-      const { data: found } = await (context.supabase as never as {
-        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: Array<{ category: string | null; title: string }> | null }>;
-      }).rpc("check_catalog_availability", {
-        _tmdb_id: data.tmdb_id ?? null,
-        _title_normalized: norm,
-        _year: data.year ?? null,
-        _kind: data.kind,
-      });
-      if (found && found.length) {
-        return { exists: true, category: found[0].category, match: found[0].title };
+    if (data.tmdb_id) {
+      const { data: byTmdb } = await context.supabase
+        .from("catalog_items")
+        .select("category, title")
+        .eq("tmdb_id", data.tmdb_id)
+        .eq("kind", data.kind)
+        .limit(1);
+      if (byTmdb && byTmdb.length) {
+        return { exists: true, category: byTmdb[0].category, match: byTmdb[0].title };
       }
-    } catch (err) {
-      console.warn("catalog availability check skipped", err);
+    }
+    if (data.year) {
+      const { data: byBoth } = await context.supabase
+        .from("catalog_items")
+        .select("category, title")
+        .eq("title_normalized", norm)
+        .eq("year", data.year)
+        .eq("kind", data.kind)
+        .limit(1);
+      if (byBoth && byBoth.length) {
+        return { exists: true, category: byBoth[0].category, match: byBoth[0].title };
+      }
+    }
+    const { data: byTitle } = await context.supabase
+      .from("catalog_items")
+      .select("category, title")
+      .eq("title_normalized", norm)
+      .eq("kind", data.kind)
+      .limit(1);
+    if (byTitle && byTitle.length) {
+      return { exists: true, category: byTitle[0].category, match: byTitle[0].title };
     }
     return { exists: false, category: null, match: null };
   });

@@ -64,18 +64,33 @@ export const createRequest = createServerFn({ method: "POST" })
       const norm = normalizeTitle(data.title);
       let match: { category: string | null; title: string } | null = null;
 
-      try {
-        const { data: found } = await (supabase as never as {
-          rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: Array<{ category: string | null; title: string }> | null }>;
-        }).rpc("check_catalog_availability", {
-          _tmdb_id: data.tmdb_id ?? null,
-          _title_normalized: norm,
-          _year: data.year ?? null,
-          _kind: catalogKind,
-        });
-        if (found && found.length) match = found[0];
-      } catch (err) {
-        console.warn("catalog availability check skipped", err);
+      if (data.tmdb_id) {
+        const { data: byTmdb } = await supabase
+          .from("catalog_items")
+          .select("category, title")
+          .eq("tmdb_id", data.tmdb_id)
+          .eq("kind", catalogKind)
+          .limit(1);
+        if (byTmdb && byTmdb.length) match = byTmdb[0];
+      }
+      if (!match && data.year) {
+        const { data: byBoth } = await supabase
+          .from("catalog_items")
+          .select("category, title")
+          .eq("title_normalized", norm)
+          .eq("year", data.year)
+          .eq("kind", catalogKind)
+          .limit(1);
+        if (byBoth && byBoth.length) match = byBoth[0];
+      }
+      if (!match) {
+        const { data: byTitle } = await supabase
+          .from("catalog_items")
+          .select("category, title")
+          .eq("title_normalized", norm)
+          .eq("kind", catalogKind)
+          .limit(1);
+        if (byTitle && byTitle.length) match = byTitle[0];
       }
       if (match) {
         const where = match.category ? ` (categoria: ${match.category})` : "";
