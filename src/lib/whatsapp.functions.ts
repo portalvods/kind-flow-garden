@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getMissingServerEnv, getServerEnv } from "./env.server";
+import { getServerEnv } from "./env.server";
 
 // ---- Helpers ----
 
@@ -22,23 +22,22 @@ function getConfig(payload?: RuntimeConfigPayload) {
   const overrideApiKey = payload?.config?.apiKey?.trim();
   const overrideInstance = payload?.config?.instance?.trim();
 
-  const hasOverride = !!(overrideBaseUrl && overrideApiKey && overrideInstance);
-  const baseUrl = hasOverride ? overrideBaseUrl : getServerEnv("EVOLUTION_API_URL");
-  const apiKey = hasOverride ? overrideApiKey : getServerEnv("EVOLUTION_API_KEY");
-  const instance = hasOverride ? overrideInstance : getServerEnv("EVOLUTION_INSTANCE");
+  // Merge por campo: qualquer valor vindo do painel sobrescreve o env.
+  const baseUrl = overrideBaseUrl || getServerEnv("EVOLUTION_API_URL") || "";
+  const apiKey = overrideApiKey || getServerEnv("EVOLUTION_API_KEY") || "";
+  const instance = overrideInstance || getServerEnv("EVOLUTION_INSTANCE") || "";
+
+  const usedPanel = !!(overrideBaseUrl || overrideApiKey || overrideInstance);
 
   return {
-    baseUrl: baseUrl?.replace(/\/$/, "") ?? "",
-    apiKey: apiKey ?? "",
-    instance: instance ?? "",
-    source: hasOverride ? "panel" : "server",
+    baseUrl: baseUrl.replace(/\/$/, ""),
+    apiKey,
+    instance,
+    source: usedPanel ? "panel" : "server",
     configured: !!(baseUrl && apiKey && instance),
   };
 }
 
-function getMissingConfigKeys(): string[] {
-  return getMissingServerEnv(["EVOLUTION_API_URL", "EVOLUTION_API_KEY", "EVOLUTION_INSTANCE"]);
-}
 
 async function evoFetch(
   path: string,
@@ -112,10 +111,13 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
     };
 
     if (!cfg.configured) {
-      const missing = getMissingConfigKeys().join(", ");
+      const missing: string[] = [];
+      if (!cfg.baseUrl) missing.push("URL");
+      if (!cfg.apiKey) missing.push("Chave API");
+      if (!cfg.instance) missing.push("Instância");
       return {
         ...base,
-        message: `Evolution API não configurada. Chaves faltando no servidor: ${missing || "EVOLUTION_*"}.`,
+        message: `Faltando: ${missing.join(", ")}. Preencha nos campos acima e clique em Aplicar configuração.`,
       };
     }
 
