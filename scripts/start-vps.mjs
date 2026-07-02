@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
-import { existsSync } from "node:fs";
+import { createReadStream, existsSync } from "node:fs";
+import { stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Readable } from "node:stream";
@@ -30,6 +31,48 @@ if (typeof fetchHandler !== "function") {
 
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "0.0.0.0";
+const publicDir = resolve(rootDir, "dist/client");
+
+const contentTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
+
+async function fetchStaticAsset(request) {
+  const url = new URL(request.url);
+  const safePath = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+  const filePath = resolve(publicDir, safePath || "index.html");
+
+  if (!filePath.startsWith(publicDir)) return new Response("Not found", { status: 404 });
+
+  try {
+    const fileStat = await stat(filePath);
+    if (!fileStat.isFile()) return new Response("Not found", { status: 404 });
+
+    const extension = filePath.slice(filePath.lastIndexOf(".")).toLowerCase();
+    return new Response(Readable.toWeb(createReadStream(filePath)), {
+      headers: {
+        "content-type": contentTypes[extension] || "application/octet-stream",
+        "cache-control": safePath.includes("assets/")
+          ? "public, max-age=31536000, immutable"
+          : "public, max-age=300",
+      },
+    });
+  } catch {
+    return new Response("Not found", { status: 404 });
+  }
+}
 
 function toWebRequest(req) {
   const proto = req.headers["x-forwarded-proto"]?.toString() || "http";
@@ -86,7 +129,11 @@ function writeWebResponse(res, webResponse) {
 const server = createServer(async (req, res) => {
   try {
     const webRequest = toWebRequest(req);
-    const webResponse = await fetchHandler(webRequest, process.env, {});
+    const webResponse = await fetchHandler(
+      webRequest,
+      { ...process.env, ASSETS: { fetch: fetchStaticAsset } },
+      { waitUntil: () => undefined },
+    );
     writeWebResponse(res, webResponse);
   } catch (error) {
     console.error(error);
