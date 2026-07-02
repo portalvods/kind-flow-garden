@@ -78,6 +78,8 @@ async function evoFetch(
       headers: {
         "Content-Type": "application/json",
         apikey: apiKey,
+        "x-api-key": apiKey,
+        Authorization: `Bearer ${apiKey}`,
         ...(init.headers ?? {}),
       },
     });
@@ -98,6 +100,21 @@ async function evoFetch(
     data = text;
   }
   return { ok: res.ok, status: res.status, data, text };
+}
+
+function formatEvoError(status: number, text: string): string {
+  const cleanText = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const shortText = cleanText.slice(0, 220) || "sem detalhes";
+
+  if (status === 403 && /1003/.test(cleanText)) {
+    return "Erro 403/1003: a URL da Evolution está apontando para um endereço bloqueado pelo Cloudflare ou para o host errado. Use a URL direta da VPS com porta 8080, ou deixe o domínio da API como DNS only/sem proxy.";
+  }
+
+  if (status === 401 || status === 403) {
+    return `Erro ${status}: a Evolution recusou a chave API. Confira se a chave no painel é exatamente a mesma AUTHENTICATION_API_KEY da VPS. Detalhe: ${shortText}`;
+  }
+
+  return `Erro ${status}: ${shortText}`;
 }
 
 async function assertAdmin(supabase: {
@@ -165,7 +182,7 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
       return { ...base, state: "not_found", message: "Instância não existe. Clique em 'Criar instância'." };
     }
     if (!stateRes.ok) {
-      return { ...base, message: `Erro ${stateRes.status}: ${stateRes.text.slice(0, 200)}` };
+      return { ...base, message: formatEvoError(stateRes.status, stateRes.text) };
     }
     const state = normalizeConnectionState(
       findFirstString(stateRes.data, [
@@ -220,7 +237,7 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
           base.message = "A Evolution respondeu, mas não enviou QR Code. Tente criar/reiniciar a instância.";
         }
       } else if (!qrRes.ok) {
-        base.message = `Não consegui gerar o QR Code. Erro ${qrRes.status}: ${qrRes.text.slice(0, 220)}`;
+        base.message = `Não consegui gerar o QR Code. ${formatEvoError(qrRes.status, qrRes.text)}`;
       }
     }
 
@@ -245,7 +262,7 @@ export const createWhatsappInstance = createServerFn({ method: "POST" })
         integration: "WHATSAPP-BAILEYS",
       }),
     });
-    if (!res.ok) throw new Error(`Erro ${res.status}: ${res.text.slice(0, 200)}`);
+    if (!res.ok) throw new Error(formatEvoError(res.status, res.text));
     return { ok: true };
   });
 
@@ -261,7 +278,7 @@ export const disconnectWhatsapp = createServerFn({ method: "POST" })
       method: "DELETE",
     });
     if (!res.ok && res.status !== 404)
-      throw new Error(`Erro ${res.status}: ${res.text.slice(0, 200)}`);
+      throw new Error(formatEvoError(res.status, res.text));
     return { ok: true };
   });
 
@@ -276,7 +293,7 @@ export const restartWhatsapp = createServerFn({ method: "POST" })
     const res = await evoFetch(`/instance/restart/${encodeURIComponent(cfg.instance)}`, data, {
       method: "POST",
     });
-    if (!res.ok) throw new Error(`Erro ${res.status}: ${res.text.slice(0, 200)}`);
+    if (!res.ok) throw new Error(formatEvoError(res.status, res.text));
     return { ok: true };
   });
 
@@ -292,7 +309,7 @@ export const deleteWhatsappInstance = createServerFn({ method: "POST" })
       method: "DELETE",
     });
     if (!res.ok && res.status !== 404)
-      throw new Error(`Erro ${res.status}: ${res.text.slice(0, 200)}`);
+      throw new Error(formatEvoError(res.status, res.text));
     return { ok: true };
   });
 
@@ -315,6 +332,6 @@ export const sendWhatsappTest = createServerFn({ method: "POST" })
       method: "POST",
       body: JSON.stringify({ number, text: data.message }),
     });
-    if (!res.ok) throw new Error(`Erro ${res.status}: ${res.text.slice(0, 200)}`);
+    if (!res.ok) throw new Error(formatEvoError(res.status, res.text));
     return { ok: true };
   });
