@@ -72,26 +72,7 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     const whatsapp = sanitizePhone(id);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
 
-    const supabasePublic = createServerPublicSupabase();
-    if (!supabasePublic) throw new Error("Configuração do backend incompleta na VPS.");
-
-    const { data: rpcEmail, error: rpcError } = await (supabasePublic as never as {
-      rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: { message: string } | null }>;
-    }).rpc("email_from_whatsapp", { _whatsapp: whatsapp });
-    if (!rpcError && rpcEmail) return { email: rpcEmail };
-
-    const { data: profile } = await (supabasePublic.from("profiles") as never as {
-      select: (columns: string) => {
-        eq: (column: string, value: string) => {
-          maybeSingle: () => Promise<{ data: { email?: string | null } | null }>;
-        };
-      };
-    })
-      .select("email")
-      .eq("whatsapp", whatsapp)
-      .maybeSingle();
-    if (!profile?.email) throw new Error("Nenhuma conta encontrada para este WhatsApp. Se preferir, entre com seu e-mail.");
-    return { email: profile.email };
+    throw new Error("Na VPS, entre usando seu e-mail e senha. O login por WhatsApp precisa da chave administrativa do backend.");
   });
 
 // ---- Forgot password: start ----
