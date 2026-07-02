@@ -50,7 +50,7 @@ export async function issueOtp(params: {
     whatsapp,
     purpose: params.purpose,
     code_hash,
-    payload: params.payload ?? null,
+    payload: (params.payload ?? null) as never,
     expires_at,
   });
   if (error) throw new Error(error.message);
