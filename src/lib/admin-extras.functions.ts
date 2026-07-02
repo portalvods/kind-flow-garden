@@ -71,13 +71,14 @@ export const getBotConfig = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const c = context.supabase as unknown as RpcClient;
-    const { data } = await c.from("site_settings").select("key, value").in("key", ["bot_enabled", "bot_message", "bot_webhook_secret"]);
+    const { data } = await c.from("site_settings").select("key, value").in("key", ["bot_enabled", "bot_message", "bot_webhook_secret", "bot_orders_enabled"]);
     const map: Record<string, string> = {};
     for (const row of (data ?? []) as Array<{ key: string; value: string | null }>) {
       if (row.value != null) map[row.key] = row.value;
     }
     return {
       enabled: map.bot_enabled === "true",
+      ordersEnabled: (map.bot_orders_enabled ?? "true") === "true",
       message: map.bot_message ?? "",
       secret: map.bot_webhook_secret ?? "",
     };
@@ -85,6 +86,7 @@ export const getBotConfig = createServerFn({ method: "GET" })
 
 const botSchema = z.object({
   enabled: z.boolean(),
+  ordersEnabled: z.boolean(),
   message: z.string().trim().min(1).max(1000),
 });
 export const saveBotConfig = createServerFn({ method: "POST" })
@@ -96,6 +98,7 @@ export const saveBotConfig = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     const { error } = await c.from("site_settings").upsert([
       { key: "bot_enabled", value: data.enabled ? "true" : "false", updated_at: now },
+      { key: "bot_orders_enabled", value: data.ordersEnabled ? "true" : "false", updated_at: now },
       { key: "bot_message", value: data.message, updated_at: now },
     ]);
     if (error) throw new Error(error.message);
