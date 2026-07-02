@@ -70,6 +70,12 @@ function PedidosPage() {
     },
   });
 
+  const limitFn = useServerFn(getDailyLimit);
+  const { data: quota } = useQuery({
+    queryKey: ["my-daily-limit", user.id],
+    queryFn: () => limitFn(),
+  });
+
   const filtered = (requests ?? []).filter((r) => tab === "all" || r.status === tab);
 
   return (
