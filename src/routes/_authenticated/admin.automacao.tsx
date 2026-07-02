@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Loader2, Sparkles, Check, AlertCircle } from "lucide-react";
+import { Bot, Loader2, Sparkles, Check, AlertCircle, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,9 @@ import {
   setAiAutomation,
   analyzeTemplate,
   applyMatches,
+  listAiAnalyses,
 } from "@/lib/ai-match.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/automacao")({
   ssr: false,
@@ -57,6 +59,14 @@ function AutomationPage() {
   const setAuto = useServerFn(setAiAutomation);
   const analyzeFn = useServerFn(analyzeTemplate);
   const applyFn = useServerFn(applyMatches);
+  const historyFn = useServerFn(listAiAnalyses);
+
+  const { data: history } = useQuery({
+    queryKey: ["ai-analyses"],
+    queryFn: () => historyFn(),
+    refetchInterval: 15000,
+  });
+
 
   const [text, setText] = useState("");
   const [matches, setMatches] = useState<Match[] | null>(null);
@@ -106,9 +116,11 @@ function AutomationPage() {
       setSelected(new Set());
       setText("");
       qc.invalidateQueries({ queryKey: ["admin-requests"] });
+      qc.invalidateQueries({ queryKey: ["ai-analyses"] });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao aplicar"),
   });
+
 
   const allSelected = useMemo(
     () => matches !== null && matches.length > 0 && selected.size === matches.length,
@@ -291,6 +303,36 @@ function AutomationPage() {
           )}
         </>
       )}
+
+      {/* Histórico */}
+      <div className="glass-card rounded-2xl p-5 space-y-3">
+        <div className="flex items-center gap-2 font-semibold">
+          <History className="h-4 w-4 text-primary" />
+          Histórico de análises
+        </div>
+        {!history || history.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Nenhuma análise ainda.</p>
+        ) : (
+          <div className="space-y-2">
+            {history.map((h) => (
+              <div
+                key={h.id}
+                className="rounded-lg border border-border/40 p-3 text-xs flex flex-wrap gap-x-4 gap-y-1"
+              >
+                <span className="text-muted-foreground">
+                  {new Date(h.created_at).toLocaleString("pt-BR")}
+                </span>
+                <span>📝 extraídos: <b>{h.extracted_count}</b></span>
+                <span>🎯 casaram: <b>{h.matched_count}</b></span>
+                <span>✅ aplicados: <b>{h.applied_count}</b></span>
+                <span>📱 notificados: <b>{h.notified_count}</b></span>
+                {h.auto_applied && <Badge variant="secondary" className="text-[10px]">auto</Badge>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+

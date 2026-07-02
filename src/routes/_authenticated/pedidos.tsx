@@ -3,11 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2 } from "lucide-react";
+import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { createRequest } from "@/lib/requests.functions";
+import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
+
 import { checkAvailability } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,9 +173,22 @@ type RequestRow = {
   notes: string | null;
   rejection_reason: string | null;
   created_at: string;
+  rating?: number | null;
 };
 
 function RequestCard({ request }: { request: RequestRow }) {
+  const qc = useQueryClient();
+  const rateFn = useServerFn(rateRequest);
+  const rate = useMutation({
+    mutationFn: (rating: 1 | -1) => rateFn({ data: { id: request.id, rating } }),
+    onSuccess: () => {
+      toast.success("Obrigado pela avaliação!");
+      qc.invalidateQueries({ queryKey: ["my-requests"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Erro"),
+  });
+  const canRate = ["completed", "fixed", "added"].includes(request.status) && !request.rating;
+
   const poster = request.poster_path
     ? `https://image.tmdb.org/t/p/w500${request.poster_path}`
     : null;
@@ -228,10 +243,41 @@ function RequestCard({ request }: { request: RequestRow }) {
         {request.rejection_reason && (
           <p className="text-xs text-red-400 mt-2 line-clamp-2">Motivo: {request.rejection_reason}</p>
         )}
+        {canRate && (
+          <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground flex-1">Este pedido foi útil?</span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={rate.isPending}
+              onClick={() => rate.mutate(1)}
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={rate.isPending}
+              onClick={() => rate.mutate(-1)}
+            >
+              <ThumbsDown className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+        {request.rating != null && (
+          <div className="mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground flex items-center gap-1.5">
+            {request.rating > 0 ? (
+              <><ThumbsUp className="h-3.5 w-3.5 text-emerald-400" /> Avaliado</>
+            ) : (
+              <><ThumbsDown className="h-3.5 w-3.5 text-red-400" /> Avaliado</>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
 function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const qc = useQueryClient();

@@ -208,8 +208,37 @@ export const analyzeTemplate = createServerFn({ method: "POST" })
     await assertAdmin(context as never);
     const items = await extractTitlesWithAI(data.template_text);
     const matches = await findMatches(context.supabase, items);
+    // Log analysis history (applied/notified counts filled by applyMatches later).
+    try {
+      const { error: logErr } = await context.supabase.from("ai_analyses").insert({
+        admin_user_id: context.userId,
+        template_excerpt: data.template_text.slice(0, 500),
+        extracted_count: items.length,
+        matched_count: matches.length,
+        applied_count: 0,
+        notified_count: 0,
+        auto_applied: false,
+      });
+      if (logErr) console.warn("[ai-match] log insert failed", logErr.message);
+    } catch (err) {
+      console.warn("[ai-match] log failed", err);
+    }
     return { extracted: items, matches };
   });
+
+export const listAiAnalyses = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as never);
+    const { data, error } = await context.supabase
+      .from("ai_analyses")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
 
 // ---- Apply matches ----
 const KIND_LABEL: Record<string, string> = {
@@ -284,5 +313,24 @@ export const applyMatches = createServerFn({ method: "POST" })
         console.error("[ai-match] notify failed", err);
       }
     }
+    // Update most recent ai_analyses row with applied counts (best-effort).
+    try {
+      const { data: last } = await context.supabase
+        .from("ai_analyses")
+        .select("id")
+        .eq("admin_user_id", context.userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last?.id) {
+        await context.supabase
+          .from("ai_analyses")
+          .update({ applied_count: updated, notified_count: notified, auto_applied: true })
+          .eq("id", last.id as string);
+      }
+    } catch (err) {
+      console.warn("[ai-match] apply log failed", err);
+    }
     return { updated, notified };
   });
+

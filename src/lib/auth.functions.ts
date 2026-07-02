@@ -1,8 +1,38 @@
 // Auth flows: signup with WhatsApp OTP, login by whatsapp-or-email, forgot password.
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sanitizePhone } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
+
+// Rate limit: max N OTP requests per key in `windowSeconds`.
+async function enforceOtpRateLimit(bucket: string, key: string, max: number, windowSeconds: number) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as unknown as {
+      rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: number | null; error: { message: string } | null }>;
+    }).rpc("rate_limit_check_and_hit", { _bucket: bucket, _key: key, _window_seconds: windowSeconds });
+    if (error) {
+      console.warn("[rate-limit] check failed:", error.message);
+      return;
+    }
+    if ((data ?? 0) >= max) {
+      throw new Error(`Muitas tentativas. Aguarde alguns minutos e tente novamente.`);
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("Muitas tentativas")) throw err;
+    console.warn("[rate-limit] unavailable:", err instanceof Error ? err.message : String(err));
+  }
+}
+
+function getIp(): string {
+  try {
+    return getRequestIP({ xForwardedFor: true }) ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 
 async function isWhatsappAlreadyRegistered(whatsapp: string): Promise<boolean> {
   try {
@@ -35,6 +65,11 @@ export const startSignup = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startSignupSchema.parse(d))
   .handler(async ({ data }) => {
     const whatsapp = sanitizePhone(data.whatsapp);
+
+    // Rate limit: max 5 signup OTPs per IP/hour, 3 per whatsapp/hour.
+    await enforceOtpRateLimit("otp:signup:ip", getIp(), 5, 3600);
+    await enforceOtpRateLimit("otp:signup:wa", whatsapp, 3, 3600);
+
     if (await isWhatsappAlreadyRegistered(whatsapp)) {
       throw new Error("Esse WhatsApp já está cadastrado. Entre com seu e-mail e senha ou use Esqueci a senha.");
     }
@@ -107,6 +142,12 @@ export const startPasswordReset = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const whatsapp = sanitizePhone(data.whatsapp);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido (com DDD).");
+
+    // Rate limit: max 3 reset OTPs per IP/hour, 3 per whatsapp/hour.
+    await enforceOtpRateLimit("otp:reset:ip", getIp(), 3, 3600);
+    await enforceOtpRateLimit("otp:reset:wa", whatsapp, 3, 3600);
+
+
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as unknown as {

@@ -17,6 +17,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
+import { Route as AuthenticatedAdminFerramentasRouteImport } from './routes/_authenticated/admin.ferramentas'
 import { Route as AuthenticatedAdminCatalogoRouteImport } from './routes/_authenticated/admin.catalogo'
 import { Route as AuthenticatedAdminAutomacaoRouteImport } from './routes/_authenticated/admin.automacao'
 import { Route as AuthenticatedAdminAparenciaRouteImport } from './routes/_authenticated/admin.aparencia'
@@ -63,6 +64,12 @@ const AuthenticatedAdminMensagensRoute =
     path: '/admin/mensagens',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminFerramentasRoute =
+  AuthenticatedAdminFerramentasRouteImport.update({
+    id: '/admin/ferramentas',
+    path: '/admin/ferramentas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminCatalogoRoute =
   AuthenticatedAdminCatalogoRouteImport.update({
     id: '/admin/catalogo',
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
@@ -101,6 +109,7 @@ export interface FileRoutesByTo {
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
@@ -115,6 +124,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/_authenticated/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/_authenticated/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/admin/aparencia'
     | '/admin/automacao'
     | '/admin/catalogo'
+    | '/admin/ferramentas'
     | '/admin/mensagens'
     | '/admin/usuarios'
     | '/admin/whatsapp'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/admin/aparencia'
     | '/admin/automacao'
     | '/admin/catalogo'
+    | '/admin/ferramentas'
     | '/admin/mensagens'
     | '/admin/usuarios'
     | '/admin/whatsapp'
@@ -154,6 +166,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/aparencia'
     | '/_authenticated/admin/automacao'
     | '/_authenticated/admin/catalogo'
+    | '/_authenticated/admin/ferramentas'
     | '/_authenticated/admin/mensagens'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/whatsapp'
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMensagensRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/ferramentas': {
+      id: '/_authenticated/admin/ferramentas'
+      path: '/admin/ferramentas'
+      fullPath: '/admin/ferramentas'
+      preLoaderRoute: typeof AuthenticatedAdminFerramentasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/catalogo': {
       id: '/_authenticated/admin/catalogo'
       path: '/admin/catalogo'
@@ -253,6 +273,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
   AuthenticatedAdminCatalogoRoute: typeof AuthenticatedAdminCatalogoRoute
+  AuthenticatedAdminFerramentasRoute: typeof AuthenticatedAdminFerramentasRoute
   AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
@@ -264,6 +285,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,
   AuthenticatedAdminCatalogoRoute: AuthenticatedAdminCatalogoRoute,
+  AuthenticatedAdminFerramentasRoute: AuthenticatedAdminFerramentasRoute,
   AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
