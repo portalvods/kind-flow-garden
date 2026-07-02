@@ -141,6 +141,8 @@ type RequestRow = {
   id: string;
   title: string;
   content_type: "movie" | "tv";
+  request_kind: string | null;
+  format: string | null;
   poster_path: string | null;
   year: number | null;
   status: string;
@@ -169,8 +171,8 @@ function RequestCard({ request }: { request: RequestRow }) {
           </div>
         )}
         <div className="absolute top-2 left-2">
-          <Badge className={`${STATUS_COLOR[request.status]} border`}>
-            {STATUS_LABEL[request.status]}
+          <Badge className={`${STATUS_COLOR[request.status] ?? ""} border`}>
+            {STATUS_LABEL[request.status] ?? request.status}
           </Badge>
         </div>
         <div className="absolute top-2 right-2">
@@ -186,8 +188,18 @@ function RequestCard({ request }: { request: RequestRow }) {
       <div className="p-4">
         <h3 className="font-semibold line-clamp-1">{request.title}</h3>
         <p className="text-xs text-muted-foreground mt-1">
-          {request.year ?? "—"} · pedido em {new Date(request.created_at).toLocaleDateString("pt-BR")}
+          {request.year ?? "—"} · {new Date(request.created_at).toLocaleDateString("pt-BR")}
         </p>
+        <div className="flex gap-1 flex-wrap mt-2">
+          {request.request_kind && (
+            <Badge variant="outline" className="text-[10px]">
+              {KIND_LABEL[request.request_kind] ?? request.request_kind}
+            </Badge>
+          )}
+          {request.format && (
+            <Badge variant="outline" className="text-[10px]">{request.format}</Badge>
+          )}
+        </div>
         {request.notes && (
           <p className="text-xs text-muted-foreground mt-2 line-clamp-2">📝 {request.notes}</p>
         )}
