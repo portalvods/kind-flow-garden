@@ -2,7 +2,19 @@ import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
+// Polyfill WebSocket for Node < 22 so @supabase/supabase-js (realtime) doesn't crash.
+if (typeof (globalThis as { WebSocket?: unknown }).WebSocket === "undefined") {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+    const WS = require("ws");
+    (globalThis as { WebSocket?: unknown }).WebSocket = WS;
+  } catch {
+    // ws not installed; realtime features will be unavailable but non-realtime calls still work
+  }
+}
+
 let envFileCache: Record<string, string> | null = null;
+
 
 function parseEnvFile(content: string): Record<string, string> {
   const values: Record<string, string> = {};
