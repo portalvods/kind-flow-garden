@@ -1,6 +1,7 @@
 // Server-side WhatsApp messaging (Evolution API) + template rendering.
 import { sanitizePhone } from "./otp.server";
 import { createServerPublicSupabase } from "./supabase-public.server";
+import { getServerEnv } from "./env.server";
 
 const DEFAULT_TEMPLATES: Record<string, string> = {
   received: "✅ Olá {cliente}, recebemos seu pedido: {titulo} ({tipo}).",
@@ -13,9 +14,9 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
 };
 
 function getConfig() {
-  const baseUrl = process.env.EVOLUTION_API_URL;
-  const apiKey = process.env.EVOLUTION_API_KEY;
-  const instance = process.env.EVOLUTION_INSTANCE;
+  const baseUrl = getServerEnv("EVOLUTION_API_URL");
+  const apiKey = getServerEnv("EVOLUTION_API_KEY");
+  const instance = getServerEnv("EVOLUTION_INSTANCE");
   return {
     baseUrl: baseUrl?.replace(/\/$/, "") ?? "",
     apiKey: apiKey ?? "",
