@@ -2,6 +2,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { issueOtp, sanitizePhone, verifyOtp } from "./otp.server";
+import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
 
 // ---- Signup: request OTP ----
 const startSignupSchema = z.object({
@@ -14,31 +15,11 @@ const startSignupSchema = z.object({
 export const startSignup = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startSignupSchema.parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const whatsapp = sanitizePhone(data.whatsapp);
-
-    // Check for duplicates
-    const { data: existingWa } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("whatsapp", whatsapp)
-      .maybeSingle();
-    if (existingWa) throw new Error("Este WhatsApp já está cadastrado.");
-
-    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    if (existingUser?.users?.some((u) => u.email?.toLowerCase() === data.email.toLowerCase())) {
-      throw new Error("Este e-mail já está cadastrado.");
-    }
-
-    const { code } = await issueOtp({
+    const { code, token } = issueSignupOtp({
+      full_name: data.full_name,
+      email: data.email,
       whatsapp,
-      purpose: "signup",
-      payload: {
-        full_name: data.full_name,
-        email: data.email,
-        password: data.password,
-        whatsapp,
-      },
     });
 
     const { sendOtpMessage } = await import("./whatsapp.server");
@@ -47,45 +28,32 @@ export const startSignup = createServerFn({ method: "POST" })
       return {
         ok: true,
         whatsapp,
+        token,
         devCode: code, // exposed only when WA not configured
         message: "WhatsApp não conectado — código exibido apenas em modo desenvolvimento.",
       };
     }
     if (!res.ok) throw new Error(`Não foi possível enviar o código (${res.error}).`);
-    return { ok: true, whatsapp };
+    return { ok: true, whatsapp, token };
   });
 
 // ---- Signup: verify OTP + create account ----
 const verifySignupSchema = z.object({
   whatsapp: z.string().min(8).max(20),
   code: z.string().length(6),
+  token: z.string().min(20),
 });
 
 export const verifySignup = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => verifySignupSchema.parse(d))
   .handler(async ({ data }) => {
-    const { payload } = await verifyOtp({
+    const payload = verifySignupOtp({
       whatsapp: data.whatsapp,
-      purpose: "signup",
       code: data.code,
+      token: data.token,
     });
-    if (!payload) throw new Error("Dados de cadastro perdidos. Recomece.");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const email = payload.email as string;
-    const password = payload.password as string;
-    const full_name = payload.full_name as string;
-    const whatsapp = payload.whatsapp as string;
-
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name, whatsapp },
-    });
-    if (error || !created.user) throw new Error(error?.message ?? "Falha ao criar conta.");
-
-    return { ok: true, email };
+    return { ok: true, email: payload.email, full_name: payload.full_name, whatsapp: payload.whatsapp };
   });
 
 // ---- Login: look up email by WhatsApp so the client can signInWithPassword ----
