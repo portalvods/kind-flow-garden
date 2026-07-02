@@ -32,6 +32,24 @@ function AppearancePage() {
   const uploadFn = useServerFn(uploadLogo);
   const clearFn = useServerFn(clearLogo);
   const nameFn = useServerFn(updateSiteName);
+  const getLimitFn = useServerFn(getAdminDailyLimit);
+  const updLimitFn = useServerFn(updateDailyLimit);
+
+  const { data: limitData } = useQuery({
+    queryKey: ["admin-daily-limit"],
+    queryFn: () => getLimitFn(),
+  });
+  const [dailyLimit, setDailyLimit] = useState<string>("");
+
+  const saveLimit = useMutation({
+    mutationFn: async () => updLimitFn({ data: { limit: Number(dailyLimit) } }),
+    onSuccess: () => {
+      toast.success("Limite atualizado.");
+      qc.invalidateQueries({ queryKey: ["admin-daily-limit"] });
+      qc.invalidateQueries({ queryKey: ["my-daily-limit"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Erro"),
+  });
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["public-settings"],
