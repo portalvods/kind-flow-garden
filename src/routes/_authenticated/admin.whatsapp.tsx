@@ -255,7 +255,7 @@ function WhatsappAdminPage() {
             />
           )}
 
-          {(status.state === "close" || status.state === "connecting") && (
+          {(status.state === "close" || status.state === "connecting" || status.state === "unknown") && (
             <QrCard status={status} onRestart={() => restartMut.mutate()} restarting={restartMut.isPending} />
           )}
 
