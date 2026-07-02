@@ -171,6 +171,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          blocked: boolean
           created_at: string
           email: string | null
           full_name: string | null
@@ -179,6 +180,7 @@ export type Database = {
           whatsapp: string
         }
         Insert: {
+          blocked?: boolean
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -187,6 +189,7 @@ export type Database = {
           whatsapp: string
         }
         Update: {
+          blocked?: boolean
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -335,6 +338,7 @@ export type Database = {
       admin_list_users: {
         Args: never
         Returns: {
+          blocked: boolean
           created_at: string
           email: string
           full_name: string
@@ -351,6 +355,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_blocked: { Args: { _user_id: string }; Returns: boolean }
       whatsapp_exists: { Args: { _whatsapp: string }; Returns: boolean }
     }
     Enums: {
