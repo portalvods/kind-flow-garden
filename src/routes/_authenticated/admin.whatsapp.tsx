@@ -264,6 +264,45 @@ function WhatsappAdminPage() {
         onClear={clearPanelConfig}
       />
 
+      <div className="glass-card rounded-2xl p-6 space-y-3">
+        <div>
+          <h2 className="font-display text-lg font-bold">WhatsApp do administrador</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Número que recebe a notificação toda vez que um cliente faz um novo pedido. Com DDD, só números.
+          </p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Input
+            placeholder="5511999999999"
+            value={adminNumber}
+            onChange={(e) => setAdminNumber(e.target.value.replace(/\D/g, ""))}
+            className="max-w-xs"
+          />
+          <Button
+            variant="outline"
+            onClick={async () => {
+              try {
+                await saveCfgFn({
+                  data: {
+                    baseUrl: appliedConfig.baseUrl,
+                    apiKey: appliedConfig.apiKey,
+                    instance: appliedConfig.instance,
+                    adminWhatsapp: adminNumber.trim(),
+                  },
+                });
+                toast.success("Número do admin salvo.");
+              } catch (err) {
+                toast.error((err as Error).message);
+              }
+            }}
+            disabled={!hasCompletePanelConfig(appliedConfig)}
+          >
+            Salvar número
+          </Button>
+        </div>
+      </div>
+
+
       {isLoading ? (
         <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
