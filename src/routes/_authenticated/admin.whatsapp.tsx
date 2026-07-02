@@ -1,0 +1,535 @@
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  Loader2,
+  MessageCircle,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Power,
+  Send,
+  Trash2,
+  QrCode,
+  ArrowLeft,
+  Plus,
+  AlertCircle,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  getWhatsappStatus,
+  createWhatsappInstance,
+  disconnectWhatsapp,
+  restartWhatsapp,
+  deleteWhatsappInstance,
+  sendWhatsappTest,
+  type WhatsappStatus,
+} from "@/lib/whatsapp.functions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+
+export const Route = createFileRoute("/_authenticated/admin/whatsapp")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw redirect({ to: "/auth" });
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!data) throw redirect({ to: "/pedidos" });
+  },
+  component: WhatsappAdminPage,
+});
+
+function WhatsappAdminPage() {
+  const qc = useQueryClient();
+  const fetchStatus = useServerFn(getWhatsappStatus);
+  const createInst = useServerFn(createWhatsappInstance);
+  const disconnect = useServerFn(disconnectWhatsapp);
+  const restart = useServerFn(restartWhatsapp);
+  const deleteInst = useServerFn(deleteWhatsappInstance);
+  const sendTest = useServerFn(sendWhatsappTest);
+
+  const [testNumber, setTestNumber] = useState("");
+  const [testMessage, setTestMessage] = useState("Olá! Esta é uma mensagem de teste do Portal VOD. ✅");
+
+  const { data: status, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["whatsapp-status"],
+    queryFn: () => fetchStatus(),
+    refetchInterval: (q) => {
+      const s = q.state.data as WhatsappStatus | undefined;
+      // Poll faster when waiting for QR scan
+      if (!s?.configured) return false;
+      if (s.state === "open") return 15000;
+      return 4000;
+    },
+  });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["whatsapp-status"] });
+
+  const createMut = useMutation({
+    mutationFn: () => createInst(),
+    onSuccess: () => {
+      toast.success("Instância criada!");
+      invalidate();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const disconnectMut = useMutation({
+    mutationFn: () => disconnect(),
+    onSuccess: () => {
+      toast.success("Desconectado");
+      invalidate();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const restartMut = useMutation({
+    mutationFn: () => restart(),
+    onSuccess: () => {
+      toast.success("Reiniciando...");
+      invalidate();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: () => deleteInst(),
+    onSuccess: () => {
+      toast.success("Instância removida");
+      invalidate();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const testMut = useMutation({
+    mutationFn: () => sendTest({ data: { number: testNumber, message: testMessage } }),
+    onSuccess: () => toast.success("Mensagem enviada!"),
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/admin">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Voltar
+            </Link>
+          </Button>
+          <div>
+            <h1 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <MessageCircle className="h-7 w-7 text-primary" />
+              WhatsApp
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Conecte o WhatsApp que enviará as notificações automáticas.
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+          Atualizar
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : !status?.configured ? (
+        <NotConfiguredCard message={status?.message} />
+      ) : (
+        <>
+          <StatusCard status={status} />
+
+          {status.state === "not_found" && (
+            <ActionCard
+              icon={<Plus className="h-5 w-5" />}
+              title="Criar instância"
+              description={`A instância "${status.instance}" ainda não existe na Evolution API. Clique abaixo para criá-la.`}
+              action={
+                <Button onClick={() => createMut.mutate()} disabled={createMut.isPending}>
+                  {createMut.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  Criar instância
+                </Button>
+              }
+            />
+          )}
+
+          {(status.state === "close" || status.state === "connecting") && (
+            <QrCard status={status} onRestart={() => restartMut.mutate()} restarting={restartMut.isPending} />
+          )}
+
+          {status.state === "open" && (
+            <>
+              <TestMessageCard
+                number={testNumber}
+                message={testMessage}
+                onNumberChange={setTestNumber}
+                onMessageChange={setTestMessage}
+                onSend={() => testMut.mutate()}
+                sending={testMut.isPending}
+              />
+
+              <DangerZone
+                onDisconnect={() => {
+                  if (confirm("Desconectar o WhatsApp? Você precisará escanear o QR novamente.")) {
+                    disconnectMut.mutate();
+                  }
+                }}
+                disconnecting={disconnectMut.isPending}
+                onDelete={() => {
+                  if (
+                    confirm(
+                      "Remover a instância COMPLETAMENTE? Isso apaga todos os dados de sessão. Você precisará criar de novo depois.",
+                    )
+                  ) {
+                    deleteMut.mutate();
+                  }
+                }}
+                deleting={deleteMut.isPending}
+              />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function NotConfiguredCard({ message }: { message?: string }) {
+  return (
+    <div className="glass-card rounded-2xl p-8">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-xl bg-destructive/15 flex items-center justify-center shrink-0">
+          <AlertCircle className="h-6 w-6 text-destructive" />
+        </div>
+        <div className="space-y-3 flex-1">
+          <div>
+            <h2 className="font-display text-xl font-bold">Evolution API não configurada</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {message ?? "Adicione as 3 chaves de configuração para conectar seu WhatsApp."}
+            </p>
+          </div>
+          <div className="rounded-lg bg-muted/30 border border-border/40 p-4 space-y-2 text-sm">
+            <p className="font-medium">Secrets necessários:</p>
+            <ul className="space-y-1 text-muted-foreground font-mono text-xs">
+              <li>• <code className="text-foreground">EVOLUTION_API_URL</code> — ex: <code>https://evo.seudominio.com</code></li>
+              <li>• <code className="text-foreground">EVOLUTION_API_KEY</code> — a chave que você definiu no docker-compose</li>
+              <li>• <code className="text-foreground">EVOLUTION_INSTANCE</code> — nome da instância (ex: <code>portal</code>)</li>
+            </ul>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Me peça no chat para adicionar essas chaves e a página funcionará automaticamente.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusCard({ status }: { status: WhatsappStatus }) {
+  const config: Record<
+    WhatsappStatus["state"],
+    { label: string; color: string; icon: React.ReactNode }
+  > = {
+    open: {
+      label: "Conectado",
+      color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+      icon: <CheckCircle2 className="h-4 w-4" />,
+    },
+    connecting: {
+      label: "Conectando...",
+      color: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+      icon: <Loader2 className="h-4 w-4 animate-spin" />,
+    },
+    close: {
+      label: "Desconectado",
+      color: "bg-destructive/15 text-destructive border-destructive/30",
+      icon: <XCircle className="h-4 w-4" />,
+    },
+    not_found: {
+      label: "Instância não existe",
+      color: "bg-muted text-muted-foreground border-border",
+      icon: <AlertCircle className="h-4 w-4" />,
+    },
+    unknown: {
+      label: "Desconhecido",
+      color: "bg-muted text-muted-foreground border-border",
+      icon: <AlertCircle className="h-4 w-4" />,
+    },
+  };
+  const c = config[status.state];
+
+  return (
+    <div className="glass-card rounded-2xl p-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          {status.profilePictureUrl ? (
+            <img
+              src={status.profilePictureUrl}
+              alt={status.profileName ?? "avatar"}
+              className="h-14 w-14 rounded-full border border-border/40"
+            />
+          ) : (
+            <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
+              <MessageCircle className="h-7 w-7 text-primary" />
+            </div>
+          )}
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+              Instância: <span className="font-mono text-foreground">{status.instance}</span>
+            </div>
+            <div className="text-lg font-semibold mt-0.5">
+              {status.profileName ?? (status.state === "open" ? "Conectado" : "Aguardando conexão")}
+            </div>
+            {status.ownerJid && (
+              <div className="text-xs text-muted-foreground font-mono">
+                {status.ownerJid.replace("@s.whatsapp.net", "")}
+              </div>
+            )}
+          </div>
+        </div>
+        <Badge className={`${c.color} border gap-1.5 py-1.5 px-3`}>
+          {c.icon}
+          {c.label}
+        </Badge>
+      </div>
+      {status.message && (
+        <p className="text-sm text-muted-foreground mt-4 pt-4 border-t border-border/40">
+          {status.message}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function QrCard({
+  status,
+  onRestart,
+  restarting,
+}: {
+  status: WhatsappStatus;
+  onRestart: () => void;
+  restarting: boolean;
+}) {
+  const qrSrc = status.qrCode
+    ? status.qrCode.startsWith("data:")
+      ? status.qrCode
+      : `data:image/png;base64,${status.qrCode}`
+    : null;
+
+  return (
+    <div className="glass-card rounded-2xl p-6 md:p-8">
+      <div className="flex flex-col md:flex-row gap-8 items-center">
+        <div className="shrink-0">
+          {qrSrc ? (
+            <div className="bg-white p-4 rounded-xl shadow-lg glow-primary">
+              <img src={qrSrc} alt="QR Code WhatsApp" className="w-64 h-64 block" />
+            </div>
+          ) : (
+            <div className="w-64 h-64 rounded-xl bg-muted/30 border-2 border-dashed border-border flex flex-col items-center justify-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Gerando QR Code...</span>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 space-y-4">
+          <div className="flex items-center gap-2">
+            <QrCode className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-xl font-bold">Escaneie para conectar</h2>
+          </div>
+          <ol className="space-y-3 text-sm text-muted-foreground">
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold">1</span>
+              Abra o <strong className="text-foreground">WhatsApp</strong> no celular que vai enviar as notificações.
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold">2</span>
+              Toque em <strong className="text-foreground">Configurações → Aparelhos conectados → Conectar um aparelho</strong>.
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold">3</span>
+              Aponte a câmera para este QR Code.
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold">4</span>
+              A página atualiza sozinha quando conectar. ✨
+            </li>
+          </ol>
+          {status.pairingCode && (
+            <div className="rounded-lg bg-muted/30 border border-border/40 p-3">
+              <div className="text-xs text-muted-foreground mb-1">Ou use o código:</div>
+              <div className="font-mono text-lg font-bold tracking-widest">{status.pairingCode}</div>
+            </div>
+          )}
+          <Button variant="outline" size="sm" onClick={onRestart} disabled={restarting}>
+            {restarting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Gerar novo QR
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActionCard({
+  icon,
+  title,
+  description,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action: React.ReactNode;
+}) {
+  return (
+    <div className="glass-card rounded-2xl p-6">
+      <div className="flex items-start gap-4 flex-wrap">
+        <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
+          {icon}
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <h3 className="font-semibold text-lg">{title}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+        </div>
+        <div>{action}</div>
+      </div>
+    </div>
+  );
+}
+
+function TestMessageCard({
+  number,
+  message,
+  onNumberChange,
+  onMessageChange,
+  onSend,
+  sending,
+}: {
+  number: string;
+  message: string;
+  onNumberChange: (v: string) => void;
+  onMessageChange: (v: string) => void;
+  onSend: () => void;
+  sending: boolean;
+}) {
+  return (
+    <div className="glass-card rounded-2xl p-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <Send className="h-5 w-5 text-primary" />
+        <h2 className="font-display text-xl font-bold">Enviar mensagem de teste</h2>
+      </div>
+      <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
+        <div className="space-y-2">
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Número (com DDI)
+          </label>
+          <Input
+            placeholder="5511999999999"
+            value={number}
+            onChange={(e) => onNumberChange(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Mensagem
+          </label>
+          <Textarea
+            rows={3}
+            value={message}
+            onChange={(e) => onMessageChange(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <Button onClick={onSend} disabled={sending || !number || !message}>
+          {sending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4 mr-2" />
+          )}
+          Enviar
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function DangerZone({
+  onDisconnect,
+  disconnecting,
+  onDelete,
+  deleting,
+}: {
+  onDisconnect: () => void;
+  disconnecting: boolean;
+  onDelete: () => void;
+  deleting: boolean;
+}) {
+  return (
+    <div className="glass-card rounded-2xl p-6 border-destructive/30">
+      <h2 className="font-display text-lg font-bold text-destructive/90 mb-4">
+        Zona de perigo
+      </h2>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="font-medium">Desconectar WhatsApp</div>
+            <div className="text-sm text-muted-foreground">
+              Encerra a sessão. Você precisará escanear o QR de novo.
+            </div>
+          </div>
+          <Button variant="outline" onClick={onDisconnect} disabled={disconnecting}>
+            {disconnecting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Power className="h-4 w-4 mr-2" />
+            )}
+            Desconectar
+          </Button>
+        </div>
+        <div className="flex items-center justify-between gap-4 flex-wrap pt-3 border-t border-border/40">
+          <div>
+            <div className="font-medium text-destructive">Excluir instância</div>
+            <div className="text-sm text-muted-foreground">
+              Apaga tudo na Evolution API. Só use se quiser recomeçar do zero.
+            </div>
+          </div>
+          <Button variant="destructive" onClick={onDelete} disabled={deleting}>
+            {deleting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
+            Excluir
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
