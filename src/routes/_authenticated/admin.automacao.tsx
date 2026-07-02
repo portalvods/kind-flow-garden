@@ -59,6 +59,14 @@ function AutomationPage() {
   const setAuto = useServerFn(setAiAutomation);
   const analyzeFn = useServerFn(analyzeTemplate);
   const applyFn = useServerFn(applyMatches);
+  const historyFn = useServerFn(listAiAnalyses);
+
+  const { data: history } = useQuery({
+    queryKey: ["ai-analyses"],
+    queryFn: () => historyFn(),
+    refetchInterval: 15000,
+  });
+
 
   const [text, setText] = useState("");
   const [matches, setMatches] = useState<Match[] | null>(null);
