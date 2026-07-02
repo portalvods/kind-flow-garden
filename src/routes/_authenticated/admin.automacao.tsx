@@ -116,9 +116,11 @@ function AutomationPage() {
       setSelected(new Set());
       setText("");
       qc.invalidateQueries({ queryKey: ["admin-requests"] });
+      qc.invalidateQueries({ queryKey: ["ai-analyses"] });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao aplicar"),
   });
+
 
   const allSelected = useMemo(
     () => matches !== null && matches.length > 0 && selected.size === matches.length,
