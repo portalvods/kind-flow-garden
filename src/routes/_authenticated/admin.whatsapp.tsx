@@ -515,6 +515,11 @@ function QrCard({
             <div className="bg-white p-4 rounded-xl shadow-lg glow-primary">
               <img src={qrSrc} alt="QR Code WhatsApp" className="w-64 h-64 block" />
             </div>
+          ) : status.message ? (
+            <div className="w-64 min-h-64 rounded-xl bg-destructive/10 border border-destructive/30 flex flex-col items-center justify-center gap-3 p-4 text-center">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+              <span className="text-xs text-destructive leading-relaxed">{status.message}</span>
+            </div>
           ) : (
             <div className="w-64 h-64 rounded-xl bg-muted/30 border-2 border-dashed border-border flex flex-col items-center justify-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
