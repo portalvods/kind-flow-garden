@@ -3,11 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2 } from "lucide-react";
+import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { createRequest } from "@/lib/requests.functions";
+import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
+
 import { checkAvailability } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
