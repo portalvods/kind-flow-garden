@@ -60,21 +60,25 @@ function collectEnvCandidates(): string[] {
   return [...new Set(candidates)];
 }
 
-function readEnvFile(): Record<string, string> {
+function readEnvFiles(): Record<string, string> {
   if (envFileCache) return envFileCache;
+
+  const merged: Record<string, string> = {};
 
   for (const filePath of collectEnvCandidates()) {
     try {
       if (existsSync(filePath)) {
-        envFileCache = parseEnvFile(readFileSync(filePath, "utf8"));
-        return envFileCache;
+        const parsed = parseEnvFile(readFileSync(filePath, "utf8"));
+        for (const [key, value] of Object.entries(parsed)) {
+          if (value.trim()) merged[key] = value.trim();
+        }
       }
     } catch {
       // ignored: fallback to the next candidate or process.env
     }
   }
 
-  envFileCache = {};
+  envFileCache = merged;
   return envFileCache;
 }
 
@@ -82,6 +86,10 @@ export function getServerEnv(name: string): string | undefined {
   const direct = process.env[name];
   if (direct && direct.trim()) return direct.trim();
 
-  const fromFile = readEnvFile()[name];
+  const fromFile = readEnvFiles()[name];
   return fromFile && fromFile.trim() ? fromFile.trim() : undefined;
+}
+
+export function getMissingServerEnv(names: string[]): string[] {
+  return names.filter((name) => !getServerEnv(name));
 }
