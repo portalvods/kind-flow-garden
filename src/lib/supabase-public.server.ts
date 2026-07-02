@@ -1,12 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { getServerEnv } from "./env.server";
 
 export function createServerPublicSupabase() {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const url = getServerEnv("SUPABASE_URL") || getServerEnv("VITE_SUPABASE_URL");
   const key =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY;
+    getServerEnv("SUPABASE_PUBLISHABLE_KEY") ||
+    getServerEnv("VITE_SUPABASE_PUBLISHABLE_KEY") ||
+    getServerEnv("VITE_SUPABASE_ANON_KEY");
 
   if (!url || !key) return null;
 
