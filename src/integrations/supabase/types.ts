@@ -521,6 +521,7 @@ export type Database = {
         Returns: undefined
       }
       email_by_whatsapp: { Args: { _whatsapp: string }; Returns: string }
+      find_profile_by_wa: { Args: { _phone: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
