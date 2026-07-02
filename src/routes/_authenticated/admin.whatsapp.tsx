@@ -140,7 +140,7 @@ function WhatsappAdminPage() {
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["whatsapp-status"] });
 
-  const savePanelConfig = () => {
+  const savePanelConfig = async () => {
     const payload = buildWhatsappPayload(panelConfig);
     if (!hasCompletePanelConfig(panelConfig) || !payload.config) {
       toast.error("Preencha URL, chave e instância.");
@@ -150,18 +150,38 @@ function WhatsappAdminPage() {
     setPanelConfig(normalized);
     setAppliedConfig(normalized);
     window.localStorage.setItem(WHATSAPP_PANEL_CONFIG_KEY, JSON.stringify(normalized));
-    toast.success("Configuração aplicada neste painel.");
+    try {
+      await saveCfgFn({
+        data: {
+          baseUrl: normalized.baseUrl,
+          apiKey: normalized.apiKey,
+          instance: normalized.instance,
+          adminWhatsapp: adminNumber.trim(),
+        },
+      });
+      toast.success("Configuração salva. Notificações automáticas ativadas.");
+    } catch (err) {
+      toast.error(
+        "Aplicada no painel, mas não consegui salvar no servidor: " + (err as Error).message,
+      );
+    }
     invalidate();
   };
 
-  const clearPanelConfig = () => {
+  const clearPanelConfig = async () => {
     window.localStorage.removeItem(WHATSAPP_PANEL_CONFIG_KEY);
     const emptyConfig = { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
     setPanelConfig(emptyConfig);
     setAppliedConfig(emptyConfig);
-    toast.success("Configuração local removida.");
+    try {
+      await clearCfgFn();
+    } catch {
+      /* ignore */
+    }
+    toast.success("Configuração removida.");
     invalidate();
   };
+
 
   const createMut = useMutation({
     mutationFn: () => createInst({ data: buildWhatsappPayload(panelConfig) }),
