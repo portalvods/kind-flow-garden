@@ -3,7 +3,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { issueOtp, sanitizePhone, verifyOtp } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
-import { createServerPublicSupabase } from "./supabase-public.server";
 
 // ---- Signup: request OTP ----
 const startSignupSchema = z.object({
