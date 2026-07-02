@@ -162,14 +162,15 @@ export const getWhatsappSavedConfig = createServerFn({ method: "GET" })
     for (const row of data ?? []) {
       if (row.value) map[row.key as string] = String(row.value);
     }
+    const local = readLocalWhatsappConfig();
 
     return {
       config: {
-        baseUrl: map.evolution_url ?? "",
-        apiKey: map.evolution_api_key ?? "",
-        instance: map.evolution_instance ?? DEFAULT_WHATSAPP_INSTANCE,
+        baseUrl: map.evolution_url ?? local.evolution_url ?? "",
+        apiKey: map.evolution_api_key ?? local.evolution_api_key ?? "",
+        instance: map.evolution_instance ?? local.evolution_instance ?? DEFAULT_WHATSAPP_INSTANCE,
       },
-      adminWhatsapp: map.admin_whatsapp ?? "",
+      adminWhatsapp: map.admin_whatsapp ?? local.admin_whatsapp ?? "",
     };
   });
 
