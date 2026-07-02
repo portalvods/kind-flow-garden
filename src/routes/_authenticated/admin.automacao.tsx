@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Bot, Loader2, Sparkles, Check, AlertCircle } from "lucide-react";
+import { Bot, Loader2, Sparkles, Check, AlertCircle, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,9 @@ import {
   setAiAutomation,
   analyzeTemplate,
   applyMatches,
+  listAiAnalyses,
 } from "@/lib/ai-match.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/automacao")({
   ssr: false,
