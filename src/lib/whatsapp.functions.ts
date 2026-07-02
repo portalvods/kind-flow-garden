@@ -1,13 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getServerEnv } from "./env.server";
 
 // ---- Helpers ----
 
 function getConfig() {
-  const baseUrl = process.env.EVOLUTION_API_URL;
-  const apiKey = process.env.EVOLUTION_API_KEY;
-  const instance = process.env.EVOLUTION_INSTANCE;
+  const baseUrl = getServerEnv("EVOLUTION_API_URL");
+  const apiKey = getServerEnv("EVOLUTION_API_KEY");
+  const instance = getServerEnv("EVOLUTION_INSTANCE");
   return {
     baseUrl: baseUrl?.replace(/\/$/, "") ?? "",
     apiKey: apiKey ?? "",

@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomInt, timingSafeEqual } from "crypto";
 import { sanitizePhone } from "./otp.server";
+import { getServerEnv } from "./env.server";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 
@@ -16,7 +17,7 @@ type SignupPayload = {
 };
 
 function getSigningSecret(): string {
-  const secret = process.env.OTP_SIGNING_SECRET || process.env.LOVABLE_API_KEY || process.env.EVOLUTION_API_KEY;
+  const secret = getServerEnv("OTP_SIGNING_SECRET") || getServerEnv("LOVABLE_API_KEY") || getServerEnv("EVOLUTION_API_KEY");
   if (!secret) {
     throw new Error("Configuração de cadastro incompleta. Defina LOVABLE_API_KEY ou EVOLUTION_API_KEY na VPS.");
   }
