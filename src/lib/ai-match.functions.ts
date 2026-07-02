@@ -79,10 +79,13 @@ async function extractViaLovable(text: string, key: string): Promise<string> {
 }
 
 async function extractViaGemini(text: string, key: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": key,
+    },
     body: JSON.stringify({
       systemInstruction: {
         parts: [{
@@ -97,6 +100,11 @@ async function extractViaGemini(text: string, key: string): Promise<string> {
   if (!res.ok) {
     const body = await res.text();
     if (res.status === 429) throw new Error("Limite da API do Gemini excedido. Aguarde uns minutos.");
+    if (res.status === 403 || res.status === 400) {
+      throw new Error(
+        "GEMINI_API_KEY inválida ou sem permissão. Verifique: (1) a chave está correta no .env da VPS (sem aspas/espaços), (2) foi criada em https://aistudio.google.com/apikey, (3) sua região tem acesso ao Gemini. Tente gerar uma nova chave se persistir.",
+      );
+    }
     throw new Error(`Falha na IA Gemini (${res.status}): ${body.slice(0, 200)}`);
   }
   const json = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
