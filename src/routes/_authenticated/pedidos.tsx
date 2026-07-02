@@ -314,7 +314,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   });
 
 
-  const canSubmit = selected !== null || manualTitle.trim().length >= 2;
+  const canSubmit = (selected !== null || manualTitle.trim().length >= 2) && !blockedByCatalog;
 
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
