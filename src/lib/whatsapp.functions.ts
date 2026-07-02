@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getServerEnv } from "./env.server";
+import { getMissingServerEnv, getServerEnv } from "./env.server";
 
 // ---- Helpers ----
 
@@ -15,6 +15,10 @@ function getConfig() {
     instance: instance ?? "",
     configured: !!(baseUrl && apiKey && instance),
   };
+}
+
+function getMissingConfigKeys(): string[] {
+  return getMissingServerEnv(["EVOLUTION_API_URL", "EVOLUTION_API_KEY", "EVOLUTION_INSTANCE"]);
 }
 
 async function evoFetch(
@@ -85,7 +89,11 @@ export const getWhatsappStatus = createServerFn({ method: "GET" })
     };
 
     if (!cfg.configured) {
-      return { ...base, message: "Evolution API não configurada. Adicione as chaves nos secrets." };
+      const missing = getMissingConfigKeys().join(", ");
+      return {
+        ...base,
+        message: `Evolution API não configurada. Chaves faltando no servidor: ${missing || "EVOLUTION_*"}.`,
+      };
     }
 
     // 1. Check connection state

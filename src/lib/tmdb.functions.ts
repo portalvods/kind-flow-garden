@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getServerEnv } from "./env.server";
 
 const searchSchema = z.object({
   query: z.string().trim().min(1).max(100),
@@ -17,7 +18,7 @@ export type TmdbResult = {
 export const searchTmdb = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => searchSchema.parse(data))
   .handler(async ({ data }): Promise<{ results: TmdbResult[]; configured: boolean }> => {
-    const apiKey = process.env.TMDB_API_KEY;
+    const apiKey = getServerEnv("TMDB_API_KEY");
     if (!apiKey) return { results: [], configured: false };
 
     const url = `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(
