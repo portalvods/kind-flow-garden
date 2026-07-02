@@ -215,13 +215,15 @@ function AuthPage() {
 
   const handleForgotStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!whatsapp.trim().includes("@")) return toast.error("Informe o e-mail cadastrado");
+    if (whatsapp.trim().length < 10) return toast.error("Informe seu WhatsApp com DDD.");
     setLoading(true);
     try {
       const res = await startResetFn({ data: { whatsapp } });
       setOtpWhatsapp(res.whatsapp);
-      setDevHint(null);
-      toast.success("Enviamos o link de recuperação no seu e-mail.");
+      setSignupToken(res.token);
+      setDevHint(res.devCode ? `Modo dev — código: ${res.devCode}` : null);
+      setStep("reset-password");
+      toast.success("Enviamos um código no seu WhatsApp.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro");
     } finally {
@@ -233,11 +235,25 @@ function AuthPage() {
     e.preventDefault();
     if (code.length !== 6) return toast.error("Digite o código.");
     if (newPassword.length < 6) return toast.error("Nova senha: mínimo 6 caracteres.");
+    if (!signupToken) return toast.error("Solicite um novo código.");
     setLoading(true);
     try {
       const { email: emailOut } = await completeResetFn({
-        data: { whatsapp: otpWhatsapp, code, new_password: newPassword },
+        data: { whatsapp: otpWhatsapp, code, token: signupToken, new_password: newPassword },
       });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailOut,
+        password: newPassword,
+      });
+      if (error) throw error;
+      toast.success("Senha redefinida!");
+      navigate({ to: "/pedidos" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setLoading(false);
+    }
+  };
       const { error } = await supabase.auth.signInWithPassword({
         email: emailOut,
         password: newPassword,
