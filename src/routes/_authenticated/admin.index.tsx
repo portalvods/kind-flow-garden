@@ -260,6 +260,14 @@ function AdminPage() {
                       <><Tv className="h-3 w-3 mr-1" /> Série</>
                     )}
                   </Badge>
+                  {r.request_kind && (
+                    <Badge variant="outline" className="text-[10px]">
+                      {KIND_LABEL[r.request_kind] ?? r.request_kind}
+                    </Badge>
+                  )}
+                  {r.format && (
+                    <Badge variant="outline" className="text-[10px]">{r.format}</Badge>
+                  )}
                   {r.year && <span className="text-xs text-muted-foreground">{r.year}</span>}
                   <Badge className={`${STATUS_COLOR[r.status]} border ml-auto`}>
                     {STATUS_LABEL[r.status]}
@@ -279,26 +287,47 @@ function AdminPage() {
               </div>
 
               <div className="flex flex-wrap gap-2 items-center">
-                {r.status !== "processing" && (
+                {r.status !== "analyzing" && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "processing" })}
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "analyzing" })}
+                    disabled={changeStatus.isPending}
+                  >
+                    <Search className="h-3.5 w-3.5 mr-1" />
+                    Em análise
+                  </Button>
+                )}
+                {r.status !== "approved" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "approved" })}
                     disabled={changeStatus.isPending}
                   >
                     <Play className="h-3.5 w-3.5 mr-1" />
-                    Processar
+                    Aprovar
                   </Button>
                 )}
-                {r.status !== "added" && (
+                {r.request_kind === "conserto" ? (
                   <Button
                     size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-500"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "added" })}
+                    className="bg-teal-600 hover:bg-teal-500"
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "fixed" })}
                     disabled={changeStatus.isPending}
                   >
                     <Check className="h-3.5 w-3.5 mr-1" />
-                    Adicionado
+                    Consertado
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-500"
+                    onClick={() => changeStatus.mutate({ id: r.id, status: "completed" })}
+                    disabled={changeStatus.isPending}
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    Concluído
                   </Button>
                 )}
                 {r.status !== "rejected" && (
