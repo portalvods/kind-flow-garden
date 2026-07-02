@@ -51,6 +51,62 @@ export const setAiAutomation = createServerFn({ method: "POST" })
 // ---- AI extraction ----
 type ExtractedItem = { title: string; year: number | null };
 
+function dedupeItems(items: ExtractedItem[]): ExtractedItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const title = item.title.trim();
+    if (title.length < 2) return false;
+    const key = `${normalizeTitle(title)}:${item.year ?? ""}`;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function cleanTemplateTitle(raw: string): ExtractedItem | null {
+  let line = raw
+    .replace(/#EXTINF[^,]*,/i, "")
+    .replace(/tvg-name=["']([^"']+)["']/i, "$1")
+    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/[🎬📺🍿✅🆕⭐🔥🚨📌🔹🔸•]/g, " ")
+    .replace(/^\s*[-–—*+>\d.)\]]+\s*/g, "")
+    .trim();
+
+  if (!line) return null;
+
+  const headerOnly = /^(adicionados?|atualizados?|lan[çc]amentos?|novidades?|filmes?|s[ée]ries?|conte[uú]dos?|template|lista|cat[ée]goria|pedido|pedidos)$/i;
+  if (headerOnly.test(line)) return null;
+
+  line = line
+    .replace(/^(filme|movie|s[ée]rie|series|show|novos? epis[oó]dios?|adicionado|atualizado)\s*[:|-]\s*/i, "")
+    .replace(/\b(4k|uhd|fhd|full\s*hd|hd|sd|1080p|720p|2160p|hdr|web-?dl|bluray|dual\s*audio|dublado|legendado|nacional)\b/gi, " ")
+    .replace(/\b(S\d{1,2}E\d{1,3}|S\d{1,2}|T\d{1,2}|temporada\s*\d+|epis[oó]dio\s*\d+|ep\.?\s*\d+)\b/gi, " ")
+    .replace(/[\[\]{}]/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  const yearMatch = line.match(/\b(19\d{2}|20\d{2})\b/);
+  const year = yearMatch ? Number(yearMatch[1]) : null;
+  const title = line
+    .replace(/\b(19\d{2}|20\d{2})\b/g, "")
+    .replace(/[()|]+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .replace(/[:;-]+$/g, "")
+    .trim();
+
+  if (title.length < 2 || /^[\W_]+$/.test(title)) return null;
+  return { title, year };
+}
+
+function extractTitlesLocally(text: string): ExtractedItem[] {
+  const lines = text
+    .split(/\r?\n|\s{3,}/)
+    .map((line) => cleanTemplateTitle(line))
+    .filter((item): item is ExtractedItem => Boolean(item));
+
+  return dedupeItems(lines);
+}
+
 async function extractViaLovable(text: string, key: string): Promise<string> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -114,25 +170,40 @@ async function extractViaGemini(text: string, key: string): Promise<string> {
 async function extractTitlesWithAI(text: string): Promise<ExtractedItem[]> {
   const geminiKey = getServerEnv("GEMINI_API_KEY");
   const lovableKey = getServerEnv("LOVABLE_API_KEY");
-  if (!geminiKey && !lovableKey) {
-    throw new Error("Configure GEMINI_API_KEY (grátis em aistudio.google.com/apikey) ou LOVABLE_API_KEY no .env do servidor.");
+  const localItems = extractTitlesLocally(text);
+
+  let content: string | null = null;
+
+  if (geminiKey) {
+    try {
+      content = await extractViaGemini(text, geminiKey);
+    } catch (err) {
+      console.warn("[ai-match] Gemini unavailable, using local parser", err);
+    }
   }
 
-  const content = geminiKey
-    ? await extractViaGemini(text, geminiKey)
-    : await extractViaLovable(text, lovableKey!);
+  if (!content && lovableKey) {
+    try {
+      content = await extractViaLovable(text, lovableKey);
+    } catch (err) {
+      console.warn("[ai-match] Lovable AI unavailable, using local parser", err);
+    }
+  }
+
+  if (!content) return localItems;
 
   try {
     const parsed = JSON.parse(content) as { items?: Array<{ title?: unknown; year?: unknown }> };
     const items = Array.isArray(parsed.items) ? parsed.items : [];
-    return items
+    const aiItems = items
       .map((it) => ({
         title: String(it.title ?? "").trim(),
         year: typeof it.year === "number" ? it.year : null,
       }))
       .filter((it) => it.title.length > 1);
+    return dedupeItems([...aiItems, ...localItems]);
   } catch {
-    return [];
+    return localItems;
   }
 }
 
