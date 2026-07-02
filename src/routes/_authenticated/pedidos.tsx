@@ -334,35 +334,37 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
           </div>
 
           {search && search.results.length > 0 && (
-            <div className="grid gap-2 max-h-72 overflow-y-auto pr-1">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-1">
               {search.results.map((r) => (
                 <button
                   key={`${r.type}-${r.id}`}
                   onClick={() => setSelected(r)}
-                  className="flex items-center gap-3 rounded-lg p-2 hover:bg-accent/10 text-left transition"
+                  className="group text-left"
                 >
-                  {r.poster_path ? (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w92${r.poster_path}`}
-                      alt=""
-                      className="w-10 h-14 object-cover rounded"
-                    />
-                  ) : (
-                    <div className="w-10 h-14 bg-muted rounded flex items-center justify-center">
-                      <ImageOff className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{r.title}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="aspect-[2/3] rounded-lg overflow-hidden bg-muted relative ring-1 ring-border/40 group-hover:ring-primary/60 transition">
+                    {r.poster_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w342${r.poster_path}`}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageOff className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Badge className="absolute top-1.5 right-1.5 bg-black/70 backdrop-blur text-[10px]">
                       {r.type === "movie" ? "Filme" : "Série"}
-                      {r.year && ` · ${r.year}`}
-                    </p>
+                    </Badge>
                   </div>
+                  <p className="text-xs font-medium truncate mt-1.5">{r.title}</p>
+                  <p className="text-[10px] text-muted-foreground">{r.year ?? ""}</p>
                 </button>
               ))}
             </div>
           )}
+
 
           {search && !search.configured && query.trim().length >= 2 && (
             <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-200">
