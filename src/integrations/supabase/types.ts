@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analyses: {
+        Row: {
+          admin_user_id: string | null
+          applied_count: number
+          auto_applied: boolean
+          created_at: string
+          extracted_count: number
+          id: string
+          matched_count: number
+          notified_count: number
+          template_excerpt: string
+        }
+        Insert: {
+          admin_user_id?: string | null
+          applied_count?: number
+          auto_applied?: boolean
+          created_at?: string
+          extracted_count?: number
+          id?: string
+          matched_count?: number
+          notified_count?: number
+          template_excerpt: string
+        }
+        Update: {
+          admin_user_id?: string | null
+          applied_count?: number
+          auto_applied?: boolean
+          created_at?: string
+          extracted_count?: number
+          id?: string
+          matched_count?: number
+          notified_count?: number
+          template_excerpt?: string
+        }
+        Relationships: []
+      }
       catalog_items: {
         Row: {
           category: string | null
@@ -205,6 +241,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_hits: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: number
+          key: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: number
+          key: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: number
+          key?: string
+        }
+        Relationships: []
+      }
       request_logs: {
         Row: {
           changed_by: string | null
@@ -252,6 +309,9 @@ export type Database = {
           notes: string | null
           overview: string | null
           poster_path: string | null
+          rated_at: string | null
+          rating: number | null
+          rating_comment: string | null
           rejection_reason: string | null
           request_kind: Database["public"]["Enums"]["request_kind"]
           status: Database["public"]["Enums"]["request_status"]
@@ -269,6 +329,9 @@ export type Database = {
           notes?: string | null
           overview?: string | null
           poster_path?: string | null
+          rated_at?: string | null
+          rating?: number | null
+          rating_comment?: string | null
           rejection_reason?: string | null
           request_kind?: Database["public"]["Enums"]["request_kind"]
           status?: Database["public"]["Enums"]["request_status"]
@@ -286,6 +349,9 @@ export type Database = {
           notes?: string | null
           overview?: string | null
           poster_path?: string | null
+          rated_at?: string | null
+          rating?: number | null
+          rating_comment?: string | null
           rejection_reason?: string | null
           request_kind?: Database["public"]["Enums"]["request_kind"]
           status?: Database["public"]["Enums"]["request_status"]
@@ -341,6 +407,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_duplicate_requests: {
+        Args: never
+        Returns: {
+          content_type: string
+          count: number
+          normalized_title: string
+          request_ids: string[]
+          request_kind: string
+          sample_title: string
+          user_ids: string[]
+          year: number
+        }[]
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -376,6 +455,10 @@ export type Database = {
         Returns: boolean
       }
       is_blocked: { Args: { _user_id: string }; Returns: boolean }
+      rate_limit_check_and_hit: {
+        Args: { _bucket: string; _key: string; _window_seconds: number }
+        Returns: number
+      }
       whatsapp_exists: { Args: { _whatsapp: string }; Returns: boolean }
     }
     Enums: {
