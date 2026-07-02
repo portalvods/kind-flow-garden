@@ -3,11 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, Film, Tv, ImageOff, X } from "lucide-react";
+import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { createRequest } from "@/lib/requests.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
+import { checkAvailability } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -243,6 +244,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [notes, setNotes] = useState("");
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
+  const availFn = useServerFn(checkAvailability);
 
   const { data: search, isFetching } = useQuery({
     queryKey: ["tmdb", query],
@@ -250,6 +252,23 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     enabled: query.trim().length >= 2,
     staleTime: 60_000,
   });
+
+  const { data: availability, isFetching: checkingAvail } = useQuery({
+    queryKey: ["avail", selected?.type, selected?.id, selected?.title, selected?.year, kind],
+    queryFn: () =>
+      availFn({
+        data: {
+          tmdb_id: selected!.id,
+          title: selected!.title,
+          year: selected!.year,
+          kind: selected!.type === "tv" ? "series" : "movie",
+        },
+      }),
+    enabled: !!selected && kind === "adicao",
+    staleTime: 30_000,
+  });
+
+  const blockedByCatalog = kind === "adicao" && availability?.exists === true;
 
   const create = useMutation({
     mutationFn: async () => {
@@ -332,6 +351,24 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             </div>
             {selected.overview && (
               <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{selected.overview}</p>
+            )}
+            {kind === "adicao" && checkingAvail && (
+              <p className="text-xs text-muted-foreground mt-2 inline-flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" /> verificando disponibilidade...
+              </p>
+            )}
+            {blockedByCatalog && (
+              <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-200">
+                <div className="inline-flex items-center gap-1 font-semibold">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Já está no catálogo
+                </div>
+                {availability?.category && (
+                  <p className="mt-1 opacity-90">Categoria: <strong>{availability.category}</strong></p>
+                )}
+                <p className="mt-1 opacity-80">
+                  Para pedir mesmo assim, mude o tipo do pedido para <em>Atualização</em> ou <em>Conserto</em>.
+                </p>
+              </div>
             )}
           </div>
         </div>

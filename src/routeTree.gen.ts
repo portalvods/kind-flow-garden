@@ -16,6 +16,7 @@ import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
+import { Route as AuthenticatedAdminCatalogoRouteImport } from './routes/_authenticated/admin.catalogo'
 import { Route as AuthenticatedAdminAparenciaRouteImport } from './routes/_authenticated/admin.aparencia'
 
 const AuthRoute = AuthRouteImport.update({
@@ -54,6 +55,12 @@ const AuthenticatedAdminMensagensRoute =
     path: '/admin/mensagens',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminCatalogoRoute =
+  AuthenticatedAdminCatalogoRouteImport.update({
+    id: '/admin/catalogo',
+    path: '/admin/catalogo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminAparenciaRoute =
   AuthenticatedAdminAparenciaRouteImport.update({
     id: '/admin/aparencia',
@@ -66,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
+  '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -75,6 +83,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
+  '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -86,6 +95,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
+  '/_authenticated/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pedidos'
     | '/admin/aparencia'
+    | '/admin/catalogo'
     | '/admin/mensagens'
     | '/admin/whatsapp'
     | '/admin/'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pedidos'
     | '/admin/aparencia'
+    | '/admin/catalogo'
     | '/admin/mensagens'
     | '/admin/whatsapp'
     | '/admin'
@@ -116,6 +128,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/pedidos'
     | '/_authenticated/admin/aparencia'
+    | '/_authenticated/admin/catalogo'
     | '/_authenticated/admin/mensagens'
     | '/_authenticated/admin/whatsapp'
     | '/_authenticated/admin/'
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMensagensRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/catalogo': {
+      id: '/_authenticated/admin/catalogo'
+      path: '/admin/catalogo'
+      fullPath: '/admin/catalogo'
+      preLoaderRoute: typeof AuthenticatedAdminCatalogoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/aparencia': {
       id: '/_authenticated/admin/aparencia'
       path: '/admin/aparencia'
@@ -191,6 +211,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
+  AuthenticatedAdminCatalogoRoute: typeof AuthenticatedAdminCatalogoRoute
   AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
   AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -199,6 +220,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
+  AuthenticatedAdminCatalogoRoute: AuthenticatedAdminCatalogoRoute,
   AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
   AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
