@@ -22,16 +22,18 @@ function getConfig(payload?: RuntimeConfigPayload) {
   const overrideApiKey = payload?.config?.apiKey?.trim();
   const overrideInstance = payload?.config?.instance?.trim();
 
-  const hasOverride = !!(overrideBaseUrl && overrideApiKey && overrideInstance);
-  const baseUrl = hasOverride ? overrideBaseUrl : getServerEnv("EVOLUTION_API_URL");
-  const apiKey = hasOverride ? overrideApiKey : getServerEnv("EVOLUTION_API_KEY");
-  const instance = hasOverride ? overrideInstance : getServerEnv("EVOLUTION_INSTANCE");
+  // Merge por campo: qualquer valor vindo do painel sobrescreve o env.
+  const baseUrl = overrideBaseUrl || getServerEnv("EVOLUTION_API_URL") || "";
+  const apiKey = overrideApiKey || getServerEnv("EVOLUTION_API_KEY") || "";
+  const instance = overrideInstance || getServerEnv("EVOLUTION_INSTANCE") || "";
+
+  const usedPanel = !!(overrideBaseUrl || overrideApiKey || overrideInstance);
 
   return {
-    baseUrl: baseUrl?.replace(/\/$/, "") ?? "",
-    apiKey: apiKey ?? "",
-    instance: instance ?? "",
-    source: hasOverride ? "panel" : "server",
+    baseUrl: baseUrl.replace(/\/$/, ""),
+    apiKey,
+    instance,
+    source: usedPanel ? "panel" : "server",
     configured: !!(baseUrl && apiKey && instance),
   };
 }
