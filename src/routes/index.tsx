@@ -52,10 +52,10 @@ function Landing() {
           Sistema premium de pedidos VOD
         </div>
         <h1 className="font-display text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">
-          Peça qualquer filme ou série,
+          Peça qualquer filme ou série
           <br />
           <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-            direto no seu servidor.
+            direto no site.
           </span>
         </h1>
         <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
