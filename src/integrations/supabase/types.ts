@@ -339,6 +339,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      whatsapp_exists: { Args: { _whatsapp: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "revendedor" | "cliente"

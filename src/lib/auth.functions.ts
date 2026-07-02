@@ -6,6 +6,25 @@ import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
 import { createServerPublicSupabase } from "./supabase-public.server";
 import { getServerEnv } from "./env.server";
 
+async function isWhatsappAlreadyRegistered(whatsapp: string): Promise<boolean> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as never as {
+      rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: boolean | null; error: { message: string } | null }>;
+    }).rpc("whatsapp_exists", { _whatsapp: whatsapp });
+
+    if (error) {
+      console.warn("[signup] whatsapp duplicate check failed:", error.message);
+      return false;
+    }
+
+    return data === true;
+  } catch (err) {
+    console.warn("[signup] whatsapp duplicate check unavailable:", err instanceof Error ? err.message : String(err));
+    return false;
+  }
+}
+
 // ---- Signup: request OTP ----
 const startSignupSchema = z.object({
   full_name: z.string().trim().min(2).max(80),
@@ -18,6 +37,10 @@ export const startSignup = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startSignupSchema.parse(d))
   .handler(async ({ data }) => {
     const whatsapp = sanitizePhone(data.whatsapp);
+    if (await isWhatsappAlreadyRegistered(whatsapp)) {
+      throw new Error("Esse WhatsApp já está cadastrado. Entre com seu e-mail e senha ou use Esqueci a senha.");
+    }
+
     const { code, token } = issueSignupOtp({
       full_name: data.full_name,
       email: data.email,
