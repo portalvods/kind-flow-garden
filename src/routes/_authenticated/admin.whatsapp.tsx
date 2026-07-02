@@ -25,6 +25,9 @@ import {
   restartWhatsapp,
   deleteWhatsappInstance,
   sendWhatsappTest,
+  saveWhatsappConfig,
+  clearWhatsappConfig,
+  getAdminWhatsappSetting,
   type WhatsappStatus,
 } from "@/lib/whatsapp.functions";
 import { Button } from "@/components/ui/button";
