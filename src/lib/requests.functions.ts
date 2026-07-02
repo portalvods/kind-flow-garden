@@ -168,7 +168,7 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
 
     const { data: current, error: fetchErr } = await supabase
       .from("requests")
-      .select("id, user_id, title, status, request_kind, format")
+      .select("id, user_id, title, status, request_kind, format, content_type")
       .eq("id", data.id)
       .maybeSingle();
     if (fetchErr || !current) throw new Error("Pedido não encontrado");
