@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { createReadStream, existsSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -7,6 +7,35 @@ import { Readable } from "node:stream";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = resolve(__dirname, "..");
+
+function loadEnvFile() {
+  const envPath = resolve(rootDir, ".env");
+  if (!existsSync(envPath)) return;
+
+  const content = readFileSync(envPath, "utf8");
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+
+    const normalized = line.startsWith("export ") ? line.slice(7).trim() : line;
+    const eqIndex = normalized.indexOf("=");
+    if (eqIndex <= 0) continue;
+
+    const key = normalized.slice(0, eqIndex).trim();
+    let value = normalized.slice(eqIndex + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+
+    if (value && !process.env[key]) process.env[key] = value;
+  }
+
+  process.env.SUPABASE_URL ||= process.env.VITE_SUPABASE_URL;
+  process.env.SUPABASE_PUBLISHABLE_KEY ||=
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+}
+
+loadEnvFile();
 
 const candidates = [
   resolve(rootDir, ".output/server/index.mjs"),
