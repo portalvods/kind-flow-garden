@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { updateRequestStatus } from "@/lib/requests.functions";
+import { getRejectionReasons } from "@/lib/admin-extras.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -106,6 +107,11 @@ function AdminPage() {
   const [rejectReason, setRejectReason] = useState("");
 
   const updateFn = useServerFn(updateRequestStatus);
+  const reasonsFn = useServerFn(getRejectionReasons);
+  const { data: presetReasons } = useQuery({
+    queryKey: ["rejection-reasons"],
+    queryFn: () => reasonsFn(),
+  });
 
   const { data: requests, isLoading } = useQuery({
     queryKey: ["admin-requests"],
@@ -367,12 +373,26 @@ function AdminPage() {
           <p className="text-sm text-muted-foreground">
             Informe o motivo. O cliente será notificado no WhatsApp.
           </p>
+          {(presetReasons?.reasons?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {presetReasons!.reasons.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRejectReason(r)}
+                  className="text-xs px-3 py-1.5 rounded-full border border-border/60 bg-muted/30 hover:bg-primary/15 hover:border-primary/40 transition-colors"
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
           <Textarea
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="Ex: Título indisponível na fonte..."
+            placeholder="Ou escreva um motivo personalizado..."
             maxLength={500}
-            rows={4}
+            rows={3}
           />
           <DialogFooter>
             <Button variant="ghost" onClick={() => setRejectTarget(null)}>
