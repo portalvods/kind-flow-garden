@@ -86,11 +86,14 @@ function AutomationPage() {
       if (res.matches.length === 0) {
         toast.info("Nenhum pedido pendente corresponde a esse template.");
       } else {
-        toast.success(`${res.matches.length} pedido(s) casaram com o template.`);
+        toast.success(`${res.matches.length} pedido(s) casaram. Aplicando automaticamente...`);
+        // Auto-apply: com a IA ligada, conclui e notifica sem confirmação manual
+        apply.mutate(res.matches.map((m) => m.request_id));
       }
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao analisar"),
   });
+
 
   const apply = useMutation({
     mutationFn: (ids: string[]) => applyFn({ data: { request_ids: ids } }),
