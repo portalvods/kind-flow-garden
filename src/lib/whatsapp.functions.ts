@@ -145,6 +145,31 @@ export type WhatsappStatus = {
 
 // ---- Server Functions ----
 
+export const getWhatsappSavedConfig = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { data, error } = await context.supabase
+      .from("site_settings")
+      .select("key, value")
+      .in("key", ["evolution_url", "evolution_api_key", "evolution_instance", "admin_whatsapp"]);
+    if (error) throw new Error(error.message);
+
+    const map: Record<string, string> = {};
+    for (const row of data ?? []) {
+      if (row.value) map[row.key as string] = String(row.value);
+    }
+
+    return {
+      config: {
+        baseUrl: map.evolution_url ?? "",
+        apiKey: map.evolution_api_key ?? "",
+        instance: map.evolution_instance ?? DEFAULT_WHATSAPP_INSTANCE,
+      },
+      adminWhatsapp: map.admin_whatsapp ?? "",
+    };
+  });
+
 export const getWhatsappStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => configPayloadSchema.parse(data ?? {}))
