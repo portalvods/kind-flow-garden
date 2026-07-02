@@ -89,8 +89,8 @@ function Landing() {
           />
           <Feature
             icon={<ShieldCheck className="h-5 w-5" />}
-            title="Painel completo"
-            desc="Gerencie pedidos, aprove, recuse e acompanhe logs de tudo."
+            title="Acompanhe seus pedidos"
+            desc="Veja o status de cada solicitação e o histórico completo em um só lugar."
           />
         </div>
       </section>
