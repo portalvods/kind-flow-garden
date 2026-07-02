@@ -143,6 +143,12 @@ export const startPasswordReset = createServerFn({ method: "POST" })
     const whatsapp = sanitizePhone(data.whatsapp);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido (com DDD).");
 
+    // Rate limit: max 3 reset OTPs per IP/hour, 3 per whatsapp/hour.
+    await enforceOtpRateLimit("otp:reset:ip", getIp(), 3, 3600);
+    await enforceOtpRateLimit("otp:reset:wa", whatsapp, 3, 3600);
+
+
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as unknown as {
       rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: string | null; error: { message: string } | null }>;
