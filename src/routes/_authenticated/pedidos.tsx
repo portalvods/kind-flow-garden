@@ -243,10 +243,41 @@ function RequestCard({ request }: { request: RequestRow }) {
         {request.rejection_reason && (
           <p className="text-xs text-red-400 mt-2 line-clamp-2">Motivo: {request.rejection_reason}</p>
         )}
+        {canRate && (
+          <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground flex-1">Este pedido foi útil?</span>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={rate.isPending}
+              onClick={() => rate.mutate(1)}
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={rate.isPending}
+              onClick={() => rate.mutate(-1)}
+            >
+              <ThumbsDown className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+        {request.rating != null && (
+          <div className="mt-3 pt-3 border-t border-border/40 text-xs text-muted-foreground flex items-center gap-1.5">
+            {request.rating > 0 ? (
+              <><ThumbsUp className="h-3.5 w-3.5 text-emerald-400" /> Avaliado</>
+            ) : (
+              <><ThumbsDown className="h-3.5 w-3.5 text-red-400" /> Avaliado</>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
 function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const qc = useQueryClient();
