@@ -80,6 +80,7 @@ export type WhatsappStatus = {
   configured: boolean;
   instance: string;
   configSource: "server" | "panel";
+  endpoint: string | null;
   state: "open" | "connecting" | "close" | "unknown" | "not_found";
   qrCode: string | null; // data:image/png;base64,... or base64 string
   pairingCode: string | null;
