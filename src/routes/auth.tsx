@@ -254,19 +254,6 @@ function AuthPage() {
       setLoading(false);
     }
   };
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailOut,
-        password: newPassword,
-      });
-      if (error) throw error;
-      toast.success("Senha redefinida!");
-      navigate({ to: "/pedidos" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
