@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette } from "lucide-react";
+import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -81,6 +81,9 @@ function AuthedLayout() {
                 </NavLink>
                 <NavLink to="/admin/mensagens" active={pathname.startsWith("/admin/mensagens")} icon={<MessagesSquare className="h-4 w-4" />}>
                   Mensagens
+                </NavLink>
+                <NavLink to="/admin/catalogo" active={pathname.startsWith("/admin/catalogo")} icon={<ListVideo className="h-4 w-4" />}>
+                  Catálogo
                 </NavLink>
                 <NavLink to="/admin/aparencia" active={pathname.startsWith("/admin/aparencia")} icon={<Palette className="h-4 w-4" />}>
                   Aparência
