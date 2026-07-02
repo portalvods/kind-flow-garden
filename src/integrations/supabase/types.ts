@@ -173,6 +173,8 @@ export type Database = {
         Row: {
           blocked: boolean
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -182,6 +184,8 @@ export type Database = {
         Insert: {
           blocked?: boolean
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -191,6 +195,8 @@ export type Database = {
         Update: {
           blocked?: boolean
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -346,6 +352,20 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
           whatsapp: string
         }[]
+      }
+      admin_set_user_blocked: {
+        Args: { _blocked: boolean; _user_id: string }
+        Returns: undefined
+      }
+      admin_soft_delete_user: { Args: { _user_id: string }; Returns: undefined }
+      admin_update_user: {
+        Args: {
+          _email: string
+          _full_name: string
+          _user_id: string
+          _whatsapp: string
+        }
+        Returns: undefined
       }
       email_by_whatsapp: { Args: { _whatsapp: string }; Returns: string }
       has_role: {
