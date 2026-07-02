@@ -51,16 +51,10 @@ export const setAiAutomation = createServerFn({ method: "POST" })
 // ---- AI extraction ----
 type ExtractedItem = { title: string; year: number | null };
 
-async function extractTitlesWithAI(text: string): Promise<ExtractedItem[]> {
-  const key = getServerEnv("LOVABLE_API_KEY");
-  if (!key) throw new Error("LOVABLE_API_KEY não configurada no servidor.");
-
+async function extractViaLovable(text: string, key: string): Promise<string> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: "google/gemini-3-flash-preview",
       messages: [
@@ -69,28 +63,57 @@ async function extractTitlesWithAI(text: string): Promise<ExtractedItem[]> {
           content:
             "Você extrai títulos de filmes e séries de um 'template' postado por um provedor VOD que lista conteúdos adicionados ou atualizados. Retorne APENAS JSON válido no formato: {\"items\":[{\"title\":\"Nome da obra\",\"year\":2024}]}. O campo year é opcional (use null se não houver). Um item por obra: não separe temporadas ou episódios em vários itens, retorne apenas o nome da série uma única vez. Ignore cabeçalhos, categorias, emojis, formatos (HD/4K/Dublado) e informações que não sejam títulos.",
         },
-        {
-          role: "user",
-          content: `Extraia todos os títulos do template abaixo:\n\n${text.slice(0, 12000)}`,
-        },
+        { role: "user", content: `Extraia todos os títulos do template abaixo:\n\n${text.slice(0, 12000)}` },
       ],
       response_format: { type: "json_object" },
     }),
   });
-
   if (!res.ok) {
     const body = await res.text();
-    if (res.status === 429)
-      throw new Error("Limite de uso da IA excedido. Tente novamente em instantes.");
-    if (res.status === 402)
-      throw new Error("Créditos da IA esgotados. Adicione créditos no workspace da Lovable.");
+    if (res.status === 429) throw new Error("Limite de uso da IA excedido. Tente novamente em instantes.");
+    if (res.status === 402) throw new Error("Créditos da IA esgotados. Adicione créditos no workspace da Lovable ou configure GEMINI_API_KEY na VPS.");
     throw new Error(`Falha na IA (${res.status}): ${body.slice(0, 200)}`);
   }
+  const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  return json.choices?.[0]?.message?.content ?? "{}";
+}
 
-  const json = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = json.choices?.[0]?.message?.content ?? "{}";
+async function extractViaGemini(text: string, key: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: {
+        parts: [{
+          text:
+            "Você extrai títulos de filmes e séries de um 'template' postado por um provedor VOD que lista conteúdos adicionados ou atualizados. Retorne APENAS JSON válido no formato: {\"items\":[{\"title\":\"Nome da obra\",\"year\":2024}]}. O campo year é opcional (use null se não houver). Um item por obra: não separe temporadas ou episódios em vários itens, retorne apenas o nome da série uma única vez. Ignore cabeçalhos, categorias, emojis, formatos (HD/4K/Dublado) e informações que não sejam títulos.",
+        }],
+      },
+      contents: [{ role: "user", parts: [{ text: `Extraia todos os títulos do template abaixo:\n\n${text.slice(0, 12000)}` }] }],
+      generationConfig: { responseMimeType: "application/json" },
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    if (res.status === 429) throw new Error("Limite da API do Gemini excedido. Aguarde uns minutos.");
+    throw new Error(`Falha na IA Gemini (${res.status}): ${body.slice(0, 200)}`);
+  }
+  const json = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+  return json.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+}
+
+async function extractTitlesWithAI(text: string): Promise<ExtractedItem[]> {
+  const geminiKey = getServerEnv("GEMINI_API_KEY");
+  const lovableKey = getServerEnv("LOVABLE_API_KEY");
+  if (!geminiKey && !lovableKey) {
+    throw new Error("Configure GEMINI_API_KEY (grátis em aistudio.google.com/apikey) ou LOVABLE_API_KEY no .env do servidor.");
+  }
+
+  const content = geminiKey
+    ? await extractViaGemini(text, geminiKey)
+    : await extractViaLovable(text, lovableKey!);
+
   try {
     const parsed = JSON.parse(content) as { items?: Array<{ title?: unknown; year?: unknown }> };
     const items = Array.isArray(parsed.items) ? parsed.items : [];
