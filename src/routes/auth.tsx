@@ -245,16 +245,14 @@ function AuthPage() {
     if (!signupToken) return toast.error("Solicite um novo código.");
     setLoading(true);
     try {
-      const { email: emailOut } = await completeResetFn({
+      await completeResetFn({
         data: { whatsapp: otpWhatsapp, code, token: signupToken, new_password: newPassword },
       });
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailOut,
-        password: newPassword,
-      });
-      if (error) throw error;
-      toast.success("Senha redefinida!");
-      navigate({ to: "/pedidos" });
+      toast.success("Senha redefinida! Faça login com a nova senha.");
+      setMode("login");
+      setCode("");
+      setSignupToken(null);
+      setNewPassword("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro");
     } finally {
