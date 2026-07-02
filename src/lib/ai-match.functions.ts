@@ -249,7 +249,7 @@ export const applyMatches = createServerFn({ method: "POST" })
     let notified = 0;
     for (const r of reqs) {
       const kind = r.request_kind as string | null;
-      const newStatus = kind === "conserto" ? "fixed" : "completed";
+      const newStatus: "fixed" | "completed" = kind === "conserto" ? "fixed" : "completed";
       const { error: updErr } = await context.supabase
         .from("requests")
         .update({ status: newStatus, rejection_reason: null })
