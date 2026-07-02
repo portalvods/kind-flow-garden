@@ -1,6 +1,6 @@
 // Server-side WhatsApp messaging (Evolution API) + template rendering.
 import { sanitizePhone } from "./otp.server";
-import { createServerPublicSupabase } from "./supabase-public.server";
+// (server publishable client not needed here; templates are read via admin client)
 import { getServerEnv } from "./env.server";
 
 const DEFAULT_TEMPLATES: Record<string, string> = {
