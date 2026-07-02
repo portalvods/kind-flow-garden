@@ -17,6 +17,31 @@ const configPayloadSchema = z.object({
 
 type RuntimeConfigPayload = z.infer<typeof configPayloadSchema>;
 
+function getNestedString(value: unknown, path: string[]): string | null {
+  let current = value;
+  for (const key of path) {
+    if (!current || typeof current !== "object") return null;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return typeof current === "string" && current.trim() ? current.trim() : null;
+}
+
+function findFirstString(value: unknown, paths: string[][]): string | null {
+  for (const path of paths) {
+    const found = getNestedString(value, path);
+    if (found) return found;
+  }
+  return null;
+}
+
+function normalizeConnectionState(value: unknown): WhatsappStatus["state"] {
+  const raw = String(value ?? "unknown").toLowerCase();
+  if (raw === "open") return "open";
+  if (raw === "connecting") return "connecting";
+  if (raw === "close" || raw === "closed" || raw === "disconnect" || raw === "disconnected") return "close";
+  return "unknown";
+}
+
 function getConfig(payload?: RuntimeConfigPayload) {
   const overrideBaseUrl = payload?.config?.baseUrl?.trim();
   const overrideApiKey = payload?.config?.apiKey?.trim();
@@ -142,8 +167,13 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
     if (!stateRes.ok) {
       return { ...base, message: `Erro ${stateRes.status}: ${stateRes.text.slice(0, 200)}` };
     }
-    const stateData = stateRes.data as { instance?: { state?: string } } | null;
-    const state = (stateData?.instance?.state ?? "unknown") as WhatsappStatus["state"];
+    const state = normalizeConnectionState(
+      findFirstString(stateRes.data, [
+        ["instance", "state"],
+        ["state"],
+        ["connectionState"],
+      ]),
+    );
     base.state = state;
 
     // 2. If connected, fetch profile details
@@ -164,11 +194,31 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
     if (state === "close" || state === "connecting" || state === "unknown") {
       const qrRes = await evoFetch(`/instance/connect/${encodeURIComponent(cfg.instance)}`, data);
       if (qrRes.ok && qrRes.data) {
-        const d = qrRes.data as Record<string, unknown>;
-        const qr = (d.base64 as string | undefined) ?? (d.qrcode as string | undefined) ?? null;
-        const pairing = (d.pairingCode as string | undefined) ?? null;
+        const qr = findFirstString(qrRes.data, [
+          ["base64"],
+          ["qrcode"],
+          ["qrCode"],
+          ["qr"],
+          ["code"],
+          ["qrcode", "base64"],
+          ["qrcode", "code"],
+          ["data", "base64"],
+          ["data", "qrcode"],
+          ["data", "qrCode"],
+          ["data", "qr"],
+          ["data", "code"],
+        ]);
+        const pairing = findFirstString(qrRes.data, [
+          ["pairingCode"],
+          ["pairing_code"],
+          ["data", "pairingCode"],
+          ["data", "pairing_code"],
+        ]);
         base.qrCode = qr;
         base.pairingCode = pairing;
+        if (!qr && !pairing) {
+          base.message = "A Evolution respondeu, mas não enviou QR Code. Tente criar/reiniciar a instância.";
+        }
       } else if (!qrRes.ok) {
         base.message = `Não consegui gerar o QR Code. Erro ${qrRes.status}: ${qrRes.text.slice(0, 220)}`;
       }
