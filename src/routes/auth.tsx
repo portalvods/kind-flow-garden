@@ -405,18 +405,18 @@ function AuthPage() {
             <>
               <h1 className="font-display text-2xl font-bold mb-1">Esqueci minha senha</h1>
               <p className="text-sm text-muted-foreground mb-6">
-                Informe seu e-mail cadastrado para receber o link de recuperação.
+                Informe seu WhatsApp cadastrado. Enviaremos um código para você redefinir a senha.
               </p>
               <form onSubmit={handleForgotStart} className="space-y-4">
                 <div>
-                  <Label htmlFor="fwa">E-mail cadastrado</Label>
+                  <Label htmlFor="fwa">WhatsApp cadastrado (com DDD)</Label>
                   <Input
                     id="fwa"
-                    type="email"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="voce@email.com"
+                    placeholder="5511999999999"
                     required
+                    maxLength={20}
                   />
                 </div>
                 <Button type="submit" className="w-full h-11" disabled={loading}>
