@@ -47,10 +47,11 @@ function loadPanelWhatsappConfig(): PanelWhatsappConfig {
     const saved = window.localStorage.getItem(WHATSAPP_PANEL_CONFIG_KEY);
     if (!saved) return { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
     const parsed = JSON.parse(saved) as Partial<PanelWhatsappConfig>;
+    const savedInstance = parsed.instance?.trim();
     return {
       baseUrl: parsed.baseUrl ?? "",
       apiKey: parsed.apiKey ?? "",
-      instance: parsed.instance ?? DEFAULT_WHATSAPP_INSTANCE,
+      instance: savedInstance && savedInstance !== "portal" ? savedInstance : DEFAULT_WHATSAPP_INSTANCE,
     };
   } catch {
     return { baseUrl: "", apiKey: "", instance: DEFAULT_WHATSAPP_INSTANCE };
