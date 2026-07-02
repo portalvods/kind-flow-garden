@@ -65,6 +65,11 @@ export const startSignup = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startSignupSchema.parse(d))
   .handler(async ({ data }) => {
     const whatsapp = sanitizePhone(data.whatsapp);
+
+    // Rate limit: max 5 signup OTPs per IP/hour, 3 per whatsapp/hour.
+    await enforceOtpRateLimit("otp:signup:ip", getIp(), 5, 3600);
+    await enforceOtpRateLimit("otp:signup:wa", whatsapp, 3, 3600);
+
     if (await isWhatsappAlreadyRegistered(whatsapp)) {
       throw new Error("Esse WhatsApp já está cadastrado. Entre com seu e-mail e senha ou use Esqueci a senha.");
     }
