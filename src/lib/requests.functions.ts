@@ -1,10 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sendTemplate } from "./whatsapp.server";
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(200),
   content_type: z.enum(["movie", "tv"]),
+  request_kind: z.enum(["adicao", "atualizacao", "conserto"]).default("adicao"),
+  format: z.string().trim().max(50).nullable().optional(),
   tmdb_id: z.number().int().nullable().optional(),
   poster_path: z.string().max(300).nullable().optional(),
   year: z.number().int().min(1900).max(2100).nullable().optional(),
@@ -12,15 +15,18 @@ const createSchema = z.object({
   notes: z.string().max(500).nullable().optional(),
 });
 
+const KIND_LABEL: Record<string, string> = {
+  adicao: "Adição",
+  atualizacao: "Atualização",
+  conserto: "Conserto",
+};
+
 const updateStatusSchema = z.object({
   id: z.string().uuid(),
-  status: z.enum(["pending", "processing", "added", "rejected"]),
+  status: z.enum(["pending", "processing", "analyzing", "approved", "added", "completed", "fixed", "rejected"]),
   rejection_reason: z.string().max(500).nullable().optional(),
 });
 
-/**
- * Creates a request for the authenticated user and notifies the admin via WhatsApp.
- */
 export const createRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => createSchema.parse(data))
@@ -33,6 +39,8 @@ export const createRequest = createServerFn({ method: "POST" })
         user_id: userId,
         title: data.title,
         content_type: data.content_type,
+        request_kind: data.request_kind,
+        format: data.format ?? null,
         tmdb_id: data.tmdb_id ?? null,
         poster_path: data.poster_path ?? null,
         year: data.year ?? null,
@@ -43,40 +51,45 @@ export const createRequest = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Load requester profile for the admin notification
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name, whatsapp")
       .eq("id", userId)
       .maybeSingle();
 
+    const vars = {
+      cliente: profile?.full_name ?? "Cliente",
+      whatsapp: profile?.whatsapp ?? "",
+      titulo: data.title,
+      tipo: KIND_LABEL[data.request_kind],
+      formato: data.format ?? "—",
+      obs: data.notes ?? "—",
+    };
+
+    // Notify client (received)
     try {
-      const { notifyAdminNewRequest } = await import("./whatsapp.server");
-      await notifyAdminNewRequest({
-        clientName: profile?.full_name ?? "Cliente",
-        clientWhatsapp: profile?.whatsapp ?? null,
-        title: data.title,
-        contentType: data.content_type,
-        year: data.year ?? null,
-        notes: data.notes ?? null,
-      });
+      await sendTemplate(profile?.whatsapp ?? null, "received", vars);
     } catch (err) {
-      console.error("Admin notification failed", err);
+      console.error("client notify received failed", err);
+    }
+
+    // Notify admin
+    try {
+      const adminNumber = process.env.ADMIN_WHATSAPP;
+      if (adminNumber) await sendTemplate(adminNumber, "admin_new_request", vars);
+    } catch (err) {
+      console.error("admin notify failed", err);
     }
 
     return { id: request.id };
   });
 
-/**
- * Admin-only: change a request's status, log the change, notify the client via WhatsApp.
- */
 export const updateRequestStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => updateStatusSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // Verify admin
     const { data: adminRow } = await supabase
       .from("user_roles")
       .select("role")
@@ -85,10 +98,9 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!adminRow) throw new Error("Forbidden");
 
-    // Fetch current
     const { data: current, error: fetchErr } = await supabase
       .from("requests")
-      .select("id, user_id, title, status")
+      .select("id, user_id, title, status, request_kind, format")
       .eq("id", data.id)
       .maybeSingle();
     if (fetchErr || !current) throw new Error("Pedido não encontrado");
@@ -97,7 +109,7 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
       .from("requests")
       .update({
         status: data.status,
-        rejection_reason: data.status === "rejected" ? data.rejection_reason ?? null : null,
+        rejection_reason: data.status === "rejected" ? (data.rejection_reason ?? null) : null,
       })
       .eq("id", data.id);
     if (updateErr) throw new Error(updateErr.message);
@@ -110,23 +122,38 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
       note: data.rejection_reason ?? null,
     });
 
-    // Notify client
     const { data: profile } = await supabase
       .from("profiles")
-      .select("whatsapp")
+      .select("full_name, whatsapp")
       .eq("id", current.user_id)
       .maybeSingle();
 
-    try {
-      const { notifyClientStatusChange } = await import("./whatsapp.server");
-      await notifyClientStatusChange({
-        clientWhatsapp: profile?.whatsapp ?? null,
-        title: current.title,
-        status: data.status,
-        rejectionReason: data.rejection_reason ?? null,
-      });
-    } catch (err) {
-      console.error("Client notification failed", err);
+    // Map status -> template key
+    const key =
+      data.status === "analyzing" || data.status === "processing"
+        ? "analyzing"
+        : data.status === "approved"
+          ? "approved"
+          : data.status === "completed" || data.status === "added"
+            ? "completed"
+            : data.status === "fixed"
+              ? "fixed"
+              : data.status === "rejected"
+                ? "rejected"
+                : null;
+
+    if (key) {
+      try {
+        await sendTemplate(profile?.whatsapp ?? null, key, {
+          cliente: profile?.full_name ?? "Cliente",
+          titulo: current.title,
+          tipo: KIND_LABEL[current.request_kind as string] ?? "",
+          formato: (current.format as string | null) ?? "—",
+          motivo: data.rejection_reason ?? "—",
+        });
+      } catch (err) {
+        console.error("Client notification failed", err);
+      }
     }
 
     return { ok: true };
