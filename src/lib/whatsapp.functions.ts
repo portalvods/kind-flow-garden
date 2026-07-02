@@ -38,9 +38,6 @@ function getConfig(payload?: RuntimeConfigPayload) {
   };
 }
 
-function getMissingConfigKeys(): string[] {
-  return getMissingServerEnv(["EVOLUTION_API_URL", "EVOLUTION_API_KEY", "EVOLUTION_INSTANCE"]);
-}
 
 async function evoFetch(
   path: string,
