@@ -77,7 +77,7 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
 
 // ---- Forgot password: start ----
 const startResetSchema = z.object({
-  whatsapp: z.string().min(8).max(20),
+  whatsapp: z.string().trim().email().max(150),
 });
 
 export const startPasswordReset = createServerFn({ method: "POST" })
