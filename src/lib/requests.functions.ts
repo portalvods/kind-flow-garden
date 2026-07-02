@@ -1,9 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { sendTemplate } from "./whatsapp.server";
+import { sendTemplate, getAdminWhatsappNumber } from "./whatsapp.server";
 import { normalizeTitle } from "./m3u.server";
-import { getServerEnv } from "./env.server";
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(200),
