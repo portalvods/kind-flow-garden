@@ -46,6 +46,7 @@ function AuthPage() {
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [otpWhatsapp, setOtpWhatsapp] = useState("");
+  const [signupToken, setSignupToken] = useState("");
   const [devHint, setDevHint] = useState<string | null>(null);
 
   const settingsFn = useServerFn(getPublicSettings);
@@ -75,6 +76,7 @@ function AuthPage() {
     setStep("form");
     setCode("");
     setNewPassword("");
+    setSignupToken("");
     setDevHint(null);
   };
 
@@ -115,6 +117,7 @@ function AuthPage() {
         data: { email, password, full_name: fullName, whatsapp },
       });
       setOtpWhatsapp(res.whatsapp);
+      setSignupToken(res.token);
       setDevHint(res.devCode ? `Modo dev — código: ${res.devCode}` : null);
       setStep("otp");
       toast.success("Enviamos um código no seu WhatsApp.");
@@ -128,12 +131,25 @@ function AuthPage() {
   const handleSignupVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) return toast.error("Digite o código de 6 dígitos.");
+    if (!signupToken) return toast.error("Solicite um novo código.");
     setLoading(true);
     try {
-      const { email: emailOut } = await verifySignupFn({
-        data: { whatsapp: otpWhatsapp, code },
+      const verified = await verifySignupFn({
+        data: { whatsapp: otpWhatsapp, code, token: signupToken },
       });
-      const { error } = await supabase.auth.signInWithPassword({ email: emailOut, password });
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: verified.email,
+        password,
+        options: {
+          data: {
+            full_name: verified.full_name,
+            whatsapp: verified.whatsapp,
+          },
+        },
+      });
+      if (signUpError) throw signUpError;
+
+      const { error } = await supabase.auth.signInWithPassword({ email: verified.email, password });
       if (error) throw error;
       toast.success("Conta criada!");
       navigate({ to: "/pedidos" });

@@ -1,7 +1,9 @@
 // Settings and branding server functions.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 async function assertAdmin(context: { supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> }; userId: string }) {
   const { data, error } = await context.supabase.rpc("has_role", {
@@ -12,8 +14,14 @@ async function assertAdmin(context: { supabase: { rpc: (fn: string, args: Record
 }
 
 export const getPublicSettings = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("site_settings").select("key, value");
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return { logo_url: null, site_name: "Portal VOD" };
+
+  const supabasePublic = createClient<Database>(url, key, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  });
+  const { data } = await supabasePublic.from("site_settings").select("key, value");
   const map: Record<string, string | null> = {};
   for (const row of data ?? []) map[row.key as string] = (row.value as string | null) ?? null;
   return {
