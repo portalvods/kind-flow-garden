@@ -47,26 +47,51 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 });
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "Pendente",
+  pending: "Recebido",
+  analyzing: "Em análise",
   processing: "Em andamento",
+  approved: "Aprovado",
   added: "Adicionado",
+  completed: "Concluído",
+  fixed: "Consertado",
   rejected: "Recusado",
 };
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  analyzing: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   processing: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  approved: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   added: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  completed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  fixed: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   rejected: "bg-red-500/15 text-red-400 border-red-500/30",
 };
+const KIND_LABEL: Record<string, string> = {
+  adicao: "Adição",
+  atualizacao: "Atualização",
+  conserto: "Conserto",
+};
+
+type StatusKey =
+  | "pending"
+  | "analyzing"
+  | "processing"
+  | "approved"
+  | "added"
+  | "completed"
+  | "fixed"
+  | "rejected";
 
 type AdminRequest = {
   id: string;
   user_id: string;
   title: string;
   content_type: "movie" | "tv";
+  request_kind: string | null;
+  format: string | null;
   poster_path: string | null;
   year: number | null;
-  status: "pending" | "processing" | "added" | "rejected";
+  status: StatusKey;
   notes: string | null;
   rejection_reason: string | null;
   created_at: string;
