@@ -25,13 +25,16 @@ const entry = mod.default ?? mod;
 const fetchHandler = entry.fetch ?? mod.fetch;
 
 if (typeof fetchHandler !== "function") {
-  console.error(`O arquivo ${entryPath} não exporta um handler fetch válido.`);
-  process.exit(1);
+  // Nitro `node-server` builds start the HTTP server as soon as the entry file
+  // is imported. In that format there is no exported fetch handler to bridge.
+  console.log(`Portal VOD iniciado pelo servidor nativo: ${entryPath}`);
+  console.log(`Se o Nginx estiver apontando para a porta ${process.env.PORT || 3000}, o site deve responder normalmente.`);
+  await new Promise(() => undefined);
 }
 
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "0.0.0.0";
-const publicDir = resolve(rootDir, "dist/client");
+const publicDir = resolve(rootDir, ".output/public");
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
