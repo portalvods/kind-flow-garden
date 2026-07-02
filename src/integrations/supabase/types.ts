@@ -500,6 +500,7 @@ export type Database = {
         Returns: {
           enabled: boolean
           message: string
+          orders_enabled: boolean
         }[]
       }
       bot_create_request: {
