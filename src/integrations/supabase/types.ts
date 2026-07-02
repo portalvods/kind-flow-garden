@@ -502,6 +502,16 @@ export type Database = {
           message: string
         }[]
       }
+      bot_create_request: {
+        Args: {
+          _content_type?: string
+          _request_kind?: string
+          _secret: string
+          _title: string
+          _whatsapp: string
+        }
+        Returns: Json
+      }
       bot_try_hit: {
         Args: { _key: string; _secret: string; _ttl_seconds?: number }
         Returns: boolean
