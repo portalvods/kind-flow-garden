@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -124,7 +124,6 @@ export function writeLocalWhatsappConfig(config: LocalWhatsappConfig): boolean {
   try {
     const current = readLocalWhatsappConfig();
     const next = { ...current, ...config };
-    const { writeFileSync } = require("fs") as typeof import("fs");
     writeFileSync(getLocalWhatsappConfigPath(), JSON.stringify(next, null, 2));
     return true;
   } catch {
@@ -134,7 +133,6 @@ export function writeLocalWhatsappConfig(config: LocalWhatsappConfig): boolean {
 
 export function clearLocalWhatsappConfig(): boolean {
   try {
-    const { unlinkSync } = require("fs") as typeof import("fs");
     const path = getLocalWhatsappConfigPath();
     if (existsSync(path)) unlinkSync(path);
     return true;
