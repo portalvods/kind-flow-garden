@@ -303,6 +303,36 @@ function AutomationPage() {
           )}
         </>
       )}
+
+      {/* Histórico */}
+      <div className="glass-card rounded-2xl p-5 space-y-3">
+        <div className="flex items-center gap-2 font-semibold">
+          <History className="h-4 w-4 text-primary" />
+          Histórico de análises
+        </div>
+        {!history || history.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Nenhuma análise ainda.</p>
+        ) : (
+          <div className="space-y-2">
+            {history.map((h) => (
+              <div
+                key={h.id}
+                className="rounded-lg border border-border/40 p-3 text-xs flex flex-wrap gap-x-4 gap-y-1"
+              >
+                <span className="text-muted-foreground">
+                  {new Date(h.created_at).toLocaleString("pt-BR")}
+                </span>
+                <span>📝 extraídos: <b>{h.extracted_count}</b></span>
+                <span>🎯 casaram: <b>{h.matched_count}</b></span>
+                <span>✅ aplicados: <b>{h.applied_count}</b></span>
+                <span>📱 notificados: <b>{h.notified_count}</b></span>
+                {h.auto_applied && <Badge variant="secondary" className="text-[10px]">auto</Badge>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
