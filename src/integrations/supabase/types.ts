@@ -443,6 +443,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_active_whatsapps: {
+        Args: never
+        Returns: {
+          full_name: string
+          user_id: string
+          whatsapp: string
+        }[]
+      }
       admin_duplicate_requests: {
         Args: never
         Returns: {
@@ -552,6 +560,18 @@ export type Database = {
           _whatsapp: string
         }
         Returns: undefined
+      }
+      weekly_news: {
+        Args: { _days?: number }
+        Returns: {
+          completed_at: string
+          content_type: string
+          poster_path: string
+          request_id: string
+          request_kind: string
+          title: string
+          year: number
+        }[]
       }
       whatsapp_exists: { Args: { _whatsapp: string }; Returns: boolean }
     }

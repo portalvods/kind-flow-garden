@@ -10,6 +10,7 @@ import { createRequest } from "@/lib/requests.functions";
 import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
 import { getRequestTimeline } from "@/lib/admin-extras.functions";
+import { suggestAlternatives } from "@/lib/suggest.functions";
 
 import { checkAvailability } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
@@ -351,6 +352,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
   const availFn = useServerFn(checkAvailability);
+  const suggestFn = useServerFn(suggestAlternatives);
 
   const { data: search, isFetching } = useQuery({
     queryKey: ["tmdb", query],
@@ -373,6 +375,19 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     enabled: !!selected && kind === "adicao",
     staleTime: 30_000,
   });
+
+  // Similar-title suggestions (fuzzy) — only when kind=adicao and no exact catalog match.
+  const suggestTitle = selected?.title ?? (manualTitle.trim().length >= 3 ? manualTitle.trim() : "");
+  const suggestKind: "movie" | "series" | undefined = selected
+    ? selected.type === "tv" ? "series" : "movie"
+    : manualTitle.trim().length >= 3 ? (manualType === "tv" ? "series" : "movie") : undefined;
+  const { data: suggestions } = useQuery({
+    queryKey: ["suggest", suggestTitle, suggestKind, kind],
+    queryFn: () => suggestFn({ data: { title: suggestTitle, kind: suggestKind, limit: 3 } }),
+    enabled: kind === "adicao" && suggestTitle.length >= 3 && !availability?.exists,
+    staleTime: 30_000,
+  });
+
 
   const blockedByCatalog = kind === "adicao" && availability?.exists === true;
 
@@ -607,6 +622,27 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
           </select>
         </div>
       </div>
+
+      {kind === "adicao" && !availability?.exists && suggestions && suggestions.suggestions.length > 0 && (
+        <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-3">
+          <p className="text-xs font-semibold text-cyan-300 mb-2">
+            💡 Já temos algo parecido no catálogo:
+          </p>
+          <ul className="text-xs text-cyan-100/90 space-y-1">
+            {suggestions.suggestions.map((s, i) => (
+              <li key={i}>
+                • <strong>{s.title}</strong>
+                {s.year && ` (${s.year})`}
+                {s.category && <span className="opacity-70"> — {s.category}</span>}
+                {s.kind === "series" && <span className="opacity-70"> · Série</span>}
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            Se for uma dessas, dá uma olhada primeiro. Não é? Segue enviando normalmente.
+          </p>
+        </div>
+      )}
 
       <div>
         <Label htmlFor="notes">Observações (opcional)</Label>

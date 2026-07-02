@@ -168,7 +168,7 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
 
     const { data: current, error: fetchErr } = await supabase
       .from("requests")
-      .select("id, user_id, title, status, request_kind, format")
+      .select("id, user_id, title, status, request_kind, format, content_type")
       .eq("id", data.id)
       .maybeSingle();
     if (fetchErr || !current) throw new Error("Pedido não encontrado");
@@ -212,15 +212,57 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
 
     if (key) {
       try {
+        // On rejection, try to append 3 catalog alternatives (same kind).
+        let templateKey = key;
+        let alternativasStr = "";
+        if (key === "rejected") {
+          try {
+            const { normalizeTitle } = await import("./m3u.server");
+            const norm = normalizeTitle(current.title as string);
+            const words = norm.split(" ").filter((w) => w.length >= 3);
+            const catKind = (current as { content_type?: string }).content_type === "tv" ? "series" : "movie";
+            const found = new Map<string, { title: string; year: number | null; category: string | null }>();
+            const push = (rows: Array<Record<string, unknown>> | null) => {
+              for (const r of rows ?? []) {
+                const k = `${r.title}|${r.year ?? ""}`;
+                if (!found.has(k)) found.set(k, { title: String(r.title ?? ""), year: (r.year as number | null) ?? null, category: (r.category as string | null) ?? null });
+              }
+            };
+            const q1 = await supabase.from("catalog_items").select("title, year, category").eq("kind", catKind).ilike("title_normalized", `%${norm}%`).limit(5);
+            push(q1.data);
+            if (found.size < 3 && words.length) {
+              const orExpr = words.slice(0, 4).map((w) => `title_normalized.ilike.%${w}%`).join(",");
+              const q2 = await supabase.from("catalog_items").select("title, year, category").eq("kind", catKind).or(orExpr).limit(10);
+              push(q2.data);
+            }
+            const scored = Array.from(found.values())
+              .map((s) => {
+                const n = normalizeTitle(s.title).split(" ");
+                return { s, score: words.filter((w) => n.includes(w)).length };
+              })
+              .filter((x) => x.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 3)
+              .map((x) => x.s);
+            if (scored.length) {
+              alternativasStr = scored.map((s) => `• ${s.title}${s.year ? ` (${s.year})` : ""}${s.category ? ` — ${s.category}` : ""}`).join("\n");
+              templateKey = "rejected_with_alternatives";
+            }
+          } catch (err) {
+            console.warn("[reject] suggest alternatives failed", err);
+          }
+        }
+
         await sendTemplate(
           profile?.whatsapp ?? null,
-          key,
+          templateKey,
           {
             cliente: profile?.full_name ?? "Cliente",
             titulo: current.title,
             tipo: KIND_LABEL[current.request_kind as string] ?? "",
             formato: (current.format as string | null) ?? "—",
             motivo: data.rejection_reason ?? "—",
+            alternativas: alternativasStr || "—",
           },
           { supabase: supabase as never },
         );
@@ -228,6 +270,7 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
         console.error("Client notification failed", err);
       }
     }
+
 
     return { ok: true };
   });
