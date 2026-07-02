@@ -192,6 +192,42 @@ function AppearancePage() {
               </Button>
             </div>
           </div>
+
+          <div className="glass-card rounded-2xl p-6 space-y-4">
+            <div>
+              <h2 className="font-display font-semibold text-lg">Limite diário de pedidos</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Quantidade máxima de pedidos que cada cliente pode enviar por dia. Administradores não têm limite.
+              </p>
+            </div>
+            <div className="flex gap-2 items-end max-w-md">
+              <div className="flex-1">
+                <Label htmlFor="daily-limit">Pedidos por cliente / dia</Label>
+                <Input
+                  id="daily-limit"
+                  type="number"
+                  min={1}
+                  max={500}
+                  defaultValue={limitData?.limit ?? 5}
+                  onChange={(e) => setDailyLimit(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={() => saveLimit.mutate()}
+                disabled={!dailyLimit || Number(dailyLimit) < 1 || saveLimit.isPending}
+              >
+                {saveLimit.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Salvar
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Atual: <span className="text-primary font-semibold">{limitData?.limit ?? "—"}</span> pedidos/dia.
+            </p>
+          </div>
         </>
       )}
     </div>
