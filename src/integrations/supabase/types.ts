@@ -14,6 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      catalog_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          kind: string
+          source_id: string
+          stream_url: string | null
+          title: string
+          title_normalized: string
+          tmdb_id: number | null
+          year: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          source_id: string
+          stream_url?: string | null
+          title: string
+          title_normalized: string
+          tmdb_id?: number | null
+          year?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          source_id?: string
+          stream_url?: string | null
+          title?: string
+          title_normalized?: string
+          tmdb_id?: number | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_items_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "m3u_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      m3u_sources: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          last_error: string | null
+          last_status: string | null
+          last_synced_at: string | null
+          movies_count: number
+          name: string
+          series_count: number
+          sync_interval_hours: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          movies_count?: number
+          name: string
+          series_count?: number
+          sync_interval_hours?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_status?: string | null
+          last_synced_at?: string | null
+          movies_count?: number
+          name?: string
+          series_count?: number
+          sync_interval_hours?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       message_templates: {
         Row: {
           content: string

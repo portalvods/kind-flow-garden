@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sendTemplate } from "./whatsapp.server";
+import { normalizeTitle } from "./m3u.server";
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -55,6 +56,49 @@ export const createRequest = createServerFn({ method: "POST" })
         .gte("created_at", startOfDay.toISOString());
       if ((count ?? 0) >= dailyLimit) {
         throw new Error(`Limite diário atingido (${dailyLimit} pedidos/dia). Tente novamente amanhã.`);
+      }
+    }
+
+    // Availability check: block "adicao" if content already in M3U catalog
+    if (data.request_kind === "adicao") {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const catalogKind = data.content_type === "tv" ? "series" : "movie";
+      const norm = normalizeTitle(data.title);
+      let match: { category: string | null; title: string } | null = null;
+
+      if (data.tmdb_id) {
+        const { data: byTmdb } = await supabaseAdmin
+          .from("catalog_items")
+          .select("category, title")
+          .eq("tmdb_id", data.tmdb_id)
+          .eq("kind", catalogKind)
+          .limit(1);
+        if (byTmdb && byTmdb.length) match = byTmdb[0];
+      }
+      if (!match && data.year) {
+        const { data: byBoth } = await supabaseAdmin
+          .from("catalog_items")
+          .select("category, title")
+          .eq("title_normalized", norm)
+          .eq("year", data.year)
+          .eq("kind", catalogKind)
+          .limit(1);
+        if (byBoth && byBoth.length) match = byBoth[0];
+      }
+      if (!match) {
+        const { data: byTitle } = await supabaseAdmin
+          .from("catalog_items")
+          .select("category, title")
+          .eq("title_normalized", norm)
+          .eq("kind", catalogKind)
+          .limit(1);
+        if (byTitle && byTitle.length) match = byTitle[0];
+      }
+      if (match) {
+        const where = match.category ? ` (categoria: ${match.category})` : "";
+        throw new Error(
+          `Este conteúdo já está disponível no catálogo${where}. Se você quer atualização ou conserto, mude o tipo de solicitação.`,
+        );
       }
     }
 
