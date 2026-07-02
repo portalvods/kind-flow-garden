@@ -143,7 +143,7 @@ export const createRequest = createServerFn({ method: "POST" })
 
     // Notify admin
     try {
-      const adminNumber = getServerEnv("ADMIN_WHATSAPP");
+      const adminNumber = await getAdminWhatsappNumber();
       if (adminNumber) await sendTemplate(adminNumber, "admin_new_request", vars);
     } catch (err) {
       console.error("admin notify failed", err);
