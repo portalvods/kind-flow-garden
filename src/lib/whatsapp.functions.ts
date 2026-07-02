@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { clearLocalWhatsappConfig, getServerEnv, writeLocalWhatsappConfig } from "./env.server";
+import { clearLocalWhatsappConfig, getServerEnv, readLocalWhatsappConfig, writeLocalWhatsappConfig } from "./env.server";
 
 // ---- Helpers ----
 
@@ -48,11 +48,12 @@ function getConfig(payload?: RuntimeConfigPayload) {
   const overrideBaseUrl = payload?.config?.baseUrl?.trim();
   const overrideApiKey = payload?.config?.apiKey?.trim();
   const overrideInstance = payload?.config?.instance?.trim();
+  const local = readLocalWhatsappConfig();
 
   // Merge por campo: qualquer valor vindo do painel sobrescreve o env.
-  const baseUrl = overrideBaseUrl || getServerEnv("EVOLUTION_API_URL") || "";
-  const apiKey = overrideApiKey || getServerEnv("EVOLUTION_API_KEY") || "";
-  const instance = overrideInstance || getServerEnv("EVOLUTION_INSTANCE") || "";
+  const baseUrl = overrideBaseUrl || local.evolution_url || getServerEnv("EVOLUTION_API_URL") || "";
+  const apiKey = overrideApiKey || local.evolution_api_key || getServerEnv("EVOLUTION_API_KEY") || "";
+  const instance = overrideInstance || local.evolution_instance || getServerEnv("EVOLUTION_INSTANCE") || "";
 
   const usedPanel = !!(overrideBaseUrl || overrideApiKey || overrideInstance);
 
