@@ -10,6 +10,7 @@ import { createRequest } from "@/lib/requests.functions";
 import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
 import { getRequestTimeline } from "@/lib/admin-extras.functions";
+import { suggestAlternatives } from "@/lib/suggest.functions";
 
 import { checkAvailability } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
