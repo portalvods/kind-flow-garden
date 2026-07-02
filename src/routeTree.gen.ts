@@ -16,11 +16,14 @@ import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
+import { Route as AuthenticatedAdminRankingRouteImport } from './routes/_authenticated/admin.ranking'
 import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
 import { Route as AuthenticatedAdminFerramentasRouteImport } from './routes/_authenticated/admin.ferramentas'
 import { Route as AuthenticatedAdminCatalogoRouteImport } from './routes/_authenticated/admin.catalogo'
+import { Route as AuthenticatedAdminBotRouteImport } from './routes/_authenticated/admin.bot'
 import { Route as AuthenticatedAdminAutomacaoRouteImport } from './routes/_authenticated/admin.automacao'
 import { Route as AuthenticatedAdminAparenciaRouteImport } from './routes/_authenticated/admin.aparencia'
+import { Route as ApiPublicWebhooksEvolutionRouteImport } from './routes/api/public/webhooks/evolution'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -58,6 +61,12 @@ const AuthenticatedAdminUsuariosRoute =
     path: '/admin/usuarios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminRankingRoute =
+  AuthenticatedAdminRankingRouteImport.update({
+    id: '/admin/ranking',
+    path: '/admin/ranking',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminMensagensRoute =
   AuthenticatedAdminMensagensRouteImport.update({
     id: '/admin/mensagens',
@@ -76,6 +85,11 @@ const AuthenticatedAdminCatalogoRoute =
     path: '/admin/catalogo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminBotRoute = AuthenticatedAdminBotRouteImport.update({
+  id: '/admin/bot',
+  path: '/admin/bot',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminAutomacaoRoute =
   AuthenticatedAdminAutomacaoRouteImport.update({
     id: '/admin/automacao',
@@ -88,6 +102,12 @@ const AuthenticatedAdminAparenciaRoute =
     path: '/admin/aparencia',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicWebhooksEvolutionRoute =
+  ApiPublicWebhooksEvolutionRouteImport.update({
+    id: '/api/public/webhooks/evolution',
+    path: '/api/public/webhooks/evolution',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,12 +115,15 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
+  '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
+  '/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,12 +131,15 @@ export interface FileRoutesByTo {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
+  '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
+  '/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,12 +149,15 @@ export interface FileRoutesById {
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
+  '/_authenticated/admin/bot': typeof AuthenticatedAdminBotRoute
   '/_authenticated/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/_authenticated/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
+  '/_authenticated/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,12 +167,15 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/admin/aparencia'
     | '/admin/automacao'
+    | '/admin/bot'
     | '/admin/catalogo'
     | '/admin/ferramentas'
     | '/admin/mensagens'
+    | '/admin/ranking'
     | '/admin/usuarios'
     | '/admin/whatsapp'
     | '/admin/'
+    | '/api/public/webhooks/evolution'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,12 +183,15 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/admin/aparencia'
     | '/admin/automacao'
+    | '/admin/bot'
     | '/admin/catalogo'
     | '/admin/ferramentas'
     | '/admin/mensagens'
+    | '/admin/ranking'
     | '/admin/usuarios'
     | '/admin/whatsapp'
     | '/admin'
+    | '/api/public/webhooks/evolution'
   id:
     | '__root__'
     | '/'
@@ -165,18 +200,22 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos'
     | '/_authenticated/admin/aparencia'
     | '/_authenticated/admin/automacao'
+    | '/_authenticated/admin/bot'
     | '/_authenticated/admin/catalogo'
     | '/_authenticated/admin/ferramentas'
     | '/_authenticated/admin/mensagens'
+    | '/_authenticated/admin/ranking'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/whatsapp'
     | '/_authenticated/admin/'
+    | '/api/public/webhooks/evolution'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicWebhooksEvolutionRoute: typeof ApiPublicWebhooksEvolutionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -230,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/ranking': {
+      id: '/_authenticated/admin/ranking'
+      path: '/admin/ranking'
+      fullPath: '/admin/ranking'
+      preLoaderRoute: typeof AuthenticatedAdminRankingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/mensagens': {
       id: '/_authenticated/admin/mensagens'
       path: '/admin/mensagens'
@@ -251,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCatalogoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/bot': {
+      id: '/_authenticated/admin/bot'
+      path: '/admin/bot'
+      fullPath: '/admin/bot'
+      preLoaderRoute: typeof AuthenticatedAdminBotRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/automacao': {
       id: '/_authenticated/admin/automacao'
       path: '/admin/automacao'
@@ -265,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAparenciaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/webhooks/evolution': {
+      id: '/api/public/webhooks/evolution'
+      path: '/api/public/webhooks/evolution'
+      fullPath: '/api/public/webhooks/evolution'
+      preLoaderRoute: typeof ApiPublicWebhooksEvolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,9 +332,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
+  AuthenticatedAdminBotRoute: typeof AuthenticatedAdminBotRoute
   AuthenticatedAdminCatalogoRoute: typeof AuthenticatedAdminCatalogoRoute
   AuthenticatedAdminFerramentasRoute: typeof AuthenticatedAdminFerramentasRoute
   AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
+  AuthenticatedAdminRankingRoute: typeof AuthenticatedAdminRankingRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -284,9 +346,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,
+  AuthenticatedAdminBotRoute: AuthenticatedAdminBotRoute,
   AuthenticatedAdminCatalogoRoute: AuthenticatedAdminCatalogoRoute,
   AuthenticatedAdminFerramentasRoute: AuthenticatedAdminFerramentasRoute,
   AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
+  AuthenticatedAdminRankingRoute: AuthenticatedAdminRankingRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -299,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicWebhooksEvolutionRoute: ApiPublicWebhooksEvolutionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

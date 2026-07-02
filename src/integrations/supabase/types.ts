@@ -473,6 +473,19 @@ export type Database = {
         Returns: undefined
       }
       admin_soft_delete_user: { Args: { _user_id: string }; Returns: undefined }
+      admin_top_clients: {
+        Args: { _limit?: number }
+        Returns: {
+          completed: number
+          full_name: string
+          last_request: string
+          pending: number
+          rejected: number
+          total: number
+          user_id: string
+          whatsapp: string
+        }[]
+      }
       admin_update_user: {
         Args: {
           _email: string
@@ -481,6 +494,17 @@ export type Database = {
           _whatsapp: string
         }
         Returns: undefined
+      }
+      bot_config_by_secret: {
+        Args: { _secret: string }
+        Returns: {
+          enabled: boolean
+          message: string
+        }[]
+      }
+      bot_try_hit: {
+        Args: { _key: string; _secret: string; _ttl_seconds?: number }
+        Returns: boolean
       }
       complete_wa_password_reset: {
         Args: { _code_hash: string; _new_password: string; _token_hash: string }
@@ -498,6 +522,15 @@ export type Database = {
       rate_limit_check_and_hit: {
         Args: { _bucket: string; _key: string; _window_seconds: number }
         Returns: number
+      }
+      request_timeline: {
+        Args: { _request_id: string }
+        Returns: {
+          created_at: string
+          from_status: string
+          note: string
+          to_status: string
+        }[]
       }
       request_wa_password_reset: {
         Args: {

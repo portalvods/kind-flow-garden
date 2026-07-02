@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { createRequest } from "@/lib/requests.functions";
 import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
+import { getRequestTimeline } from "@/lib/admin-extras.functions";
 
 import { checkAvailability } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
@@ -273,7 +274,66 @@ function RequestCard({ request }: { request: RequestRow }) {
             )}
           </div>
         )}
+        <TimelineToggle requestId={request.id} />
       </div>
+    </div>
+  );
+}
+
+const TIMELINE_LABEL: Record<string, string> = {
+  pending: "Recebido",
+  analyzing: "Em análise",
+  processing: "Em andamento",
+  approved: "Aprovado",
+  added: "Adicionado",
+  completed: "Concluído",
+  fixed: "Consertado",
+  rejected: "Recusado",
+};
+
+function TimelineToggle({ requestId }: { requestId: string }) {
+  const [open, setOpen] = useState(false);
+  const fetchFn = useServerFn(getRequestTimeline);
+  const { data, isLoading } = useQuery({
+    queryKey: ["timeline", requestId],
+    queryFn: () => fetchFn({ data: { requestId } }),
+    enabled: open,
+  });
+  return (
+    <div className="mt-3 pt-3 border-t border-border/40">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+      >
+        <History className="h-3.5 w-3.5" />
+        {open ? "Ocultar histórico" : "Ver histórico"}
+      </button>
+      {open && (
+        <div className="mt-2 space-y-1.5">
+          {isLoading ? (
+            <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> carregando...
+            </p>
+          ) : !data?.events?.length ? (
+            <p className="text-xs text-muted-foreground">Sem alterações registradas ainda.</p>
+          ) : (
+            data.events.map((e, i) => (
+              <div key={i} className="text-[11px] flex gap-2">
+                <span className="text-muted-foreground shrink-0">
+                  {new Date(e.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <span>
+                  <span className="text-muted-foreground">{TIMELINE_LABEL[e.from_status] ?? e.from_status}</span>
+                  {" → "}
+                  <span className="text-foreground font-medium">{TIMELINE_LABEL[e.to_status] ?? e.to_status}</span>
+                  {e.note && <span className="text-muted-foreground"> · {e.note}</span>}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
