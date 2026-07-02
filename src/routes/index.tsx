@@ -96,7 +96,7 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border/40 py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Portal VOD
+        © {new Date().getFullYear()} {siteName}
       </footer>
     </div>
   );
