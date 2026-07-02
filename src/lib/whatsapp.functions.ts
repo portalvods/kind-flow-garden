@@ -17,6 +17,8 @@ const configPayloadSchema = z.object({
 
 type RuntimeConfigPayload = z.infer<typeof configPayloadSchema>;
 
+const DEFAULT_WHATSAPP_INSTANCE = "portal-vod";
+
 function getNestedString(value: unknown, path: string[]): string | null {
   let current = value;
   for (const key of path) {
