@@ -100,7 +100,7 @@ type AdminRequest = {
 
 function AdminPage() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"pending" | "processing" | "added" | "rejected" | "all">("pending");
+  const [tab, setTab] = useState<"pending" | "analyzing" | "approved" | "completed" | "rejected" | "all">("pending");
   const [search, setSearch] = useState("");
   const [rejectTarget, setRejectTarget] = useState<AdminRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -131,13 +131,19 @@ function AdminPage() {
 
   const stats = {
     pending: requests?.filter((r) => r.status === "pending").length ?? 0,
-    processing: requests?.filter((r) => r.status === "processing").length ?? 0,
-    added: requests?.filter((r) => r.status === "added").length ?? 0,
+    analyzing: requests?.filter((r) => r.status === "analyzing").length ?? 0,
+    approved: requests?.filter((r) => ["approved", "processing"].includes(r.status)).length ?? 0,
+    completed: requests?.filter((r) => ["completed", "added", "fixed"].includes(r.status)).length ?? 0,
     rejected: requests?.filter((r) => r.status === "rejected").length ?? 0,
   };
 
   const filtered = (requests ?? [])
-    .filter((r) => tab === "all" || r.status === tab)
+    .filter((r) => {
+      if (tab === "all") return true;
+      if (tab === "approved") return r.status === "approved" || r.status === "processing";
+      if (tab === "completed") return r.status === "completed" || r.status === "added" || r.status === "fixed";
+      return r.status === tab;
+    })
     .filter(
       (r) =>
         !search ||
@@ -148,14 +154,14 @@ function AdminPage() {
   const changeStatus = useMutation({
     mutationFn: async (input: {
       id: string;
-      status: "pending" | "processing" | "added" | "rejected";
+      status: StatusKey;
       rejection_reason?: string | null;
     }) => updateFn({ data: input }),
     onSuccess: (_, vars) => {
       toast.success(
-        vars.status === "added"
-          ? "Marcado como adicionado. Cliente foi notificado."
-          : "Status atualizado.",
+        vars.status === "completed" || vars.status === "added"
+          ? "Marcado como concluído. Cliente foi notificado."
+          : "Status atualizado. Cliente notificado.",
       );
       qc.invalidateQueries({ queryKey: ["admin-requests"] });
       setRejectTarget(null);
