@@ -365,15 +365,14 @@ function NotConfiguredCard({ message }: { message?: string }) {
             </p>
           </div>
           <div className="rounded-lg bg-muted/30 border border-border/40 p-4 space-y-2 text-sm">
-            <p className="font-medium">Secrets necessários:</p>
+            <p className="font-medium">Agora você pode configurar de 2 formas:</p>
             <ul className="space-y-1 text-muted-foreground font-mono text-xs">
-              <li>• <code className="text-foreground">EVOLUTION_API_URL</code> — ex: <code>https://evo.seudominio.com</code></li>
-              <li>• <code className="text-foreground">EVOLUTION_API_KEY</code> — a chave que você definiu no docker-compose</li>
-              <li>• <code className="text-foreground">EVOLUTION_INSTANCE</code> — nome da instância (ex: <code>portal</code>)</li>
+              <li>• Preencher os campos acima e clicar em <code className="text-foreground">Aplicar configuração</code></li>
+              <li>• Ou manter as variáveis <code className="text-foreground">EVOLUTION_API_URL</code>, <code className="text-foreground">EVOLUTION_API_KEY</code> e <code className="text-foreground">EVOLUTION_INSTANCE</code> no servidor</li>
             </ul>
           </div>
           <p className="text-xs text-muted-foreground">
-            Me peça no chat para adicionar essas chaves e a página funcionará automaticamente.
+            Na VPS, a forma mais simples é preencher os campos acima com a URL, chave e instância.
           </p>
         </div>
       </div>
