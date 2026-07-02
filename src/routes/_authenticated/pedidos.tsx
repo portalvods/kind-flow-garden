@@ -623,6 +623,27 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
+      {kind === "adicao" && !availability?.exists && suggestions && suggestions.suggestions.length > 0 && (
+        <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-3">
+          <p className="text-xs font-semibold text-cyan-300 mb-2">
+            💡 Já temos algo parecido no catálogo:
+          </p>
+          <ul className="text-xs text-cyan-100/90 space-y-1">
+            {suggestions.suggestions.map((s, i) => (
+              <li key={i}>
+                • <strong>{s.title}</strong>
+                {s.year && ` (${s.year})`}
+                {s.category && <span className="opacity-70"> — {s.category}</span>}
+                {s.kind === "series" && <span className="opacity-70"> · Série</span>}
+              </li>
+            ))}
+          </ul>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            Se for uma dessas, dá uma olhada primeiro. Não é? Segue enviando normalmente.
+          </p>
+        </div>
+      )}
+
       <div>
         <Label htmlFor="notes">Observações (opcional)</Label>
         <Textarea
