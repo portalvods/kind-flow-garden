@@ -147,28 +147,63 @@ function AuthPage() {
           },
         },
       });
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        const msg = signUpError.message || "";
+        // If user already exists, fall through to sign-in.
+        if (!/registered|exists|já/i.test(msg)) throw signUpError;
+      }
 
-      const { error } = await supabase.auth.signInWithPassword({ email: verified.email, password });
-      if (error) throw error;
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: verified.email,
+        password,
+      });
+      if (signInErr) {
+        if (/not confirmed/i.test(signInErr.message)) {
+          throw new Error(
+            "Conta criada, mas a confirmação por e-mail está ativada no backend. Abra o link enviado ao seu e-mail ou desative a confirmação em Cloud → Auth.",
+          );
+        }
+        throw signInErr;
+      }
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
-        await (supabase.from("profiles") as never as {
-          upsert: (values: Record<string, unknown>) => Promise<unknown>;
+        const { error: profErr } = await (supabase.from("profiles") as never as {
+          upsert: (values: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
         }).upsert({
           id: userData.user.id,
           full_name: verified.full_name,
           whatsapp: verified.whatsapp,
           email: verified.email,
         });
-        await (supabase.from("user_roles") as never as {
-          insert: (values: Record<string, unknown>) => Promise<unknown>;
+        if (profErr) console.warn("[signup] profiles upsert:", profErr);
+        const { error: roleErr } = await (supabase.from("user_roles") as never as {
+          insert: (values: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
         }).insert({ user_id: userData.user.id, role: "cliente" });
+        if (roleErr) console.warn("[signup] user_roles insert:", roleErr);
       }
       toast.success("Conta criada!");
       navigate({ to: "/pedidos" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Código inválido");
+      console.error("[signup verify] error:", err);
+      let msg = "";
+      if (err instanceof Error) msg = err.message;
+      else if (typeof err === "string") msg = err;
+      else if (err && typeof err === "object" && "message" in err) {
+        const m = (err as { message: unknown }).message;
+        if (typeof m === "string") msg = m;
+      }
+      if (!msg || msg === "{}") {
+        try {
+          msg = JSON.stringify(err);
+        } catch {
+          msg = "";
+        }
+      }
+      toast.error(
+        msg && msg !== "{}"
+          ? msg
+          : "Não foi possível concluir o cadastro. Verifique no backend se a confirmação de e-mail está desativada e se o cadastro público está permitido.",
+      );
     } finally {
       setLoading(false);
     }
