@@ -249,9 +249,9 @@ function AuthPage() {
         data: { whatsapp: otpWhatsapp, code, token: signupToken, new_password: newPassword },
       });
       toast.success("Senha redefinida! Faça login com a nova senha.");
-      setMode("login");
+      setMode("signin");
       setCode("");
-      setSignupToken(null);
+      setSignupToken("");
       setNewPassword("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro");
