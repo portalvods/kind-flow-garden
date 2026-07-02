@@ -172,6 +172,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           updated_at: string
@@ -179,6 +180,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           updated_at?: string
@@ -186,6 +188,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           updated_at?: string
@@ -329,6 +332,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_catalog_availability: {
+        Args: {
+          _kind: string
+          _title_normalized: string
+          _tmdb_id: number
+          _year: number
+        }
+        Returns: {
+          category: string
+          title: string
+        }[]
+      }
+      email_from_whatsapp: { Args: { _whatsapp: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
