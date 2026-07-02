@@ -1,8 +1,9 @@
 // Auth flows: signup with WhatsApp OTP, login by whatsapp-or-email, forgot password.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { issueOtp, sanitizePhone, verifyOtp } from "./otp.server";
+import { sanitizePhone } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
+import { createServerPublicSupabase } from "./supabase-public.server";
 
 // ---- Signup: request OTP ----
 const startSignupSchema = z.object({
@@ -82,28 +83,19 @@ const startResetSchema = z.object({
 export const startPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startResetSchema.parse(d))
   .handler(async ({ data }) => {
-    const whatsapp = sanitizePhone(data.whatsapp);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("whatsapp", whatsapp)
-      .maybeSingle();
-    if (!profile) throw new Error("Nenhuma conta com este WhatsApp.");
-
-    const { code } = await issueOtp({
-      whatsapp,
-      purpose: "reset",
-      payload: { user_id: profile.id },
-    });
-
-    const { sendOtpMessage } = await import("./whatsapp.server");
-    const res = await sendOtpMessage(whatsapp, code, "reset");
-    if (!res.ok && res.error === "not_configured") {
-      return { ok: true, whatsapp, devCode: code };
+    const identifier = data.whatsapp.trim();
+    if (!identifier.includes("@")) {
+      throw new Error("Na VPS, a recuperação de senha precisa ser feita pelo e-mail cadastrado.");
     }
-    if (!res.ok) throw new Error(`Não foi possível enviar o código (${res.error}).`);
-    return { ok: true, whatsapp };
+
+    const supabasePublic = createServerPublicSupabase();
+    if (!supabasePublic) throw new Error("Backend não configurado na VPS.");
+
+    const { error } = await supabasePublic.auth.resetPasswordForEmail(identifier, {
+      redirectTo: `${process.env.PUBLIC_SITE_URL ?? process.env.SITE_URL ?? ""}/auth?mode=forgot`,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true, whatsapp: identifier };
   });
 
 // ---- Forgot password: verify + set new password ----
@@ -116,20 +108,6 @@ const verifyResetSchema = z.object({
 export const completePasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => verifyResetSchema.parse(d))
   .handler(async ({ data }): Promise<{ ok: true; email: string }> => {
-    const { payload } = await verifyOtp({
-      whatsapp: data.whatsapp,
-      purpose: "reset",
-      code: data.code,
-    });
-    if (!payload?.user_id) throw new Error("Sessão de recuperação inválida.");
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const user_id = payload.user_id as string;
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
-      password: data.new_password,
-    });
-    if (error) throw new Error(error.message);
-
-    const { data: userData } = await supabaseAdmin.auth.admin.getUserById(user_id);
-    return { ok: true, email: userData.user?.email ?? "" };
+    void data;
+    throw new Error("Abra o link de recuperação enviado por e-mail para definir a nova senha.");
   });

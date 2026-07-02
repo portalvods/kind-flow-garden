@@ -35,23 +35,12 @@ export const uploadLogo = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => uploadSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const url = `data:${data.content_type};base64,${data.data_base64}`;
 
-    const bytes = Buffer.from(data.data_base64, "base64");
-    const ext = data.filename.split(".").pop() || "png";
-    const path = `logo-${Date.now()}.${ext}`;
-
-    const { error: upErr } = await supabaseAdmin.storage
-      .from("branding")
-      .upload(path, bytes, { contentType: data.content_type, upsert: true });
-    if (upErr) throw new Error(upErr.message);
-
-    const { data: pub } = supabaseAdmin.storage.from("branding").getPublicUrl(path);
-    const url = pub.publicUrl;
-
-    await supabaseAdmin
+    const { error } = await context.supabase
       .from("site_settings")
       .upsert({ key: "logo_url", value: url, updated_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
 
     return { url };
   });
@@ -60,10 +49,10 @@ export const clearLogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    const { error } = await context.supabase
       .from("site_settings")
       .upsert({ key: "logo_url", value: null, updated_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
@@ -73,10 +62,10 @@ export const updateSiteName = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => nameSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    const { error } = await context.supabase
       .from("site_settings")
       .upsert({ key: "site_name", value: data.site_name, updated_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
@@ -90,8 +79,7 @@ export const listTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await context.supabase
       .from("message_templates")
       .select("key, label, content, updated_at")
       .order("label");
@@ -104,8 +92,7 @@ export const saveTemplate = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => upsertTemplateSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
+    const { error } = await context.supabase
       .from("message_templates")
       .update({ content: data.content, updated_by: context.userId })
       .eq("key", data.key);
@@ -144,10 +131,10 @@ export const updateDailyLimit = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => limitSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    const { error } = await context.supabase
       .from("site_settings")
       .upsert({ key: "daily_request_limit", value: String(data.limit), updated_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
 
@@ -155,8 +142,7 @@ export const getAdminDailyLimit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as never);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
+    const { data: row } = await context.supabase
       .from("site_settings")
       .select("value")
       .eq("key", "daily_request_limit")
