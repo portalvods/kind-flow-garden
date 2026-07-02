@@ -39,7 +39,7 @@ export const updateUser = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const profileUpdate: Record<string, unknown> = {};
+    const profileUpdate: { full_name?: string; whatsapp?: string; email?: string } = {};
     if (data.full_name !== undefined) profileUpdate.full_name = data.full_name.trim();
     if (data.whatsapp !== undefined) profileUpdate.whatsapp = data.whatsapp.replace(/\D/g, "");
     if (data.email !== undefined) profileUpdate.email = data.email.trim().toLowerCase();
