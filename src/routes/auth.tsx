@@ -176,14 +176,13 @@ function AuthPage() {
 
   const handleForgotStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (whatsapp.trim().length < 10) return toast.error("WhatsApp inválido");
+    if (!whatsapp.trim().includes("@")) return toast.error("Informe o e-mail cadastrado");
     setLoading(true);
     try {
       const res = await startResetFn({ data: { whatsapp } });
       setOtpWhatsapp(res.whatsapp);
-      setDevHint(res.devCode ? `Modo dev — código: ${res.devCode}` : null);
-      setStep("reset-password");
-      toast.success("Código enviado no WhatsApp.");
+      setDevHint(null);
+      toast.success("Enviamos o link de recuperação no seu e-mail.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro");
     } finally {
@@ -364,16 +363,17 @@ function AuthPage() {
             <>
               <h1 className="font-display text-2xl font-bold mb-1">Esqueci minha senha</h1>
               <p className="text-sm text-muted-foreground mb-6">
-                Informe seu WhatsApp para receber um código de recuperação.
+                Informe seu e-mail cadastrado para receber o link de recuperação.
               </p>
               <form onSubmit={handleForgotStart} className="space-y-4">
                 <div>
-                  <Label htmlFor="fwa">WhatsApp cadastrado</Label>
+                  <Label htmlFor="fwa">E-mail cadastrado</Label>
                   <Input
                     id="fwa"
+                    type="email"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="5511999999999"
+                    placeholder="voce@email.com"
                     required
                   />
                 </div>
