@@ -140,10 +140,11 @@ function AutomationPage() {
           Automação por IA
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Cole o template de conteúdos adicionados/atualizados. A IA identifica os títulos,
-          cruza com os pedidos em aberto, e você confirma para marcar como concluído e notificar
-          os clientes automaticamente no WhatsApp.
+          Cole o template de conteúdos adicionados/atualizados. Com a IA ligada, os pedidos
+          que corresponderem são automaticamente marcados como concluídos e os clientes
+          são notificados no WhatsApp — sem confirmação manual.
         </p>
+
       </div>
 
       {/* Toggle */}
