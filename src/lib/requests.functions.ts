@@ -136,15 +136,15 @@ export const createRequest = createServerFn({ method: "POST" })
 
     // Notify client (received)
     try {
-      await sendTemplate(profile?.whatsapp ?? null, "received", vars, { supabase });
+      await sendTemplate(profile?.whatsapp ?? null, "received", vars, { supabase: supabase as never });
     } catch (err) {
       console.error("client notify received failed", err);
     }
 
     // Notify admin
     try {
-      const adminNumber = await getAdminWhatsappNumber({ supabase });
-      if (adminNumber) await sendTemplate(adminNumber, "admin_new_request", vars, { supabase });
+      const adminNumber = await getAdminWhatsappNumber({ supabase: supabase as never });
+      if (adminNumber) await sendTemplate(adminNumber, "admin_new_request", vars, { supabase: supabase as never });
     } catch (err) {
       console.error("admin notify failed", err);
     }
@@ -222,7 +222,7 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
             formato: (current.format as string | null) ?? "—",
             motivo: data.rejection_reason ?? "—",
           },
-          { supabase },
+          { supabase: supabase as never },
         );
       } catch (err) {
         console.error("Client notification failed", err);
