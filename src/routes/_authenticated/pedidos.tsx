@@ -217,6 +217,8 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [selected, setSelected] = useState<TmdbResult | null>(null);
   const [manualTitle, setManualTitle] = useState("");
   const [manualType, setManualType] = useState<"movie" | "tv">("movie");
+  const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
+  const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
@@ -230,24 +232,29 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
   const create = useMutation({
     mutationFn: async () => {
+      const base = {
+        request_kind: kind,
+        format: format || null,
+        notes: notes || null,
+      };
       const payload = selected
         ? {
+            ...base,
             title: selected.title,
             content_type: selected.type,
             tmdb_id: selected.id,
             poster_path: selected.poster_path,
             year: selected.year,
             overview: selected.overview,
-            notes: notes || null,
           }
         : {
+            ...base,
             title: manualTitle,
             content_type: manualType,
             tmdb_id: null,
             poster_path: null,
             year: null,
             overview: null,
-            notes: notes || null,
           };
       return createFn({ data: payload });
     },
@@ -259,9 +266,12 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setSelected(null);
       setManualTitle("");
       setNotes("");
+      setFormat("");
+      setKind("adicao");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao enviar"),
   });
+
 
   const canSubmit = selected !== null || manualTitle.trim().length >= 2;
 
