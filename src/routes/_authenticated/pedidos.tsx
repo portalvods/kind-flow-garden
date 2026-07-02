@@ -26,16 +26,29 @@ export const Route = createFileRoute("/_authenticated/pedidos")({
 });
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "Pendente",
+  pending: "Recebido",
+  analyzing: "Em análise",
   processing: "Em andamento",
+  approved: "Aprovado",
   added: "Adicionado",
+  completed: "Concluído",
+  fixed: "Consertado",
   rejected: "Recusado",
 };
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  analyzing: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   processing: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  approved: "bg-sky-500/15 text-sky-300 border-sky-500/30",
   added: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  completed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  fixed: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   rejected: "bg-red-500/15 text-red-400 border-red-500/30",
+};
+const KIND_LABEL: Record<string, string> = {
+  adicao: "Adição",
+  atualizacao: "Atualização",
+  conserto: "Conserto",
 };
 
 function PedidosPage() {
