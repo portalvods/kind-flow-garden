@@ -260,7 +260,7 @@ export const applyMatches = createServerFn({ method: "POST" })
       await context.supabase.from("request_logs").insert({
         request_id: r.id as string,
         changed_by: context.userId,
-        from_status: r.status as string,
+        from_status: r.status as "pending" | "analyzing" | "approved" | "processing",
         to_status: newStatus,
         note: "IA: marcado via template automático",
       });
