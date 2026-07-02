@@ -46,14 +46,25 @@ async function evoFetch(
 ): Promise<{ ok: boolean; status: number; data: unknown; text: string }> {
   const { baseUrl, apiKey } = getConfig(payload);
   const url = `${baseUrl}${path}`;
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      apikey: apiKey,
-      ...(init.headers ?? {}),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        apikey: apiKey,
+        ...(init.headers ?? {}),
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha de conexão";
+    return {
+      ok: false,
+      status: 0,
+      data: null,
+      text: `Não consegui conectar na Evolution API em ${url}. Detalhe: ${message}`,
+    };
+  }
   const text = await res.text();
   let data: unknown = null;
   try {
@@ -80,6 +91,7 @@ export type WhatsappStatus = {
   configured: boolean;
   instance: string;
   configSource: "server" | "panel";
+  endpoint: string | null;
   state: "open" | "connecting" | "close" | "unknown" | "not_found";
   qrCode: string | null; // data:image/png;base64,... or base64 string
   pairingCode: string | null;
@@ -102,6 +114,7 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
       configured: cfg.configured,
       instance: cfg.instance,
       configSource: cfg.source as "server" | "panel",
+      endpoint: cfg.baseUrl || null,
       state: "unknown",
       qrCode: null,
       pairingCode: null,
@@ -148,7 +161,7 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
     }
 
     // 3. If disconnected, fetch QR / pairing code
-    if (state === "close" || state === "connecting") {
+    if (state === "close" || state === "connecting" || state === "unknown") {
       const qrRes = await evoFetch(`/instance/connect/${encodeURIComponent(cfg.instance)}`, data);
       if (qrRes.ok && qrRes.data) {
         const d = qrRes.data as Record<string, unknown>;
@@ -156,6 +169,8 @@ export const getWhatsappStatus = createServerFn({ method: "POST" })
         const pairing = (d.pairingCode as string | undefined) ?? null;
         base.qrCode = qr;
         base.pairingCode = pairing;
+      } else if (!qrRes.ok) {
+        base.message = `Não consegui gerar o QR Code. Erro ${qrRes.status}: ${qrRes.text.slice(0, 220)}`;
       }
     }
 
