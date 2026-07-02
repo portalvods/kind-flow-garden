@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getPublicSettings, uploadLogo, clearLogo, updateSiteName } from "@/lib/settings.functions";
+import { getPublicSettings, uploadLogo, clearLogo, updateSiteName, getAdminDailyLimit, updateDailyLimit } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/aparencia")({
   ssr: false,
