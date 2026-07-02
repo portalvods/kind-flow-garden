@@ -118,7 +118,7 @@ function WhatsappAdminPage() {
 
   const savedConfigQuery = useQuery({
     queryKey: ["whatsapp-saved-config"],
-    queryFn: fetchSavedConfig,
+    queryFn: () => fetchSavedConfig(),
   });
 
   useEffect(() => {
