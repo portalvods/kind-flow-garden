@@ -205,6 +205,42 @@ export type Database = {
         }
         Relationships: []
       }
+      password_resets: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+          whatsapp: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           blocked: boolean
@@ -446,6 +482,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      complete_wa_password_reset: {
+        Args: { _code_hash: string; _new_password: string; _token_hash: string }
+        Returns: undefined
+      }
       email_by_whatsapp: { Args: { _whatsapp: string }; Returns: string }
       has_role: {
         Args: {
@@ -458,6 +498,15 @@ export type Database = {
       rate_limit_check_and_hit: {
         Args: { _bucket: string; _key: string; _window_seconds: number }
         Returns: number
+      }
+      request_wa_password_reset: {
+        Args: {
+          _code_hash: string
+          _token_hash: string
+          _ttl_seconds: number
+          _whatsapp: string
+        }
+        Returns: undefined
       }
       whatsapp_exists: { Args: { _whatsapp: string }; Returns: boolean }
     }

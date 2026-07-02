@@ -1,5 +1,6 @@
 // Auth flows: signup with WhatsApp OTP, login by whatsapp-or-email, forgot password.
 import { createServerFn } from "@tanstack/react-start";
+import { createHash, randomBytes, randomInt } from "crypto";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { sanitizePhone } from "./otp.server";
@@ -133,9 +134,27 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
   });
 
 // ---- Forgot password: start (via WhatsApp OTP) ----
+// Works on VPS WITHOUT the service role key: the code+token are stored in
+// public.password_resets (hashed) and the password change happens via a
+// SECURITY DEFINER RPC that updates auth.users directly.
 const startResetSchema = z.object({
   whatsapp: z.string().trim().min(8).max(20),
 });
+
+function hashCode(code: string, token: string): string {
+  return createHash("sha256").update(`wa-reset:${token}:${code}`).digest("hex");
+}
+function hashToken(token: string): string {
+  return createHash("sha256").update(`wa-reset-token:${token}`).digest("hex");
+}
+function generateSixDigitCode(): string {
+  return String(randomInt(0, 1_000_000)).padStart(6, "0");
+}
+function generateToken(): string {
+  return randomBytes(24).toString("base64url");
+}
+
+const RESET_TTL_SECONDS = 15 * 60;
 
 export const startPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startResetSchema.parse(d))
@@ -147,36 +166,22 @@ export const startPasswordReset = createServerFn({ method: "POST" })
     await enforceOtpRateLimit("otp:reset:ip", getIp(), 3, 3600);
     await enforceOtpRateLimit("otp:reset:wa", whatsapp, 3, 3600);
 
+    const { createServerPublicSupabase } = await import("./supabase-public.server");
+    const sb = createServerPublicSupabase();
+    if (!sb) throw new Error("Backend indisponível. Verifique SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY na VPS.");
 
+    const code = generateSixDigitCode();
+    const token = generateToken();
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const admin = supabaseAdmin as unknown as {
-      rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: string | null; error: { message: string } | null }>;
-    };
-    const { data: email, error } = await admin.rpc("email_by_whatsapp", { _whatsapp: whatsapp });
-    if (error) throw new Error(error.message);
-    if (!email) throw new Error("Nenhuma conta encontrada com esse WhatsApp.");
-
-    // Look up user_id via Auth Admin
-    const { data: userLookup, error: userErr } = await (supabaseAdmin as unknown as {
-      auth: { admin: { getUserByEmail?: (e: string) => Promise<{ data: { user: { id: string } | null } | null; error: { message: string } | null }> } };
-    }).auth.admin.getUserByEmail?.(email) ?? { data: null, error: null };
-
-    let userId = userLookup?.user?.id ?? "";
-    if (!userId) {
-      // Fallback: listUsers filter
-      const { data: list } = await (supabaseAdmin as unknown as {
-        auth: { admin: { listUsers: (opts?: { page?: number; perPage?: number }) => Promise<{ data: { users: Array<{ id: string; email: string | null }> }; error: { message: string } | null }> } };
-      }).auth.admin.listUsers({ perPage: 1000 });
-      userId = list?.users.find((u) => (u.email ?? "").toLowerCase() === email.toLowerCase())?.id ?? "";
-    }
-    if (!userId) {
-      if (userErr) console.warn("[reset] getUserByEmail error:", userErr.message);
-      throw new Error("Não foi possível localizar a conta. Contate o suporte.");
-    }
-
-    const { issueResetOtp } = await import("./reset-otp.server");
-    const { code, token } = issueResetOtp({ whatsapp, email, user_id: userId });
+    const { error: rpcErr } = await (sb as unknown as {
+      rpc: (name: string, params: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+    }).rpc("request_wa_password_reset", {
+      _whatsapp: whatsapp,
+      _code_hash: hashCode(code, token),
+      _token_hash: hashToken(token),
+      _ttl_seconds: RESET_TTL_SECONDS,
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
 
     const { sendOtpMessage } = await import("./whatsapp.server");
     const res = await sendOtpMessage(whatsapp, code, "reset");
@@ -185,7 +190,7 @@ export const startPasswordReset = createServerFn({ method: "POST" })
         ok: true,
         whatsapp,
         token,
-        devCode: code,
+        devCode: code, // shown only when WhatsApp isn't configured
         message: "WhatsApp não conectado — código exibido apenas em modo desenvolvimento.",
       };
     }
@@ -203,15 +208,19 @@ const verifyResetSchema = z.object({
 
 export const completePasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => verifyResetSchema.parse(d))
-  .handler(async ({ data }): Promise<{ ok: true; email: string }> => {
-    const { verifyResetOtp } = await import("./reset-otp.server");
-    const payload = verifyResetOtp({ token: data.token, whatsapp: data.whatsapp, code: data.code });
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { createServerPublicSupabase } = await import("./supabase-public.server");
+    const sb = createServerPublicSupabase();
+    if (!sb) throw new Error("Backend indisponível. Verifique SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY na VPS.");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await (supabaseAdmin as unknown as {
-      auth: { admin: { updateUserById: (id: string, attrs: { password: string }) => Promise<{ error: { message: string } | null }> } };
-    }).auth.admin.updateUserById(payload.user_id, { password: data.new_password });
+    const { error } = await (sb as unknown as {
+      rpc: (name: string, params: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+    }).rpc("complete_wa_password_reset", {
+      _token_hash: hashToken(data.token),
+      _code_hash: hashCode(data.code, data.token),
+      _new_password: data.new_password,
+    });
     if (error) throw new Error(error.message);
 
-    return { ok: true, email: payload.email };
+    return { ok: true };
   });
