@@ -3,8 +3,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { sanitizePhone } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
-import { createServerPublicSupabase } from "./supabase-public.server";
-import { getServerEnv } from "./env.server";
 
 async function isWhatsappAlreadyRegistered(whatsapp: string): Promise<boolean> {
   try {
