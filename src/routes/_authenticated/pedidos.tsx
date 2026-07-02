@@ -410,17 +410,51 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         </>
       )}
 
+      <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
+        <div>
+          <Label htmlFor="kind">Tipo do pedido *</Label>
+          <select
+            id="kind"
+            value={kind}
+            onChange={(e) => setKind(e.target.value as typeof kind)}
+            className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="adicao">Adição</option>
+            <option value="atualizacao">Atualização</option>
+            <option value="conserto">Conserto</option>
+          </select>
+        </div>
+        <div>
+          <Label htmlFor="format">Formato (opcional)</Label>
+          <select
+            id="format"
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="">— Selecione —</option>
+            <option value="HD">HD</option>
+            <option value="FHD">FHD</option>
+            <option value="4K">4K</option>
+            <option value="Dublado">Dublado</option>
+            <option value="Legendado">Legendado</option>
+            <option value="Dual Áudio">Dual Áudio</option>
+          </select>
+        </div>
+      </div>
+
       <div>
         <Label htmlFor="notes">Observações (opcional)</Label>
         <Textarea
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ex: 4K, dublado, temporada específica..."
+          placeholder="Ex: temporada específica, qualidade preferida..."
           maxLength={500}
           rows={3}
         />
       </div>
+
 
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="ghost" onClick={onDone}>
