@@ -87,15 +87,29 @@ function PedidosPage() {
             Solicite filmes e séries e acompanhe o status.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="glow-primary">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo pedido
-            </Button>
-          </DialogTrigger>
-          <NewRequestDialog onDone={() => setDialogOpen(false)} />
-        </Dialog>
+        <div className="flex items-center gap-3">
+          {quota && (
+            <Badge
+              variant="outline"
+              className={
+                quota.remaining === 0
+                  ? "border-red-500/40 text-red-300"
+                  : "border-primary/40 text-primary"
+              }
+            >
+              {quota.used}/{quota.limit} pedidos hoje
+            </Badge>
+          )}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="glow-primary" disabled={quota?.remaining === 0}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo pedido
+              </Button>
+            </DialogTrigger>
+            <NewRequestDialog onDone={() => setDialogOpen(false)} />
+          </Dialog>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
