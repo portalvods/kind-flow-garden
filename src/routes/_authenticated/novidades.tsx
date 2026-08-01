@@ -157,10 +157,46 @@ function NovidadesPage() {
               <p className="text-[11px] text-muted-foreground">
                 {i.year ?? ""} · {new Date(i.completed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
               </p>
+              {(() => {
+                const key = contentKeyFor({
+                  content_type: i.content_type,
+                  title: i.title,
+                  year: i.year,
+                });
+                const st = statsByKey.get(key);
+                return (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 w-full gap-1 text-xs"
+                    onClick={() =>
+                      setTarget({
+                        content_key: key,
+                        title: i.title,
+                        year: i.year,
+                        content_type: i.content_type === "tv" ? "tv" : "movie",
+                        poster_path: i.poster_path,
+                        my_rating: st?.my_rating ?? null,
+                      })
+                    }
+                  >
+                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                    {st ? `${st.avg_rating} (${st.total})` : "Avaliar"}
+                  </Button>
+                );
+              })()}
             </div>
           ))}
         </div>
       )}
+
+      <ReviewDialog
+        target={target}
+        onOpenChange={(open) => {
+          if (!open) setTarget(null);
+        }}
+      />
     </div>
   );
 }
+
