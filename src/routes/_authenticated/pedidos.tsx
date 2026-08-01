@@ -356,12 +356,20 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [uploading, setUploading] = useState(false);
 
   const contentType = selected ? selected.type : manualType;
+  const isSeriesUpdate = contentType === "tv" && kind === "atualizacao";
 
   useEffect(() => {
     if (contentType === "movie" && kind === "atualizacao") {
       setKind("adicao");
     }
   }, [contentType, kind]);
+
+  useEffect(() => {
+    if (!isSeriesUpdate) setSeasons([]);
+  }, [isSeriesUpdate]);
+
+  const toggleSeason = (n: number) =>
+    setSeasons((prev) => (prev.includes(n) ? prev.filter((s) => s !== n) : [...prev, n].sort((a, b) => a - b)));
 
   async function handleImage(file: File | null) {
     if (!file) return;
