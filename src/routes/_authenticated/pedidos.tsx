@@ -350,17 +350,26 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
   const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [seasons, setSeasons] = useState<number[]>([]);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const contentType = selected ? selected.type : manualType;
+  const isSeriesUpdate = contentType === "tv" && kind === "atualizacao";
 
   useEffect(() => {
     if (contentType === "movie" && kind === "atualizacao") {
       setKind("adicao");
     }
   }, [contentType, kind]);
+
+  useEffect(() => {
+    if (!isSeriesUpdate) setSeasons([]);
+  }, [isSeriesUpdate]);
+
+  const toggleSeason = (n: number) =>
+    setSeasons((prev) => (prev.includes(n) ? prev.filter((s) => s !== n) : [...prev, n].sort((a, b) => a - b)));
 
   async function handleImage(file: File | null) {
     if (!file) return;
@@ -472,10 +481,15 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
   const create = useMutation({
     mutationFn: async () => {
+      const seasonsNote =
+        isSeriesUpdate && seasons.length
+          ? `Temporadas faltando: ${seasons.map((s) => `T${s}`).join(", ")}`
+          : "";
+      const finalNotes = [seasonsNote, notes.trim()].filter(Boolean).join(" — ") || null;
       const base = {
         request_kind: kind,
         format: format || null,
-        notes: notes || null,
+        notes: finalNotes,
         image_path: kind === "conserto" ? imagePath : null,
 
       };
@@ -508,7 +522,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setQuery("");
       setSelected(null);
       setManualTitle("");
-      setNotes("");
+      setNotes(""); setSeasons([]);
       setFormat("");
       setKind("adicao");
       setForceDuplicate(false);
@@ -524,7 +538,8 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     !blockedByCatalog &&
     !blockedByCommunity &&
     !uploading &&
-    (kind !== "conserto" || notes.trim().length >= 5);
+    (kind !== "conserto" || notes.trim().length >= 5) &&
+    (!isSeriesUpdate || seasons.length > 0 || notes.trim().length >= 5);
 
 
   return (
@@ -713,6 +728,35 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
+      {isSeriesUpdate && (
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+          <Label className="text-sm">Qual temporada está faltando?</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => toggleSeason(n)}
+                className={`h-8 min-w-11 rounded-md border px-2 text-xs font-medium transition-colors ${
+                  seasons.includes(n)
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-input bg-background hover:bg-accent"
+                }`}
+              >
+                T{n}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {seasons.length
+              ? `Selecionado: ${seasons.map((s) => `T${s}`).join(", ")}`
+              : "Não marcou nenhuma? Então descreva nas observações qual episódio/temporada falta."}
+          </p>
+        </div>
+      )}
+
+
+
       {kind === "adicao" && !availability?.exists && suggestions && suggestions.suggestions.length > 0 && (
         <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-3">
           <p className="text-xs font-semibold text-cyan-300 mb-2">
@@ -778,7 +822,11 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
       <div>
         <Label htmlFor="notes">
-          {kind === "conserto" ? "O que está com problema? *" : "Observações (opcional)"}
+          {kind === "conserto"
+            ? "O que está com problema? *"
+            : isSeriesUpdate && seasons.length === 0
+              ? "Qual episódio/temporada falta? *"
+              : "Observações (opcional)"}
         </Label>
         <Textarea
           id="notes"
@@ -787,7 +835,9 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
           placeholder={
             kind === "conserto"
               ? "Ex: áudio fora de sincronia no episódio 3, sem legenda, travando..."
-              : "Ex: temporada específica, qualidade preferida..."
+              : isSeriesUpdate
+                ? "Ex: falta o episódio 5 da T2, ou os últimos episódios da temporada final..."
+                : "Ex: temporada específica, qualidade preferida..."
           }
           maxLength={500}
           rows={3}
@@ -797,7 +847,13 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             Descreva o motivo da solicitação (mínimo 5 caracteres).
           </p>
         )}
+        {isSeriesUpdate && seasons.length === 0 && notes.trim().length < 5 && (
+          <p className="text-[11px] text-amber-300 mt-1">
+            Marque a(s) temporada(s) acima ou descreva aqui o que falta (mínimo 5 caracteres).
+          </p>
+        )}
       </div>
+
 
       {kind === "conserto" && (
         <div>
