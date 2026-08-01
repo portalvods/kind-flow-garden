@@ -98,8 +98,9 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
         if (fromMe || !remoteJid || remoteJid.endsWith("@g.us")) {
           return Response.json({ ok: true, skipped: "self_or_group" });
         }
-        const number = remoteJid.split("@")[0]?.replace(/\D/g, "");
+        const number = normalizePhone(remoteJid.split("@")[0] ?? "");
         if (!number) return Response.json({ ok: true, skipped: "no_number" });
+
 
         const { supabase } = await import("@/integrations/supabase/client");
 
