@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminBotRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminAutomacaoRouteImport } from './routes/_authenticated/admin.automacao'
 import { Route as AuthenticatedAdminAparenciaRouteImport } from './routes/_authenticated/admin.aparencia'
 import { Route as ApiPublicWebhooksEvolutionRouteImport } from './routes/api/public/webhooks/evolution'
+import { Route as ApiPublicHooksSyncCatalogRouteImport } from './routes/api/public/hooks/sync-catalog'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -127,6 +128,12 @@ const ApiPublicWebhooksEvolutionRoute =
     path: '/api/public/webhooks/evolution',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSyncCatalogRoute =
+  ApiPublicHooksSyncCatalogRouteImport.update({
+    id: '/api/public/hooks/sync-catalog',
+    path: '/api/public/hooks/sync-catalog',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
   '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
 }
 export interface FileRoutesByTo {
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
   '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
 }
 export interface FileRoutesById {
@@ -185,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
   '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
 }
 export interface FileRouteTypes {
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/admin/whatsapp'
     | '/admin/'
+    | '/api/public/hooks/sync-catalog'
     | '/api/public/webhooks/evolution'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/admin/whatsapp'
     | '/admin'
+    | '/api/public/hooks/sync-catalog'
     | '/api/public/webhooks/evolution'
   id:
     | '__root__'
@@ -245,6 +257,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/whatsapp'
     | '/_authenticated/admin/'
+    | '/api/public/hooks/sync-catalog'
     | '/api/public/webhooks/evolution'
   fileRoutesById: FileRoutesById
 }
@@ -252,6 +265,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksSyncCatalogRoute: typeof ApiPublicHooksSyncCatalogRoute
   ApiPublicWebhooksEvolutionRoute: typeof ApiPublicWebhooksEvolutionRoute
 }
 
@@ -383,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksEvolutionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/sync-catalog': {
+      id: '/api/public/hooks/sync-catalog'
+      path: '/api/public/hooks/sync-catalog'
+      fullPath: '/api/public/hooks/sync-catalog'
+      preLoaderRoute: typeof ApiPublicHooksSyncCatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -427,18 +448,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksSyncCatalogRoute: ApiPublicHooksSyncCatalogRoute,
   ApiPublicWebhooksEvolutionRoute: ApiPublicWebhooksEvolutionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -557,6 +557,10 @@ export type Database = {
         Args: { _key: string; _secret: string; _ttl_seconds?: number }
         Returns: boolean
       }
+      catalog_cron_append: {
+        Args: { _items: Json; _secret: string; _source_id: string }
+        Returns: number
+      }
       catalog_cron_due_sources: {
         Args: { _secret: string }
         Returns: {
