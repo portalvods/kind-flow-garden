@@ -56,8 +56,9 @@ export function issueSignupOtp(data: { full_name: string; email: string; whatsap
   token: string;
   whatsapp: string;
 } {
-  const whatsapp = sanitizePhone(data.whatsapp);
+  const whatsapp = normalizePhone(data.whatsapp);
   if (whatsapp.length < 10) throw new Error("Número de WhatsApp inválido.");
+
 
   const code = generateCode();
   const payload: SignupPayload = {
