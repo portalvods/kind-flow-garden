@@ -288,16 +288,17 @@ function WhatsappAdminPage() {
         <div>
           <h2 className="font-display text-lg font-bold">WhatsApp do administrador</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Número que recebe a notificação toda vez que um cliente faz um novo pedido. Com DDD, só números.
+            Número que recebe a notificação toda vez que um cliente faz um novo pedido. DDD + número (o 55 é adicionado automaticamente).
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Input
-            placeholder="5511999999999"
+            placeholder="11999999999"
             value={adminNumber}
             onChange={(e) => setAdminNumber(e.target.value.replace(/\D/g, ""))}
             className="max-w-xs"
           />
+
           <Button
             variant="outline"
             onClick={async () => {
