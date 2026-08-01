@@ -173,12 +173,13 @@ const RESET_TTL_SECONDS = 15 * 60;
 export const startPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startResetSchema.parse(d))
   .handler(async ({ data }) => {
-    const whatsapp = sanitizePhone(data.whatsapp);
+    const whatsapp = normalizePhone(data.whatsapp);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido (com DDD).");
 
     // Rate limit: max 3 reset OTPs per IP/hour, 3 per whatsapp/hour.
     await enforceOtpRateLimit("otp:reset:ip", getIp(), 3, 3600);
     await enforceOtpRateLimit("otp:reset:wa", whatsapp, 3, 3600);
+
 
     const { createServerPublicSupabase } = await import("./supabase-public.server");
     const sb = createServerPublicSupabase();
