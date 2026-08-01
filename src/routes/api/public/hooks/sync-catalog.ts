@@ -19,9 +19,16 @@ async function runSync(secret: string) {
 
   for (const src of sources) {
     try {
-      const res = await fetch(src.url, { headers: { "User-Agent": "PortalVOD/1.0" } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await fetch(src.url, {
+        headers: { "User-Agent": "VLC/3.0.20 LibVLC/3.0.20" },
+        signal: AbortSignal.timeout(120_000),
+        redirect: "follow",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status} ao baixar a lista (URL inválida ou servidor fora do ar)`);
       const text = await res.text();
+      if (!/#EXTM3U|#EXTINF/i.test(text.slice(0, 5000))) {
+        throw new Error("A URL não retornou uma lista M3U válida (resposta HTML/erro do servidor)");
+      }
       const items = parseM3u(text);
       const movies = items.filter((i) => i.kind === "movie").length;
       const series = items.filter((i) => i.kind === "series").length;
