@@ -51,8 +51,9 @@ export function issueResetOtp(data: { whatsapp: string; email: string; user_id: 
   token: string;
   whatsapp: string;
 } {
-  const whatsapp = sanitizePhone(data.whatsapp);
+  const whatsapp = normalizePhone(data.whatsapp);
   if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
+
   const code = generateCode();
   const payload: ResetPayload = {
     purpose: "reset",
