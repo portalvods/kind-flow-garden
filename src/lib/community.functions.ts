@@ -46,3 +46,43 @@ export const toggleRequestVote = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return res as { voted: boolean; votes: number };
   });
+
+export type CommunityDuplicate = {
+  request_id: string;
+  title: string;
+  year: number | null;
+  request_kind: string;
+  status: string;
+  poster_path: string | null;
+  author_initials: string;
+  votes: number;
+  voted: boolean;
+  mine: boolean;
+};
+
+export const findCommunityDuplicate = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        title: z.string().trim().min(1).max(200),
+        year: z.number().int().nullable().optional(),
+        content_type: z.enum(["movie", "tv"]),
+        request_kind: z.enum(["adicao", "atualizacao", "conserto"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ duplicate: CommunityDuplicate | null }> => {
+    const { data: rows, error } = await (context.supabase.rpc as never as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>)("find_community_duplicate", {
+      _title: data.title,
+      _year: data.year ?? null,
+      _content_type: data.content_type,
+      _request_kind: data.request_kind,
+    });
+    if (error) throw new Error(error.message);
+    const list = (rows ?? []) as CommunityDuplicate[];
+    return { duplicate: list.length ? list[0] : null };
+  });

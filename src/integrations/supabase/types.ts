@@ -575,6 +575,26 @@ export type Database = {
         Returns: undefined
       }
       email_by_whatsapp: { Args: { _whatsapp: string }; Returns: string }
+      find_community_duplicate: {
+        Args: {
+          _content_type: string
+          _request_kind: string
+          _title: string
+          _year: number
+        }
+        Returns: {
+          author_initials: string
+          mine: boolean
+          poster_path: string
+          request_id: string
+          request_kind: string
+          status: string
+          title: string
+          voted: boolean
+          votes: number
+          year: number
+        }[]
+      }
       find_profile_by_wa: { Args: { _phone: string }; Returns: string }
       has_role: {
         Args: {

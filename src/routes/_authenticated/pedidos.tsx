@@ -13,6 +13,7 @@ import { getRequestTimeline } from "@/lib/admin-extras.functions";
 import { suggestAlternatives } from "@/lib/suggest.functions";
 
 import { checkAvailability } from "@/lib/catalog.functions";
+import { findCommunityDuplicate, toggleRequestVote } from "@/lib/community.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -349,10 +350,13 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
   const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [forceDuplicate, setForceDuplicate] = useState(false);
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
   const availFn = useServerFn(checkAvailability);
   const suggestFn = useServerFn(suggestAlternatives);
+  const dupFn = useServerFn(findCommunityDuplicate);
+  const voteFn = useServerFn(toggleRequestVote);
 
   const { data: search, isFetching } = useQuery({
     queryKey: ["tmdb", query],
@@ -388,6 +392,37 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     staleTime: 30_000,
   });
 
+
+  // Duplicate check against community (same title/year/kind already requested by someone)
+  const dupTitle = selected?.title ?? manualTitle.trim();
+  const dupType: "movie" | "tv" = selected ? selected.type : manualType;
+  const { data: dupData } = useQuery({
+    queryKey: ["community-dup", dupTitle, dupType, selected?.year ?? null, kind],
+    queryFn: () =>
+      dupFn({
+        data: {
+          title: dupTitle,
+          year: selected?.year ?? null,
+          content_type: dupType,
+          request_kind: kind,
+        },
+      }),
+    enabled: dupTitle.length >= 2,
+    staleTime: 15_000,
+  });
+  const duplicate = dupData?.duplicate ?? null;
+  const blockedByCommunity = !!duplicate && !duplicate.mine && !forceDuplicate;
+
+  const voteDup = useMutation({
+    mutationFn: (id: string) => voteFn({ data: { request_id: id } }),
+    onSuccess: () => {
+      toast.success("Curtida registrada! Seu voto ajuda esse pedido a sair mais rápido.");
+      qc.invalidateQueries({ queryKey: ["community-dup"] });
+      qc.invalidateQueries({ queryKey: ["community-requests"] });
+      onDone();
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao curtir"),
+  });
 
   const blockedByCatalog = kind === "adicao" && availability?.exists === true;
 
@@ -430,12 +465,14 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setNotes("");
       setFormat("");
       setKind("adicao");
+      setForceDuplicate(false);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao enviar"),
   });
 
 
-  const canSubmit = (selected !== null || manualTitle.trim().length >= 2) && !blockedByCatalog;
+  const canSubmit =
+    (selected !== null || manualTitle.trim().length >= 2) && !blockedByCatalog && !blockedByCommunity;
 
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -643,6 +680,48 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
           </p>
         </div>
       )}
+
+      {duplicate && !duplicate.mine && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+          <p className="text-xs font-semibold text-amber-200">
+            ⚠️ Esse conteúdo já foi pedido por outro membro
+          </p>
+          <p className="mt-1 text-xs text-amber-100/90">
+            <strong>{duplicate.title}</strong>
+            {duplicate.year ? ` (${duplicate.year})` : ""} — pedido por {duplicate.author_initials} ·{" "}
+            {duplicate.votes} curtida{duplicate.votes === 1 ? "" : "s"}
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {kind === "conserto"
+              ? "Você pode curtir para ele ser corrigido logo, ou enviar seu pedido mesmo assim."
+              : "Você pode curtir para ele ser adicionado logo, ou enviar seu pedido mesmo assim."}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={duplicate.voted ? "default" : "outline"}
+              className="gap-1"
+              disabled={voteDup.isPending || duplicate.voted}
+              onClick={() => voteDup.mutate(duplicate.request_id)}
+            >
+              <ThumbsUp className="h-4 w-4" />
+              {duplicate.voted ? "Já curtido" : "Curtir esse pedido"}
+            </Button>
+            {!forceDuplicate && (
+              <Button size="sm" variant="ghost" onClick={() => setForceDuplicate(true)}>
+                Pedir mesmo assim
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {duplicate?.mine && (
+        <p className="text-xs text-muted-foreground">
+          Você já tem um pedido em andamento para esse título.
+        </p>
+      )}
+
 
       <div>
         <Label htmlFor="notes">Observações (opcional)</Label>
