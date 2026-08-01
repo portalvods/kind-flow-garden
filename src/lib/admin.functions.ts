@@ -50,12 +50,13 @@ export const updateUser = createServerFn({ method: "POST" })
     await callAdminRpc(context, "admin_update_user", {
       _user_id: data.userId,
       _full_name: data.full_name ?? "",
-      _whatsapp: data.whatsapp ?? "",
+      _whatsapp: normalizePhone(data.whatsapp ?? ""),
       _email: data.email ?? "",
     });
 
     return { ok: true };
   });
+
 
 export const setUserBlocked = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
