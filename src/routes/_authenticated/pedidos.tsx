@@ -251,6 +251,26 @@ function RequestCard({ request }: { request: RequestRow }) {
             />
           </div>
         )}
+        {["pending", "analyzing", "approved", "processing"].includes(request.status) && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-3 w-full gap-2"
+            onClick={() => {
+              const url = `${window.location.origin}/comunidade`;
+              const text = `Pedi "${request.title}"${request.year ? ` (${request.year})` : ""} no portal. Entra e vota pra aprovarem mais rápido: ${url}`;
+              if (typeof navigator !== "undefined" && navigator.share) {
+                navigator.share({ text }).catch(() => {});
+                return;
+              }
+              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+            }}
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Pedir apoio na comunidade
+          </Button>
+        )}
+
         {request.notes && (
           <p className="text-xs text-muted-foreground mt-2 line-clamp-2">📝 {request.notes}</p>
         )}
