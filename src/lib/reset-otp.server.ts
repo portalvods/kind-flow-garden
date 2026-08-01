@@ -72,8 +72,9 @@ export function verifyResetOtp(params: { token: string; whatsapp: string; code: 
     throw new Error("Código inválido ou expirado. Solicite um novo.");
   }
   const payload = decodePayload(encoded);
-  const whatsapp = sanitizePhone(params.whatsapp);
+  const whatsapp = normalizePhone(params.whatsapp);
   const code = (params.code ?? "").trim();
+
   if (payload.purpose !== "reset" || payload.whatsapp !== whatsapp) {
     throw new Error("Código inválido. Solicite um novo.");
   }
