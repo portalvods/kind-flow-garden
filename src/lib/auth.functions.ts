@@ -132,7 +132,7 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     const id = data.identifier.trim();
     if (id.includes("@")) return { email: id };
 
-    const whatsapp = sanitizePhone(id);
+    const whatsapp = normalizePhone(id);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
 
     const { createClient } = await import("@supabase/supabase-js");
@@ -145,6 +145,7 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     if (!email) throw new Error("Nenhuma conta encontrada com esse WhatsApp.");
     return { email: email as string };
   });
+
 
 // ---- Forgot password: start (via WhatsApp OTP) ----
 // Works on VPS WITHOUT the service role key: the code+token are stored in
