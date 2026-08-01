@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { clearLocalWhatsappConfig, getServerEnv, readLocalWhatsappConfig, writeLocalWhatsappConfig } from "./env.server";
+import { normalizePhone } from "./otp.server";
+
 
 // ---- Helpers ----
 
