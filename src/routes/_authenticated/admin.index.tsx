@@ -96,6 +96,8 @@ type AdminRequest = {
   year: number | null;
   status: StatusKey;
   notes: string | null;
+  image_path?: string | null;
+
   rejection_reason: string | null;
   created_at: string;
   profiles?: { full_name: string | null; whatsapp: string | null } | null;
