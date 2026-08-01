@@ -72,6 +72,22 @@ async function getConfig(options?: WhatsappOptions) {
   };
 }
 
+// Evita enviar lixo: colapsa repetições exageradas do mesmo caractere
+// (ex: "KKKKKKKKKK") e bloqueia mensagens que sejam só isso.
+export function sanitizeOutgoingText(raw: string): string {
+  return (raw ?? "")
+    .replace(/(.)\1{5,}/g, (_m, c: string) => c.repeat(3))
+    .replace(/\n{4,}/g, "\n\n\n")
+    .slice(0, 4000)
+    .trim();
+}
+
+function isJunkMessage(text: string): boolean {
+  const t = text.replace(/\s/g, "");
+  if (!t) return true;
+  return /^(.)\1*$/.test(t) && t.length > 3;
+}
+
 export async function sendWhatsapp(to: string, message: string, options?: WhatsappOptions): Promise<{ ok: boolean; error?: string }> {
   const cfg = await getConfig(options);
   if (!cfg.configured) {
@@ -80,6 +96,14 @@ export async function sendWhatsapp(to: string, message: string, options?: Whatsa
   }
   const number = sanitizePhone(to);
   if (!number) return { ok: false, error: "invalid_number" };
+
+  message = sanitizeOutgoingText(message);
+  if (isJunkMessage(message)) {
+    console.warn("[whatsapp] blocked junk outgoing message", JSON.stringify(message.slice(0, 60)));
+    return { ok: false, error: "junk_message" };
+  }
+  console.info("[whatsapp] sending to", number, "text:", JSON.stringify(message.slice(0, 120)));
+
 
   try {
     const url = `${cfg.baseUrl}/message/sendText/${encodeURIComponent(cfg.instance)}`;
