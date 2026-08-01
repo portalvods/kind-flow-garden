@@ -417,6 +417,74 @@ function AdminPage() {
         </div>
       )}
 
+      {/* Complete dialog */}
+      <Dialog open={!!doneTarget} onOpenChange={(o) => !o && setDoneTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {doneTarget?.status === "fixed" ? "Marcar como consertado" : "Marcar como concluído"}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Escolha uma mensagem pronta ou escreva uma personalizada. Variáveis:{" "}
+            <code className="text-primary">{"{cliente}"}</code>,{" "}
+            <code className="text-primary">{"{titulo}"}</code>.
+          </p>
+          {(presetDoneMsgs?.messages?.length ?? 0) > 0 && (
+            <div className="space-y-2">
+              {presetDoneMsgs!.messages.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setDoneMessage(m)}
+                  className={`w-full text-left text-xs px-3 py-2 rounded-lg border transition-colors ${
+                    doneMessage === m
+                      ? "border-primary/60 bg-primary/15"
+                      : "border-border/60 bg-muted/30 hover:bg-primary/10"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+          <Textarea
+            value={doneMessage}
+            onChange={(e) => setDoneMessage(e.target.value)}
+            placeholder="Ou escreva uma mensagem personalizada..."
+            maxLength={1000}
+            rows={3}
+          />
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                doneTarget &&
+                changeStatus.mutate({ id: doneTarget.req.id, status: doneTarget.status })
+              }
+              disabled={changeStatus.isPending}
+            >
+              Enviar mensagem padrão
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-500"
+              onClick={() =>
+                doneTarget &&
+                changeStatus.mutate({
+                  id: doneTarget.req.id,
+                  status: doneTarget.status,
+                  custom_message: doneMessage.trim() || null,
+                })
+              }
+              disabled={changeStatus.isPending || !doneMessage.trim()}
+            >
+              {changeStatus.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar e enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Reject dialog */}
       <Dialog open={!!rejectTarget} onOpenChange={(o) => !o && setRejectTarget(null)}>
         <DialogContent>
