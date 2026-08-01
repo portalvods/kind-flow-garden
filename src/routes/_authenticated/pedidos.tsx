@@ -728,6 +728,35 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
+      {isSeriesUpdate && (
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+          <Label className="text-sm">Qual temporada está faltando?</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => toggleSeason(n)}
+                className={`h-8 min-w-11 rounded-md border px-2 text-xs font-medium transition-colors ${
+                  seasons.includes(n)
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-input bg-background hover:bg-accent"
+                }`}
+              >
+                T{n}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {seasons.length
+              ? `Selecionado: ${seasons.map((s) => `T${s}`).join(", ")}`
+              : "Não marcou nenhuma? Então descreva nas observações qual episódio/temporada falta."}
+          </p>
+        </div>
+      )}
+
+
+
       {kind === "adicao" && !availability?.exists && suggestions && suggestions.suggestions.length > 0 && (
         <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-3">
           <p className="text-xs font-semibold text-cyan-300 mb-2">
