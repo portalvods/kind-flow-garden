@@ -681,6 +681,48 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         </div>
       )}
 
+      {duplicate && !duplicate.mine && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+          <p className="text-xs font-semibold text-amber-200">
+            ⚠️ Esse conteúdo já foi pedido por outro membro
+          </p>
+          <p className="mt-1 text-xs text-amber-100/90">
+            <strong>{duplicate.title}</strong>
+            {duplicate.year ? ` (${duplicate.year})` : ""} — pedido por {duplicate.author_initials} ·{" "}
+            {duplicate.votes} curtida{duplicate.votes === 1 ? "" : "s"}
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {kind === "conserto"
+              ? "Você pode curtir para ele ser corrigido logo, ou enviar seu pedido mesmo assim."
+              : "Você pode curtir para ele ser adicionado logo, ou enviar seu pedido mesmo assim."}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={duplicate.voted ? "default" : "outline"}
+              className="gap-1"
+              disabled={voteDup.isPending || duplicate.voted}
+              onClick={() => voteDup.mutate(duplicate.request_id)}
+            >
+              <ThumbsUp className="h-4 w-4" />
+              {duplicate.voted ? "Já curtido" : "Curtir esse pedido"}
+            </Button>
+            {!forceDuplicate && (
+              <Button size="sm" variant="ghost" onClick={() => setForceDuplicate(true)}>
+                Pedir mesmo assim
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {duplicate?.mine && (
+        <p className="text-xs text-muted-foreground">
+          Você já tem um pedido em andamento para esse título.
+        </p>
+      )}
+
+
       <div>
         <Label htmlFor="notes">Observações (opcional)</Label>
         <Textarea
