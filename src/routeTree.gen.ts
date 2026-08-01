@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authenticated/novidades'
+import { Route as AuthenticatedComunidadeRouteImport } from './routes/_authenticated/comunidade'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
@@ -48,6 +49,11 @@ const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
 const AuthenticatedNovidadesRoute = AuthenticatedNovidadesRouteImport.update({
   id: '/novidades',
   path: '/novidades',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedComunidadeRoute = AuthenticatedComunidadeRouteImport.update({
+  id: '/comunidade',
+  path: '/comunidade',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -118,6 +124,7 @@ const ApiPublicWebhooksEvolutionRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/comunidade': typeof AuthenticatedComunidadeRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/comunidade': typeof AuthenticatedComunidadeRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/comunidade': typeof AuthenticatedComunidadeRoute
   '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/comunidade'
     | '/novidades'
     | '/pedidos'
     | '/admin/aparencia'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/comunidade'
     | '/novidades'
     | '/pedidos'
     | '/admin/aparencia'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/comunidade'
     | '/_authenticated/novidades'
     | '/_authenticated/pedidos'
     | '/_authenticated/admin/aparencia'
@@ -265,6 +277,13 @@ declare module '@tanstack/react-router' {
       path: '/novidades'
       fullPath: '/novidades'
       preLoaderRoute: typeof AuthenticatedNovidadesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comunidade': {
+      id: '/_authenticated/comunidade'
+      path: '/comunidade'
+      fullPath: '/comunidade'
+      preLoaderRoute: typeof AuthenticatedComunidadeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/': {
@@ -348,6 +367,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedComunidadeRoute: typeof AuthenticatedComunidadeRoute
   AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
@@ -363,6 +383,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedComunidadeRoute: AuthenticatedComunidadeRoute,
   AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
