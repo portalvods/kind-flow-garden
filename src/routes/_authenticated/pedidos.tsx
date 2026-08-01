@@ -468,6 +468,8 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         request_kind: kind,
         format: format || null,
         notes: notes || null,
+        image_path: kind === "conserto" ? imagePath : null,
+
       };
       const payload = selected
         ? {
