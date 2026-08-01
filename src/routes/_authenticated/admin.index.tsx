@@ -306,9 +306,15 @@ function AdminPage() {
                     <Badge variant="outline" className="text-[10px]">{r.format}</Badge>
                   )}
                   {r.year && <span className="text-xs text-muted-foreground">{r.year}</span>}
+                  {votesOf(r.id) > 0 && (
+                    <Badge className="border border-primary/30 bg-primary/15 text-primary gap-1">
+                      <ThumbsUp className="h-3 w-3" /> {votesOf(r.id)}
+                    </Badge>
+                  )}
                   <Badge className={`${STATUS_COLOR[r.status]} border ml-auto`}>
                     {STATUS_LABEL[r.status]}
                   </Badge>
+
                 </div>
                 <p className="text-xs text-muted-foreground">
                   👤 {r.profiles?.full_name ?? "—"}
