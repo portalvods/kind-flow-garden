@@ -46,8 +46,12 @@ export const suggestAlternatives = createServerFn({ method: "GET" })
 
     async function push(rows: Array<Record<string, unknown>> | null) {
       for (const r of rows ?? []) {
+        const rowKind = r.kind as "movie" | "series";
+        if (data.kind && rowKind !== data.kind) continue;
+        if (isChannel(r as { category?: string | null; title?: string | null })) continue;
         const key = `${r.title}|${r.year ?? ""}|${r.kind}`;
         if (results.has(key)) continue;
+
         results.set(key, {
           title: String(r.title ?? ""),
           year: (r.year as number | null) ?? null,
