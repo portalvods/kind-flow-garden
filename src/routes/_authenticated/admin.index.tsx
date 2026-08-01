@@ -105,8 +105,10 @@ function AdminPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"pending" | "analyzing" | "approved" | "completed" | "rejected" | "all">("pending");
   const [search, setSearch] = useState("");
+  const [sortByVotes, setSortByVotes] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<AdminRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+
 
   const updateFn = useServerFn(updateRequestStatus);
   const reasonsFn = useServerFn(getRejectionReasons);
