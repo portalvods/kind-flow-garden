@@ -58,6 +58,17 @@ function NovidadesPage() {
 
   const items = data?.items ?? [];
 
+  const keys = items.map((i) =>
+    contentKeyFor({ content_type: i.content_type, title: i.title, year: i.year }),
+  );
+  const statsFn = useServerFn(getReviewStats);
+  const { data: statsData } = useQuery({
+    queryKey: ["review-stats", keys],
+    queryFn: () => statsFn({ data: { keys } }),
+    enabled: keys.length > 0,
+  });
+  const statsByKey = new Map((statsData?.items ?? []).map((s) => [s.content_key, s]));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
