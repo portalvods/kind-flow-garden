@@ -82,6 +82,14 @@ function AuthedLayout() {
             <NavLink to="/em-alta" active={pathname.startsWith("/em-alta")} icon={<Flame className="h-4 w-4" />}>
               Em alta
             </NavLink>
+            <NavLink
+              to="/resenhas"
+              active={pathname.startsWith("/resenhas")}
+              icon={<MessageSquareQuote className="h-4 w-4" />}
+            >
+              Resenhas
+            </NavLink>
+
 
 
             {isAdmin && (
