@@ -20,6 +20,18 @@ const schema = z.object({
 
 const STOP = new Set(["the", "a", "an", "de", "da", "do", "das", "dos", "o", "os", "as", "e", "of", "and", "la", "el", "un", "una"]);
 
+// Categorias de canais ao vivo / rádios — nunca sugerir como conteúdo semelhante.
+const CHANNEL_RE =
+  /(canais|canal|ao vivo|24 ?h(oras)?|tv aberta|abertos|radio|rádio|esportes ao vivo|ppv|pay ?per ?view|adultos|jogos|eventos)/i;
+
+function isChannel(row: { category?: string | null; title?: string | null; year?: number | null }) {
+  const cat = row.category ?? "";
+  if (CHANNEL_RE.test(cat)) return true;
+  if (/\|/.test(String(row.title ?? ""))) return true;
+  return false;
+}
+
+
 export const suggestAlternatives = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => schema.parse(d))
