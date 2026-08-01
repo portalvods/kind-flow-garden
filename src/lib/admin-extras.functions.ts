@@ -134,6 +134,45 @@ export const saveRejectionReasons = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// -------- Completion (ready) messages --------
+const DEFAULT_COMPLETION_MESSAGES = [
+  "Olá {cliente}! ✅ *{titulo}* já está disponível no seu servidor. Bom filme!",
+  "Oi {cliente}! Concluímos seu pedido de *{titulo}*. Já pode assistir 🎬",
+  "{cliente}, *{titulo}* foi adicionado com sucesso. Se não aparecer, atualize o app.",
+  "Prontinho, {cliente}! *{titulo}* foi corrigido e já está funcionando normalmente.",
+];
+
+export const getCompletionMessages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ messages: string[] }> => {
+    const c = context.supabase as unknown as RpcClient;
+    const { data } = await c.from("site_settings").select("value").eq("key", "completion_messages").maybeSingle();
+    let messages: string[] = [];
+    try {
+      messages = data?.value ? JSON.parse(data.value) : [];
+    } catch { messages = []; }
+    if (!Array.isArray(messages) || messages.length === 0) messages = DEFAULT_COMPLETION_MESSAGES;
+    return { messages };
+  });
+
+const completionSchema = z.object({ messages: z.array(z.string().trim().min(1).max(1000)).max(30) });
+export const saveCompletionMessages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => completionSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const c = context.supabase as unknown as RpcClient;
+    const { error } = await c.from("site_settings").upsert({
+      key: "completion_messages",
+      value: JSON.stringify(data.messages),
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
+
 // -------- Bot config --------
 export const getBotConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

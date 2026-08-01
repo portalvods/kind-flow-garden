@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { sendTemplate, getAdminWhatsappNumber } from "./whatsapp.server";
+import { sendTemplate, getAdminWhatsappNumber, sendWhatsapp, renderTemplate } from "./whatsapp.server";
 import { normalizeTitle } from "./m3u.server";
 
 const createSchema = z.object({
@@ -26,6 +26,7 @@ const updateStatusSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(["pending", "processing", "analyzing", "approved", "added", "completed", "fixed", "rejected"]),
   rejection_reason: z.string().max(500).nullable().optional(),
+  custom_message: z.string().max(1000).nullable().optional(),
 });
 
 export const createRequest = createServerFn({ method: "POST" })
@@ -209,6 +210,24 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
               : data.status === "rejected"
                 ? "rejected"
                 : null;
+
+    // Custom message overrides the automatic template for this status change.
+    const custom = (data.custom_message ?? "").trim();
+    if (custom) {
+      try {
+        const text = renderTemplate(custom, {
+          cliente: profile?.full_name ?? "Cliente",
+          titulo: current.title,
+          tipo: KIND_LABEL[current.request_kind as string] ?? "",
+          formato: (current.format as string | null) ?? "—",
+          motivo: data.rejection_reason ?? "—",
+        });
+        await sendWhatsapp(profile?.whatsapp ?? "", text, { supabase: supabase as never });
+      } catch (err) {
+        console.error("Custom client notification failed", err);
+      }
+      return { ok: true };
+    }
 
     if (key) {
       try {

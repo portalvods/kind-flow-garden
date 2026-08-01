@@ -19,7 +19,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { updateRequestStatus } from "@/lib/requests.functions";
-import { getRejectionReasons } from "@/lib/admin-extras.functions";
+import { getRejectionReasons, getCompletionMessages } from "@/lib/admin-extras.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -108,13 +108,20 @@ function AdminPage() {
   const [sortByVotes, setSortByVotes] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<AdminRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [doneTarget, setDoneTarget] = useState<{ req: AdminRequest; status: StatusKey } | null>(null);
+  const [doneMessage, setDoneMessage] = useState("");
 
 
   const updateFn = useServerFn(updateRequestStatus);
   const reasonsFn = useServerFn(getRejectionReasons);
+  const doneMsgsFn = useServerFn(getCompletionMessages);
   const { data: presetReasons } = useQuery({
     queryKey: ["rejection-reasons"],
     queryFn: () => reasonsFn(),
+  });
+  const { data: presetDoneMsgs } = useQuery({
+    queryKey: ["completion-messages"],
+    queryFn: () => doneMsgsFn(),
   });
 
   const { data: requests, isLoading } = useQuery({
@@ -184,6 +191,7 @@ function AdminPage() {
       id: string;
       status: StatusKey;
       rejection_reason?: string | null;
+      custom_message?: string | null;
     }) => updateFn({ data: input }),
     onSuccess: (_, vars) => {
       toast.success(
@@ -194,6 +202,8 @@ function AdminPage() {
       qc.invalidateQueries({ queryKey: ["admin-requests"] });
       setRejectTarget(null);
       setRejectReason("");
+      setDoneTarget(null);
+      setDoneMessage("");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao atualizar"),
   });
@@ -356,7 +366,10 @@ function AdminPage() {
                   <Button
                     size="sm"
                     className="bg-teal-600 hover:bg-teal-500"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "fixed" })}
+                    onClick={() => {
+                      setDoneMessage("");
+                      setDoneTarget({ req: r, status: "fixed" });
+                    }}
                     disabled={changeStatus.isPending}
                   >
                     <Check className="h-3.5 w-3.5 mr-1" />
@@ -366,7 +379,10 @@ function AdminPage() {
                   <Button
                     size="sm"
                     className="bg-emerald-600 hover:bg-emerald-500"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "completed" })}
+                    onClick={() => {
+                      setDoneMessage("");
+                      setDoneTarget({ req: r, status: "completed" });
+                    }}
                     disabled={changeStatus.isPending}
                   >
                     <Check className="h-3.5 w-3.5 mr-1" />
@@ -400,6 +416,74 @@ function AdminPage() {
           ))}
         </div>
       )}
+
+      {/* Complete dialog */}
+      <Dialog open={!!doneTarget} onOpenChange={(o) => !o && setDoneTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {doneTarget?.status === "fixed" ? "Marcar como consertado" : "Marcar como concluído"}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Escolha uma mensagem pronta ou escreva uma personalizada. Variáveis:{" "}
+            <code className="text-primary">{"{cliente}"}</code>,{" "}
+            <code className="text-primary">{"{titulo}"}</code>.
+          </p>
+          {(presetDoneMsgs?.messages?.length ?? 0) > 0 && (
+            <div className="space-y-2">
+              {presetDoneMsgs!.messages.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setDoneMessage(m)}
+                  className={`w-full text-left text-xs px-3 py-2 rounded-lg border transition-colors ${
+                    doneMessage === m
+                      ? "border-primary/60 bg-primary/15"
+                      : "border-border/60 bg-muted/30 hover:bg-primary/10"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+          <Textarea
+            value={doneMessage}
+            onChange={(e) => setDoneMessage(e.target.value)}
+            placeholder="Ou escreva uma mensagem personalizada..."
+            maxLength={1000}
+            rows={3}
+          />
+          <DialogFooter className="gap-2">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                doneTarget &&
+                changeStatus.mutate({ id: doneTarget.req.id, status: doneTarget.status })
+              }
+              disabled={changeStatus.isPending}
+            >
+              Enviar mensagem padrão
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-500"
+              onClick={() =>
+                doneTarget &&
+                changeStatus.mutate({
+                  id: doneTarget.req.id,
+                  status: doneTarget.status,
+                  custom_message: doneMessage.trim() || null,
+                })
+              }
+              disabled={changeStatus.isPending || !doneMessage.trim()}
+            >
+              {changeStatus.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar e enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Reject dialog */}
       <Dialog open={!!rejectTarget} onOpenChange={(o) => !o && setRejectTarget(null)}>
