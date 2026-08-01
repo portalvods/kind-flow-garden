@@ -6,6 +6,7 @@ import { Loader2, Flame, Film, Tv, ImageOff, Star } from "lucide-react";
 import { listTrendingWeek } from "@/lib/trending.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TrailerButton } from "@/components/TrailerButton";
 
 export const Route = createFileRoute("/_authenticated/em-alta")({
   component: EmAltaPage,
