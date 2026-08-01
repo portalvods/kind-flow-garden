@@ -76,7 +76,8 @@ function ComunidadePage() {
             Pedidos da comunidade
           </h1>
           <p className="text-sm text-muted-foreground">
-            Já pedidos por outros clientes. Curta o que você também quer que entre logo.
+            Só aparecem aqui adições e atualizações pedidas por 3 ou mais clientes. Curta o que você também quer que
+            entre logo.
           </p>
         </div>
         <div className="flex gap-2">
@@ -95,7 +96,7 @@ function ComunidadePage() {
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-border/60 p-10 text-center text-muted-foreground">
-          Nenhum pedido em andamento no momento.
+          Nenhum título alcançou 3 pedidos ainda.
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
