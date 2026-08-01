@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -354,6 +354,14 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const contentType = selected ? selected.type : manualType;
+
+  useEffect(() => {
+    if (contentType === "movie" && kind === "atualizacao") {
+      setKind("adicao");
+    }
+  }, [contentType, kind]);
+
   async function handleImage(file: File | null) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -682,7 +690,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
             <option value="adicao">Adição</option>
-            <option value="atualizacao">Atualização</option>
+            {contentType === "tv" && <option value="atualizacao">Atualização</option>}
             <option value="conserto">Conserto</option>
           </select>
         </div>
