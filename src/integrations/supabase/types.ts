@@ -635,6 +635,7 @@ export type Database = {
       }
       is_blocked: { Args: { _user_id: string }; Returns: boolean }
       mask_name: { Args: { _name: string }; Returns: string }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
       rate_limit_check_and_hit: {
         Args: { _bucket: string; _key: string; _window_seconds: number }
         Returns: number

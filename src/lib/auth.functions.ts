@@ -3,8 +3,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { createHash, randomBytes, randomInt } from "crypto";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { sanitizePhone } from "./otp.server";
+import { normalizePhone } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
+
 
 // Rate limit: max N OTP requests per key in `windowSeconds`.
 async function enforceOtpRateLimit(bucket: string, key: string, max: number, windowSeconds: number) {
@@ -65,11 +66,17 @@ const startSignupSchema = z.object({
 export const startSignup = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startSignupSchema.parse(d))
   .handler(async ({ data }) => {
-    const whatsapp = sanitizePhone(data.whatsapp);
+    const whatsapp = normalizePhone(data.whatsapp);
 
     // Rate limit: max 5 signup OTPs per IP/hour, 3 per whatsapp/hour.
     await enforceOtpRateLimit("otp:signup:ip", getIp(), 5, 3600);
     await enforceOtpRateLimit("otp:signup:wa", whatsapp, 3, 3600);
+
+    if (whatsapp.length < 10) {
+      throw new Error("WhatsApp inválido. Informe o número com DDD (o 55 é opcional).");
+    }
+
+
 
     if (await isWhatsappAlreadyRegistered(whatsapp)) {
       throw new Error("Esse WhatsApp já está cadastrado. Entre com seu e-mail e senha ou use Esqueci a senha.");
@@ -126,7 +133,7 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     const id = data.identifier.trim();
     if (id.includes("@")) return { email: id };
 
-    const whatsapp = sanitizePhone(id);
+    const whatsapp = normalizePhone(id);
     if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
 
     const { createClient } = await import("@supabase/supabase-js");
@@ -139,6 +146,7 @@ export const emailFromIdentifier = createServerFn({ method: "POST" })
     if (!email) throw new Error("Nenhuma conta encontrada com esse WhatsApp.");
     return { email: email as string };
   });
+
 
 // ---- Forgot password: start (via WhatsApp OTP) ----
 // Works on VPS WITHOUT the service role key: the code+token are stored in
@@ -166,12 +174,14 @@ const RESET_TTL_SECONDS = 15 * 60;
 export const startPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startResetSchema.parse(d))
   .handler(async ({ data }) => {
-    const whatsapp = sanitizePhone(data.whatsapp);
-    if (whatsapp.length < 10) throw new Error("WhatsApp inválido (com DDD).");
+    const whatsapp = normalizePhone(data.whatsapp);
+    if (whatsapp.length < 10) throw new Error("WhatsApp inválido. Informe o número com DDD (o 55 é opcional).");
 
     // Rate limit: max 3 reset OTPs per IP/hour, 3 per whatsapp/hour.
+
     await enforceOtpRateLimit("otp:reset:ip", getIp(), 3, 3600);
     await enforceOtpRateLimit("otp:reset:wa", whatsapp, 3, 3600);
+
 
     const { createServerPublicSupabase } = await import("./supabase-public.server");
     const sb = createServerPublicSupabase();

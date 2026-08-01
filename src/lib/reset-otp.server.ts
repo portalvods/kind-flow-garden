@@ -1,7 +1,8 @@
 // Stateless HMAC OTP token for password reset via WhatsApp.
 import { createHash, createHmac, randomInt, timingSafeEqual } from "crypto";
-import { sanitizePhone } from "./otp.server";
+import { normalizePhone } from "./otp.server";
 import { getServerEnv } from "./env.server";
+
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 
@@ -50,8 +51,9 @@ export function issueResetOtp(data: { whatsapp: string; email: string; user_id: 
   token: string;
   whatsapp: string;
 } {
-  const whatsapp = sanitizePhone(data.whatsapp);
+  const whatsapp = normalizePhone(data.whatsapp);
   if (whatsapp.length < 10) throw new Error("WhatsApp inválido.");
+
   const code = generateCode();
   const payload: ResetPayload = {
     purpose: "reset",
@@ -70,8 +72,9 @@ export function verifyResetOtp(params: { token: string; whatsapp: string; code: 
     throw new Error("Código inválido ou expirado. Solicite um novo.");
   }
   const payload = decodePayload(encoded);
-  const whatsapp = sanitizePhone(params.whatsapp);
+  const whatsapp = normalizePhone(params.whatsapp);
   const code = (params.code ?? "").trim();
+
   if (payload.purpose !== "reset" || payload.whatsapp !== whatsapp) {
     throw new Error("Código inválido. Solicite um novo.");
   }

@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { normalizePhone } from "@/lib/otp.server";
 
 // Bot de recebimento: quando um contato manda mensagem para o WhatsApp
 // conectado, tentamos criar um pedido automaticamente (identificando o
 // cliente pelo número) e respondemos com o resultado.
-//
 // Configure na Evolution API:
 //   URL: https://<seu-site>/api/public/webhooks/evolution?secret=<SECRET>
 //   Eventos: MESSAGES_UPSERT
+
 
 const KEYWORDS = [
   "pedido",
@@ -97,8 +98,9 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
         if (fromMe || !remoteJid || remoteJid.endsWith("@g.us")) {
           return Response.json({ ok: true, skipped: "self_or_group" });
         }
-        const number = remoteJid.split("@")[0]?.replace(/\D/g, "");
+        const number = normalizePhone(remoteJid.split("@")[0] ?? "");
         if (!number) return Response.json({ ok: true, skipped: "no_number" });
+
 
         const { supabase } = await import("@/integrations/supabase/client");
 

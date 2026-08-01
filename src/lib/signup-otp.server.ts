@@ -1,6 +1,7 @@
 import { createHash, createHmac, randomInt, timingSafeEqual } from "crypto";
-import { sanitizePhone } from "./otp.server";
+import { normalizePhone } from "./otp.server";
 import { getServerEnv } from "./env.server";
+
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 
@@ -55,8 +56,9 @@ export function issueSignupOtp(data: { full_name: string; email: string; whatsap
   token: string;
   whatsapp: string;
 } {
-  const whatsapp = sanitizePhone(data.whatsapp);
+  const whatsapp = normalizePhone(data.whatsapp);
   if (whatsapp.length < 10) throw new Error("Número de WhatsApp inválido.");
+
 
   const code = generateCode();
   const payload: SignupPayload = {
@@ -81,8 +83,9 @@ export function verifySignupOtp(params: { token: string; whatsapp: string; code:
   }
 
   const payload = decodePayload(encoded);
-  const whatsapp = sanitizePhone(params.whatsapp);
+  const whatsapp = normalizePhone(params.whatsapp);
   const code = (params.code ?? "").trim();
+
   if (payload.purpose !== "signup" || payload.whatsapp !== whatsapp) {
     throw new Error("Código inválido. Solicite um novo.");
   }

@@ -268,9 +268,10 @@ function UsersPage() {
               <Input value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))} />
             </div>
             <div>
-              <Label>WhatsApp (somente números com DDD)</Label>
+              <Label>WhatsApp (DDD + número — o 55 é opcional)</Label>
               <Input value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} />
             </div>
+
             <div>
               <Label>E-mail</Label>
               <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />

@@ -1,6 +1,7 @@
 // Server-side WhatsApp messaging (Evolution API) + template rendering.
-import { sanitizePhone } from "./otp.server";
+import { normalizePhone } from "./otp.server";
 import { getServerEnv, readLocalWhatsappConfig } from "./env.server";
+
 
 type SupabaseReader = {
   from: (table: string) => {
@@ -94,8 +95,9 @@ export async function sendWhatsapp(to: string, message: string, options?: Whatsa
     console.info("[whatsapp] Evolution API not configured; skipping notification");
     return { ok: false, error: "not_configured" };
   }
-  const number = sanitizePhone(to);
+  const number = normalizePhone(to);
   if (!number) return { ok: false, error: "invalid_number" };
+
 
   message = sanitizeOutgoingText(message);
   if (isJunkMessage(message)) {
