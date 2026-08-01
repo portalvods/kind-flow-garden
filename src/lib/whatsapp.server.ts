@@ -1,6 +1,7 @@
 // Server-side WhatsApp messaging (Evolution API) + template rendering.
-import { sanitizePhone } from "./otp.server";
+import { normalizePhone } from "./otp.server";
 import { getServerEnv, readLocalWhatsappConfig } from "./env.server";
+
 
 type SupabaseReader = {
   from: (table: string) => {
