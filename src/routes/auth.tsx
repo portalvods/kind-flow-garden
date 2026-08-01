@@ -341,16 +341,17 @@ function AuthPage() {
                   <Input id="full" value={fullName} onChange={(e) => setFullName(e.target.value)} required maxLength={80} />
                 </div>
                 <div>
-                  <Label htmlFor="wa">WhatsApp (com DDD) *</Label>
+                  <Label htmlFor="wa">WhatsApp (DDD + número) *</Label>
                   <Input
                     id="wa"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="5511999999999"
+                    placeholder="11999999999 (o 55 é adicionado automaticamente)"
                     required
                     maxLength={20}
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="mail">E-mail</Label>
                   <Input id="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
