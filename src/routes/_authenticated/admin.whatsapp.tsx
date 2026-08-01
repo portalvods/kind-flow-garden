@@ -718,13 +718,14 @@ function TestMessageCard({
       <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Número (com DDI)
+            Número (DDD + número)
           </label>
           <Input
-            placeholder="5511999999999"
+            placeholder="11999999999"
             value={number}
             onChange={(e) => onNumberChange(e.target.value)}
           />
+
         </div>
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
