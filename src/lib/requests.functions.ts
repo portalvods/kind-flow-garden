@@ -122,6 +122,8 @@ export const createRequest = createServerFn({ method: "POST" })
         year: data.year ?? null,
         overview: data.overview ?? null,
         notes: data.notes ?? null,
+        image_path: data.image_path ?? null,
+
       })
       .select()
       .single();
