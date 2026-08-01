@@ -481,10 +481,15 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
   const create = useMutation({
     mutationFn: async () => {
+      const seasonsNote =
+        isSeriesUpdate && seasons.length
+          ? `Temporadas faltando: ${seasons.map((s) => `T${s}`).join(", ")}`
+          : "";
+      const finalNotes = [seasonsNote, notes.trim()].filter(Boolean).join(" — ") || null;
       const base = {
         request_kind: kind,
         format: format || null,
-        notes: notes || null,
+        notes: finalNotes,
         image_path: kind === "conserto" ? imagePath : null,
 
       };
