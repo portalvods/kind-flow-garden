@@ -465,12 +465,14 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setNotes("");
       setFormat("");
       setKind("adicao");
+      setForceDuplicate(false);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao enviar"),
   });
 
 
-  const canSubmit = (selected !== null || manualTitle.trim().length >= 2) && !blockedByCatalog;
+  const canSubmit =
+    (selected !== null || manualTitle.trim().length >= 2) && !blockedByCatalog && !blockedByCommunity;
 
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
