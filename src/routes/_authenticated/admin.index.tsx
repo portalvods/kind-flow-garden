@@ -336,6 +336,8 @@ function AdminPage() {
                 {r.notes && (
                   <p className="text-xs text-muted-foreground mt-1">📝 {r.notes}</p>
                 )}
+                {r.image_path && <RequestImage path={r.image_path} />}
+
                 {r.rejection_reason && (
                   <p className="text-xs text-red-400 mt-1">Motivo: {r.rejection_reason}</p>
                 )}
