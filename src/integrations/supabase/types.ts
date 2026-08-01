@@ -336,6 +336,35 @@ export type Database = {
           },
         ]
       }
+      request_votes: {
+        Row: {
+          created_at: string
+          id: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_votes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           content_type: Database["public"]["Enums"]["content_type"]
@@ -525,6 +554,22 @@ export type Database = {
         Args: { _key: string; _secret: string; _ttl_seconds?: number }
         Returns: boolean
       }
+      community_requests: {
+        Args: { _limit?: number }
+        Returns: {
+          author_initials: string
+          content_type: string
+          created_at: string
+          poster_path: string
+          request_id: string
+          request_kind: string
+          status: string
+          title: string
+          voted: boolean
+          votes: number
+          year: number
+        }[]
+      }
       complete_wa_password_reset: {
         Args: { _code_hash: string; _new_password: string; _token_hash: string }
         Returns: undefined
@@ -539,6 +584,7 @@ export type Database = {
         Returns: boolean
       }
       is_blocked: { Args: { _user_id: string }; Returns: boolean }
+      mask_name: { Args: { _name: string }; Returns: string }
       rate_limit_check_and_hit: {
         Args: { _bucket: string; _key: string; _window_seconds: number }
         Returns: number
@@ -561,6 +607,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      toggle_request_vote: { Args: { _request_id: string }; Returns: Json }
       weekly_news: {
         Args: { _days?: number }
         Returns: {
