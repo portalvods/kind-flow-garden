@@ -286,10 +286,11 @@ function AuthPage() {
                     id="identifier"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="5511999999999 ou voce@email.com"
+                    placeholder="11999999999 (com DDD) ou voce@email.com"
                     required
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="password">Senha</Label>
                   <Input
