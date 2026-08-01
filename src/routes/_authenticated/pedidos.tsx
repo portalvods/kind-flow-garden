@@ -690,7 +690,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
             <option value="adicao">Adição</option>
-            <option value="atualizacao">Atualização</option>
+            {contentType === "tv" && <option value="atualizacao">Atualização</option>}
             <option value="conserto">Conserto</option>
           </select>
         </div>
