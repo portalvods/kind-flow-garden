@@ -350,6 +350,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
   const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [seasons, setSeasons] = useState<number[]>([]);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
