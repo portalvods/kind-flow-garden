@@ -222,7 +222,8 @@ function AuthPage() {
 
   const handleForgotStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (whatsapp.trim().length < 10) return toast.error("Informe seu WhatsApp com DDD.");
+    if (whatsapp.trim().length < 10) return toast.error("Informe seu WhatsApp com DDD (o 55 é opcional).");
+
     setLoading(true);
     try {
       const res = await startResetFn({ data: { whatsapp } });
