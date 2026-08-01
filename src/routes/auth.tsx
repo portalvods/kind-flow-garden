@@ -416,16 +416,17 @@ function AuthPage() {
               </p>
               <form onSubmit={handleForgotStart} className="space-y-4">
                 <div>
-                  <Label htmlFor="fwa">WhatsApp cadastrado (com DDD)</Label>
+                  <Label htmlFor="fwa">WhatsApp cadastrado (DDD + número)</Label>
                   <Input
                     id="fwa"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="5511999999999"
+                    placeholder="11999999999 (o 55 é adicionado automaticamente)"
                     required
                     maxLength={20}
                   />
                 </div>
+
                 <Button type="submit" className="w-full h-11" disabled={loading}>
                   {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Enviar código
