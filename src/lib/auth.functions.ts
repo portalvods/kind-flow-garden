@@ -3,8 +3,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { createHash, randomBytes, randomInt } from "crypto";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { sanitizePhone } from "./otp.server";
+import { normalizePhone } from "./otp.server";
 import { issueSignupOtp, verifySignupOtp } from "./signup-otp.server";
+
 
 // Rate limit: max N OTP requests per key in `windowSeconds`.
 async function enforceOtpRateLimit(bucket: string, key: string, max: number, windowSeconds: number) {
