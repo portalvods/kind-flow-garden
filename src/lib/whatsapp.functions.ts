@@ -388,7 +388,7 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
       { key: "evolution_instance", value: data.instance, updated_at: now },
     ];
     if (data.adminWhatsapp !== undefined) {
-      rows.push({ key: "admin_whatsapp", value: data.adminWhatsapp.replace(/\D/g, ""), updated_at: now });
+      rows.push({ key: "admin_whatsapp", value: normalizePhone(data.adminWhatsapp), updated_at: now });
     }
     const { error } = await (context.supabase as never as {
       from: (t: string) => { upsert: (rows: unknown) => Promise<{ error: unknown }> };
@@ -400,8 +400,9 @@ export const saveWhatsappConfig = createServerFn({ method: "POST" })
       evolution_url: data.baseUrl.replace(/\/$/, ""),
       evolution_api_key: data.apiKey,
       evolution_instance: data.instance,
-      ...(data.adminWhatsapp !== undefined ? { admin_whatsapp: data.adminWhatsapp.replace(/\D/g, "") } : {}),
+      ...(data.adminWhatsapp !== undefined ? { admin_whatsapp: normalizePhone(data.adminWhatsapp) } : {}),
     });
+
     return { ok: true };
   });
 
