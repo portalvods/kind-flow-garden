@@ -14,7 +14,9 @@ import {
   Clock,
   Play,
   Trash2,
+  ThumbsUp,
 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { updateRequestStatus } from "@/lib/requests.functions";
 import { getRejectionReasons } from "@/lib/admin-extras.functions";
@@ -103,8 +105,10 @@ function AdminPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"pending" | "analyzing" | "approved" | "completed" | "rejected" | "all">("pending");
   const [search, setSearch] = useState("");
+  const [sortByVotes, setSortByVotes] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<AdminRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+
 
   const updateFn = useServerFn(updateRequestStatus);
   const reasonsFn = useServerFn(getRejectionReasons);
@@ -135,6 +139,18 @@ function AdminPage() {
     },
   });
 
+  const { data: voteMap } = useQuery({
+    queryKey: ["admin-request-votes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("request_votes").select("request_id");
+      if (error) throw error;
+      const m: Record<string, number> = {};
+      for (const v of data ?? []) m[v.request_id] = (m[v.request_id] ?? 0) + 1;
+      return m;
+    },
+  });
+  const votesOf = (id: string) => voteMap?.[id] ?? 0;
+
   const stats = {
     pending: requests?.filter((r) => r.status === "pending").length ?? 0,
     analyzing: requests?.filter((r) => r.status === "analyzing").length ?? 0,
@@ -155,7 +171,13 @@ function AdminPage() {
         !search ||
         r.title.toLowerCase().includes(search.toLowerCase()) ||
         r.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()),
+    )
+    .sort((a, b) =>
+      sortByVotes
+        ? votesOf(b.id) - votesOf(a.id) || +new Date(b.created_at) - +new Date(a.created_at)
+        : 0,
     );
+
 
   const changeStatus = useMutation({
     mutationFn: async (input: {
@@ -219,7 +241,16 @@ function AdminPage() {
           </TabsList>
           <TabsContent value={tab} className="hidden" />
         </Tabs>
+        <Button
+          size="sm"
+          variant={sortByVotes ? "default" : "outline"}
+          onClick={() => setSortByVotes((v) => !v)}
+          className="gap-1"
+        >
+          <ThumbsUp className="h-4 w-4" /> Mais curtidos
+        </Button>
         <div className="relative flex-1 max-w-xs min-w-[200px]">
+
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
@@ -275,9 +306,15 @@ function AdminPage() {
                     <Badge variant="outline" className="text-[10px]">{r.format}</Badge>
                   )}
                   {r.year && <span className="text-xs text-muted-foreground">{r.year}</span>}
+                  {votesOf(r.id) > 0 && (
+                    <Badge className="border border-primary/30 bg-primary/15 text-primary gap-1">
+                      <ThumbsUp className="h-3 w-3" /> {votesOf(r.id)}
+                    </Badge>
+                  )}
                   <Badge className={`${STATUS_COLOR[r.status]} border ml-auto`}>
                     {STATUS_LABEL[r.status]}
                   </Badge>
+
                 </div>
                 <p className="text-xs text-muted-foreground">
                   👤 {r.profiles?.full_name ?? "—"}
