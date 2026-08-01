@@ -95,8 +95,9 @@ export async function sendWhatsapp(to: string, message: string, options?: Whatsa
     console.info("[whatsapp] Evolution API not configured; skipping notification");
     return { ok: false, error: "not_configured" };
   }
-  const number = sanitizePhone(to);
+  const number = normalizePhone(to);
   if (!number) return { ok: false, error: "invalid_number" };
+
 
   message = sanitizeOutgoingText(message);
   if (isJunkMessage(message)) {
