@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedResenhasRouteImport } from './routes/_authenticated/resenhas'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authenticated/novidades'
 import { Route as AuthenticatedEmAltaRouteImport } from './routes/_authenticated/em-alta'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedResenhasRoute = AuthenticatedResenhasRouteImport.update({
+  id: '/resenhas',
+  path: '/resenhas',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/resenhas': typeof AuthenticatedResenhasRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/resenhas': typeof AuthenticatedResenhasRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/_authenticated/em-alta': typeof AuthenticatedEmAltaRoute
   '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/_authenticated/resenhas': typeof AuthenticatedResenhasRoute
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/_authenticated/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/em-alta'
     | '/novidades'
     | '/pedidos'
+    | '/resenhas'
     | '/admin/aparencia'
     | '/admin/automacao'
     | '/admin/bot'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/em-alta'
     | '/novidades'
     | '/pedidos'
+    | '/resenhas'
     | '/admin/aparencia'
     | '/admin/automacao'
     | '/admin/bot'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/_authenticated/em-alta'
     | '/_authenticated/novidades'
     | '/_authenticated/pedidos'
+    | '/_authenticated/resenhas'
     | '/_authenticated/admin/aparencia'
     | '/_authenticated/admin/automacao'
     | '/_authenticated/admin/bot'
@@ -303,6 +315,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/resenhas': {
+      id: '/_authenticated/resenhas'
+      path: '/resenhas'
+      fullPath: '/resenhas'
+      preLoaderRoute: typeof AuthenticatedResenhasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pedidos': {
       id: '/_authenticated/pedidos'
@@ -431,6 +450,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEmAltaRoute: typeof AuthenticatedEmAltaRoute
   AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedResenhasRoute: typeof AuthenticatedResenhasRoute
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
   AuthenticatedAdminBotRoute: typeof AuthenticatedAdminBotRoute
@@ -449,6 +469,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEmAltaRoute: AuthenticatedEmAltaRoute,
   AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedResenhasRoute: AuthenticatedResenhasRoute,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,
   AuthenticatedAdminBotRoute: AuthenticatedAdminBotRoute,

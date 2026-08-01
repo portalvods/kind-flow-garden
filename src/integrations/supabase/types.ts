@@ -97,6 +97,51 @@ export type Database = {
           },
         ]
       }
+      content_reviews: {
+        Row: {
+          body: string | null
+          content_key: string
+          content_type: string
+          created_at: string
+          id: string
+          poster_path: string | null
+          rating: number
+          title: string
+          tmdb_id: number | null
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          body?: string | null
+          content_key: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          poster_path?: string | null
+          rating: number
+          title: string
+          tmdb_id?: number | null
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          body?: string | null
+          content_key?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          poster_path?: string | null
+          rating?: number
+          title?: string
+          tmdb_id?: number | null
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       m3u_sources: {
         Row: {
           active: boolean
@@ -641,6 +686,15 @@ export type Database = {
         Args: { _code_hash: string; _new_password: string; _token_hash: string }
         Returns: undefined
       }
+      content_review_stats: {
+        Args: { _keys: string[] }
+        Returns: {
+          avg_rating: number
+          content_key: string
+          my_rating: number
+          total: number
+        }[]
+      }
       delete_request_comment: { Args: { _id: string }; Returns: undefined }
       email_by_whatsapp: { Args: { _whatsapp: string }; Returns: string }
       find_community_duplicate: {
@@ -672,6 +726,17 @@ export type Database = {
         Returns: boolean
       }
       is_blocked: { Args: { _user_id: string }; Returns: boolean }
+      list_content_reviews: {
+        Args: { _content_key: string }
+        Returns: {
+          author_initials: string
+          body: string
+          created_at: string
+          id: string
+          mine: boolean
+          rating: number
+        }[]
+      }
       list_request_comments: {
         Args: { _request_id: string }
         Returns: {
@@ -707,6 +772,32 @@ export type Database = {
         Returns: undefined
       }
       toggle_request_vote: { Args: { _request_id: string }; Returns: Json }
+      top_reviewed_content: {
+        Args: { _limit?: number }
+        Returns: {
+          avg_rating: number
+          content_key: string
+          content_type: string
+          my_rating: number
+          poster_path: string
+          title: string
+          total: number
+          year: number
+        }[]
+      }
+      upsert_content_review: {
+        Args: {
+          _body: string
+          _content_key: string
+          _content_type: string
+          _poster_path: string
+          _rating: number
+          _title: string
+          _tmdb_id: number
+          _year: number
+        }
+        Returns: string
+      }
       weekly_news: {
         Args: { _days?: number }
         Returns: {
