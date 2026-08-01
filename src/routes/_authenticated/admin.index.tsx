@@ -139,6 +139,18 @@ function AdminPage() {
     },
   });
 
+  const { data: voteMap } = useQuery({
+    queryKey: ["admin-request-votes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("request_votes").select("request_id");
+      if (error) throw error;
+      const m: Record<string, number> = {};
+      for (const v of data ?? []) m[v.request_id] = (m[v.request_id] ?? 0) + 1;
+      return m;
+    },
+  });
+  const votesOf = (id: string) => voteMap?.[id] ?? 0;
+
   const stats = {
     pending: requests?.filter((r) => r.status === "pending").length ?? 0,
     analyzing: requests?.filter((r) => r.status === "analyzing").length ?? 0,
@@ -159,7 +171,13 @@ function AdminPage() {
         !search ||
         r.title.toLowerCase().includes(search.toLowerCase()) ||
         r.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()),
+    )
+    .sort((a, b) =>
+      sortByVotes
+        ? votesOf(b.id) - votesOf(a.id) || +new Date(b.created_at) - +new Date(a.created_at)
+        : 0,
     );
+
 
   const changeStatus = useMutation({
     mutationFn: async (input: {
