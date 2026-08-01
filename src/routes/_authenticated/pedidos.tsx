@@ -589,6 +589,14 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             {selected.overview && (
               <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{selected.overview}</p>
             )}
+            <div className="mt-3">
+              <TrailerButton
+                tmdbId={selected.id}
+                contentType={selected.type}
+                title={selected.title}
+              />
+            </div>
+
             {kind === "adicao" && checkingAvail && (
               <p className="text-xs text-muted-foreground mt-2 inline-flex items-center gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" /> verificando disponibilidade...
