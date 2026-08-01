@@ -110,12 +110,27 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
         if (!row.enabled) return Response.json({ ok: true, skipped: "disabled" });
 
         const text = extractText(msgData);
+
+        // Ignora risadas/ruído ("kkkkk", "hahaha", "rsrs", emojis soltos,
+        // ou o mesmo caractere repetido) — o bot não responde a isso.
+        const compact = text.replace(/\s/g, "");
+        const isNoise =
+          !compact ||
+          /^[kK]+$/.test(compact) ||
+          /^(?:ha|rs|hu|he)+!*$/i.test(compact) ||
+          /^(.)\1*$/.test(compact) ||
+          !/[a-zA-ZÀ-ÿ0-9]/.test(compact);
+        if (isNoise) {
+          return Response.json({ ok: true, skipped: "noise" });
+        }
+
         const parsed = parseCommand(text);
 
         const { sendWhatsapp } = await import("@/lib/whatsapp.server");
 
         // Se não parece pedido, aplica anti-flood e manda mensagem padrão.
         if (!parsed) {
+
           const { data: allowed } = await supabase.rpc("bot_try_hit", {
             _secret: providedSecret,
             _key: number,
