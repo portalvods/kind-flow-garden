@@ -20,6 +20,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { updateRequestStatus } from "@/lib/requests.functions";
 import { getRejectionReasons, getCompletionMessages } from "@/lib/admin-extras.functions";
+import { TrailerButton } from "@/components/TrailerButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -122,6 +123,7 @@ type AdminRequest = {
   status: StatusKey;
   notes: string | null;
   image_path?: string | null;
+  tmdb_id?: number | null;
 
   rejection_reason: string | null;
   created_at: string;
@@ -343,6 +345,14 @@ function AdminPage() {
                     <Badge variant="outline" className="text-[10px]">{r.format}</Badge>
                   )}
                   {r.year && <span className="text-xs text-muted-foreground">{r.year}</span>}
+                  {r.tmdb_id && (
+                    <TrailerButton
+                      tmdbId={r.tmdb_id}
+                      contentType={r.content_type}
+                      title={r.title}
+                      variant="ghost"
+                    />
+                  )}
                   {votesOf(r.id) > 0 && (
                     <Badge className="border border-primary/30 bg-primary/15 text-primary gap-1">
                       <ThumbsUp className="h-3 w-3" /> {votesOf(r.id)}
