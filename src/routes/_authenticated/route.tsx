@@ -104,6 +104,10 @@ function AuthedLayout() {
                 <NavLink to="/admin/ranking" active={pathname.startsWith("/admin/ranking")} icon={<Trophy className="h-4 w-4" />}>
                   Ranking
                 </NavLink>
+                <NavLink to="/admin/curtidos" active={pathname.startsWith("/admin/curtidos")} icon={<ThumbsUp className="h-4 w-4" />}>
+                  Mais curtidos
+                </NavLink>
+
                 <NavLink to="/admin/aparencia" active={pathname.startsWith("/admin/aparencia")} icon={<Palette className="h-4 w-4" />}>
                   Aparência
                 </NavLink>

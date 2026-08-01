@@ -21,6 +21,7 @@ import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminRankingRouteImport } from './routes/_authenticated/admin.ranking'
 import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
 import { Route as AuthenticatedAdminFerramentasRouteImport } from './routes/_authenticated/admin.ferramentas'
+import { Route as AuthenticatedAdminCurtidosRouteImport } from './routes/_authenticated/admin.curtidos'
 import { Route as AuthenticatedAdminCatalogoRouteImport } from './routes/_authenticated/admin.catalogo'
 import { Route as AuthenticatedAdminBotRouteImport } from './routes/_authenticated/admin.bot'
 import { Route as AuthenticatedAdminAutomacaoRouteImport } from './routes/_authenticated/admin.automacao'
@@ -91,6 +92,12 @@ const AuthenticatedAdminFerramentasRoute =
     path: '/admin/ferramentas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminCurtidosRoute =
+  AuthenticatedAdminCurtidosRouteImport.update({
+    id: '/admin/curtidos',
+    path: '/admin/curtidos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminCatalogoRoute =
   AuthenticatedAdminCatalogoRouteImport.update({
     id: '/admin/catalogo',
@@ -131,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
@@ -149,6 +157,7 @@ export interface FileRoutesByTo {
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
@@ -169,6 +178,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/_authenticated/admin/bot': typeof AuthenticatedAdminBotRoute
   '/_authenticated/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/_authenticated/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/_authenticated/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/_authenticated/admin/ranking': typeof AuthenticatedAdminRankingRoute
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/admin/automacao'
     | '/admin/bot'
     | '/admin/catalogo'
+    | '/admin/curtidos'
     | '/admin/ferramentas'
     | '/admin/mensagens'
     | '/admin/ranking'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/admin/automacao'
     | '/admin/bot'
     | '/admin/catalogo'
+    | '/admin/curtidos'
     | '/admin/ferramentas'
     | '/admin/mensagens'
     | '/admin/ranking'
@@ -226,6 +238,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/automacao'
     | '/_authenticated/admin/bot'
     | '/_authenticated/admin/catalogo'
+    | '/_authenticated/admin/curtidos'
     | '/_authenticated/admin/ferramentas'
     | '/_authenticated/admin/mensagens'
     | '/_authenticated/admin/ranking'
@@ -328,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFerramentasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/curtidos': {
+      id: '/_authenticated/admin/curtidos'
+      path: '/admin/curtidos'
+      fullPath: '/admin/curtidos'
+      preLoaderRoute: typeof AuthenticatedAdminCurtidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/catalogo': {
       id: '/_authenticated/admin/catalogo'
       path: '/admin/catalogo'
@@ -374,6 +394,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
   AuthenticatedAdminBotRoute: typeof AuthenticatedAdminBotRoute
   AuthenticatedAdminCatalogoRoute: typeof AuthenticatedAdminCatalogoRoute
+  AuthenticatedAdminCurtidosRoute: typeof AuthenticatedAdminCurtidosRoute
   AuthenticatedAdminFerramentasRoute: typeof AuthenticatedAdminFerramentasRoute
   AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
   AuthenticatedAdminRankingRoute: typeof AuthenticatedAdminRankingRoute
@@ -390,6 +411,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,
   AuthenticatedAdminBotRoute: AuthenticatedAdminBotRoute,
   AuthenticatedAdminCatalogoRoute: AuthenticatedAdminCatalogoRoute,
+  AuthenticatedAdminCurtidosRoute: AuthenticatedAdminCurtidosRoute,
   AuthenticatedAdminFerramentasRoute: AuthenticatedAdminFerramentasRoute,
   AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
   AuthenticatedAdminRankingRoute: AuthenticatedAdminRankingRoute,
@@ -410,13 +432,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
