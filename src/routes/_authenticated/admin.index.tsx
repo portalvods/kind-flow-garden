@@ -14,7 +14,9 @@ import {
   Clock,
   Play,
   Trash2,
+  ThumbsUp,
 } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { updateRequestStatus } from "@/lib/requests.functions";
 import { getRejectionReasons } from "@/lib/admin-extras.functions";
