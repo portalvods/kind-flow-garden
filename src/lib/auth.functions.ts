@@ -73,8 +73,9 @@ export const startSignup = createServerFn({ method: "POST" })
     await enforceOtpRateLimit("otp:signup:wa", whatsapp, 3, 3600);
 
     if (whatsapp.length < 10) {
-      throw new Error("WhatsApp inválido. Informe o número com DDD.");
+      throw new Error("WhatsApp inválido. Informe o número com DDD (o 55 é opcional).");
     }
+
 
 
     if (await isWhatsappAlreadyRegistered(whatsapp)) {
