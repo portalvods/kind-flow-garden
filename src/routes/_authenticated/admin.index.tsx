@@ -191,6 +191,7 @@ function AdminPage() {
       id: string;
       status: StatusKey;
       rejection_reason?: string | null;
+      custom_message?: string | null;
     }) => updateFn({ data: input }),
     onSuccess: (_, vars) => {
       toast.success(
@@ -201,6 +202,8 @@ function AdminPage() {
       qc.invalidateQueries({ queryKey: ["admin-requests"] });
       setRejectTarget(null);
       setRejectReason("");
+      setDoneTarget(null);
+      setDoneMessage("");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao atualizar"),
   });
@@ -363,7 +366,10 @@ function AdminPage() {
                   <Button
                     size="sm"
                     className="bg-teal-600 hover:bg-teal-500"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "fixed" })}
+                    onClick={() => {
+                      setDoneMessage("");
+                      setDoneTarget({ req: r, status: "fixed" });
+                    }}
                     disabled={changeStatus.isPending}
                   >
                     <Check className="h-3.5 w-3.5 mr-1" />
@@ -373,7 +379,10 @@ function AdminPage() {
                   <Button
                     size="sm"
                     className="bg-emerald-600 hover:bg-emerald-500"
-                    onClick={() => changeStatus.mutate({ id: r.id, status: "completed" })}
+                    onClick={() => {
+                      setDoneMessage("");
+                      setDoneTarget({ req: r, status: "completed" });
+                    }}
                     disabled={changeStatus.isPending}
                   >
                     <Check className="h-3.5 w-3.5 mr-1" />
