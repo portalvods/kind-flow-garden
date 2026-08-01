@@ -36,6 +36,75 @@ export const listTopClients = createServerFn({ method: "GET" })
     return { clients: (data as TopClient[]) ?? [] };
   });
 
+export type MostVotedRequest = {
+  request_id: string;
+  title: string;
+  year: number | null;
+  content_type: string;
+  request_kind: string;
+  status: string;
+  poster_path: string | null;
+  votes: number;
+  author_name: string | null;
+  author_whatsapp: string | null;
+  created_at: string;
+};
+
+export const listMostVotedRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ items: MostVotedRequest[] }> => {
+    await assertAdmin(context);
+    const c = context.supabase as unknown as RpcClient;
+
+    const { data: votes, error: vErr } = await c.from("request_votes").select("request_id");
+    if (vErr) throw new Error(vErr.message);
+
+    const counts = new Map<string, number>();
+    for (const v of (votes ?? []) as Array<{ request_id: string }>) {
+      counts.set(v.request_id, (counts.get(v.request_id) ?? 0) + 1);
+    }
+    const ids = [...counts.keys()];
+    if (!ids.length) return { items: [] };
+
+    const { data: reqs, error: rErr } = await c
+      .from("requests")
+      .select("id, title, year, content_type, request_kind, status, poster_path, user_id, created_at")
+      .in("id", ids);
+    if (rErr) throw new Error(rErr.message);
+
+    const rows = (reqs ?? []) as Array<{
+      id: string; title: string; year: number | null; content_type: string;
+      request_kind: string; status: string; poster_path: string | null;
+      user_id: string; created_at: string;
+    }>;
+
+    const userIds = [...new Set(rows.map((r) => r.user_id))];
+    const { data: profs } = await c.from("profiles").select("id, full_name, whatsapp").in("id", userIds);
+    const pmap = new Map(
+      ((profs ?? []) as Array<{ id: string; full_name: string | null; whatsapp: string | null }>).map((p) => [p.id, p]),
+    );
+
+    const items: MostVotedRequest[] = rows
+      .map((r) => ({
+        request_id: r.id,
+        title: r.title,
+        year: r.year,
+        content_type: r.content_type,
+        request_kind: r.request_kind,
+        status: r.status,
+        poster_path: r.poster_path,
+        votes: counts.get(r.id) ?? 0,
+        author_name: pmap.get(r.user_id)?.full_name ?? null,
+        author_whatsapp: pmap.get(r.user_id)?.whatsapp ?? null,
+        created_at: r.created_at,
+      }))
+      .sort((a, b) => b.votes - a.votes || +new Date(b.created_at) - +new Date(a.created_at))
+      .slice(0, 100);
+
+    return { items };
+  });
+
+
 // -------- Rejection reasons --------
 export const getRejectionReasons = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
