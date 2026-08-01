@@ -96,7 +96,7 @@ function ComunidadePage() {
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-border/60 p-10 text-center text-muted-foreground">
-          Nenhum pedido em andamento no momento.
+          Nenhum título alcançou 3 pedidos ainda.
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
