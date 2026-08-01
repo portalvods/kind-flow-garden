@@ -13,6 +13,7 @@ import { getRequestTimeline } from "@/lib/admin-extras.functions";
 import { suggestAlternatives } from "@/lib/suggest.functions";
 
 import { checkAvailability } from "@/lib/catalog.functions";
+import { findCommunityDuplicate, toggleRequestVote } from "@/lib/community.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
