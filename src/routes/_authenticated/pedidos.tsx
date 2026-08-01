@@ -504,13 +504,20 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setFormat("");
       setKind("adicao");
       setForceDuplicate(false);
+      setImagePath(null);
+      setImagePreview(null);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao enviar"),
   });
 
 
   const canSubmit =
-    (selected !== null || manualTitle.trim().length >= 2) && !blockedByCatalog && !blockedByCommunity;
+    (selected !== null || manualTitle.trim().length >= 2) &&
+    !blockedByCatalog &&
+    !blockedByCommunity &&
+    !uploading &&
+    (kind !== "conserto" || notes.trim().length >= 5);
+
 
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
