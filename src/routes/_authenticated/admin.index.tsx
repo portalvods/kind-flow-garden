@@ -241,7 +241,16 @@ function AdminPage() {
           </TabsList>
           <TabsContent value={tab} className="hidden" />
         </Tabs>
+        <Button
+          size="sm"
+          variant={sortByVotes ? "default" : "outline"}
+          onClick={() => setSortByVotes((v) => !v)}
+          className="gap-1"
+        >
+          <ThumbsUp className="h-4 w-4" /> Mais curtidos
+        </Button>
         <div className="relative flex-1 max-w-xs min-w-[200px]">
+
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
