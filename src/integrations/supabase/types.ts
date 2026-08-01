@@ -557,6 +557,29 @@ export type Database = {
         Args: { _key: string; _secret: string; _ttl_seconds?: number }
         Returns: boolean
       }
+      catalog_cron_due_sources: {
+        Args: { _secret: string }
+        Returns: {
+          id: string
+          name: string
+          url: string
+        }[]
+      }
+      catalog_cron_finish: {
+        Args: {
+          _error: string
+          _movies: number
+          _secret: string
+          _series: number
+          _source_id: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      catalog_cron_replace: {
+        Args: { _items: Json; _secret: string; _source_id: string }
+        Returns: number
+      }
       community_requests: {
         Args: { _limit?: number }
         Returns: {
