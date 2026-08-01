@@ -174,3 +174,51 @@ function NavLink({
     </Link>
   );
 }
+
+function SidebarGroup({
+  title,
+  pathname,
+  children,
+}: {
+  title: string;
+  pathname: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mb-5">
+      <h3 className="px-4 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      <ul className="space-y-1">
+        {children}
+      </ul>
+    </div>
+  );
+}
+
+function SidebarLink({
+  to,
+  icon,
+  children,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const active = pathname === to || pathname.startsWith(`${to}/`);
+  return (
+    <li>
+      <SheetClose asChild>
+        <Link
+          to={to}
+          className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
+            active ? "bg-primary/15 text-primary border-r-2 border-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+          }`}
+        >
+          {icon}
+          {children}
+        </Link>
+      </SheetClose>
+    </li>
+  );
+}
+
