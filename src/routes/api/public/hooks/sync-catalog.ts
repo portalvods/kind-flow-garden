@@ -45,7 +45,7 @@ async function runSync(secret: string) {
         _secret: secret,
         _source_id: src.id,
         _status: "ok",
-        _error: null,
+        _error: null as unknown as string,
         _movies: movies,
         _series: series,
       });
@@ -57,8 +57,8 @@ async function runSync(secret: string) {
         _source_id: src.id,
         _status: "error",
         _error: msg,
-        _movies: null,
-        _series: null,
+        _movies: null as unknown as number,
+        _series: null as unknown as number,
       });
       results.push({ source: src.name, ok: false, error: msg });
     }
