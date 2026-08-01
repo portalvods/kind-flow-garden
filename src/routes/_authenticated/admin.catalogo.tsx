@@ -222,6 +222,16 @@ function CatalogoPage() {
         é bloqueado e a categoria é exibida. Pedidos de <em>Atualização</em> e <em>Conserto</em> não são
         bloqueados.</p>
       </div>
+
+      <div className="glass-card rounded-2xl p-4 text-xs text-muted-foreground space-y-2">
+        <p><strong>Sincronização automática:</strong> um agendador chama o endereço abaixo e o sistema
+        sincroniza sozinho todas as fontes ativas cujo intervalo já venceu. Use o mesmo segredo
+        configurado na aba <em>Bot</em>.</p>
+        <code className="block break-all rounded-lg bg-background/60 p-2 text-[11px]">
+          POST {typeof window !== "undefined" ? window.location.origin : ""}/api/public/hooks/sync-catalog?secret=SEU_SEGREDO
+        </code>
+      </div>
+
     </div>
   );
 }
