@@ -350,6 +350,42 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
   const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImage(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Envie apenas imagens.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx. 5MB).");
+      return;
+    }
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) throw new Error("Sessão expirada");
+      const ext = file.name.split(".").pop()?.toLowerCase().slice(0, 5) || "jpg";
+      const path = `${uid}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("request-images").upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+      if (error) throw error;
+      setImagePath(path);
+      setImagePreview(URL.createObjectURL(file));
+      toast.success("Imagem anexada!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar imagem");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   const [forceDuplicate, setForceDuplicate] = useState(false);
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
