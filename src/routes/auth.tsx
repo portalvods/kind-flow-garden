@@ -111,7 +111,7 @@ function AuthPage() {
         email: z.string().email("E-mail inválido"),
         password: z.string().min(6, "Senha: mínimo 6 caracteres"),
         fullName: z.string().trim().min(2, "Informe seu nome").max(80),
-        whatsapp: z.string().trim().min(10, "WhatsApp inválido (com DDD)").max(20),
+        whatsapp: z.string().trim().min(10, "WhatsApp inválido (DDD + número)").max(20),
       })
       .safeParse({ email, password, fullName, whatsapp });
     if (!parse.success) {
