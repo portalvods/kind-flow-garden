@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Bot, Wrench, Trophy, MessageSquareCode, Sparkles } from "lucide-react";
+import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -71,9 +71,13 @@ function AuthedLayout() {
             <NavLink to="/pedidos" active={pathname === "/pedidos"} icon={<ShoppingBag className="h-4 w-4" />}>
               Meus pedidos
             </NavLink>
+            <NavLink to="/comunidade" active={pathname.startsWith("/comunidade")} icon={<Users2 className="h-4 w-4" />}>
+              Comunidade
+            </NavLink>
             <NavLink to="/novidades" active={pathname.startsWith("/novidades")} icon={<Sparkles className="h-4 w-4" />}>
               Novidades
             </NavLink>
+
             {isAdmin && (
               <>
                 <NavLink to="/admin" active={pathname === "/admin"} icon={<LayoutDashboard className="h-4 w-4" />}>
