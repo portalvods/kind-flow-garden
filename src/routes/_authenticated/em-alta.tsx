@@ -100,8 +100,17 @@ function EmAltaPage() {
                       {it.vote_average}
                     </span>
                   )}
+                <div className="pt-1">
+                  <TrailerButton
+                    tmdbId={it.id}
+                    contentType={it.type === "movie" ? "movie" : "tv"}
+                    title={it.title}
+                    size="sm"
+                    variant="secondary"
+                  />
                 </div>
               </div>
+            </div>
             </div>
           ))}
         </div>
