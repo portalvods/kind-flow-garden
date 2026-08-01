@@ -1,7 +1,8 @@
 // Stateless HMAC OTP token for password reset via WhatsApp.
 import { createHash, createHmac, randomInt, timingSafeEqual } from "crypto";
-import { sanitizePhone } from "./otp.server";
+import { normalizePhone } from "./otp.server";
 import { getServerEnv } from "./env.server";
+
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 
