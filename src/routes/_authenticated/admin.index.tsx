@@ -19,7 +19,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { updateRequestStatus } from "@/lib/requests.functions";
-import { getRejectionReasons } from "@/lib/admin-extras.functions";
+import { getRejectionReasons, getCompletionMessages } from "@/lib/admin-extras.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -108,13 +108,20 @@ function AdminPage() {
   const [sortByVotes, setSortByVotes] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<AdminRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [doneTarget, setDoneTarget] = useState<{ req: AdminRequest; status: StatusKey } | null>(null);
+  const [doneMessage, setDoneMessage] = useState("");
 
 
   const updateFn = useServerFn(updateRequestStatus);
   const reasonsFn = useServerFn(getRejectionReasons);
+  const doneMsgsFn = useServerFn(getCompletionMessages);
   const { data: presetReasons } = useQuery({
     queryKey: ["rejection-reasons"],
     queryFn: () => reasonsFn(),
+  });
+  const { data: presetDoneMsgs } = useQuery({
+    queryKey: ["completion-messages"],
+    queryFn: () => doneMsgsFn(),
   });
 
   const { data: requests, isLoading } = useQuery({
