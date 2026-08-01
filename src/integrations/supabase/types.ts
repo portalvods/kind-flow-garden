@@ -298,6 +298,38 @@ export type Database = {
         }
         Relationships: []
       }
+      request_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_comments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_logs: {
         Row: {
           changed_by: string | null
@@ -475,6 +507,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_request_comment: {
+        Args: { _body: string; _request_id: string }
+        Returns: string
+      }
       admin_active_whatsapps: {
         Args: never
         Returns: {
@@ -588,6 +624,7 @@ export type Database = {
         Args: { _limit?: number }
         Returns: {
           author_initials: string
+          comments: number
           content_type: string
           created_at: string
           poster_path: string
@@ -604,6 +641,7 @@ export type Database = {
         Args: { _code_hash: string; _new_password: string; _token_hash: string }
         Returns: undefined
       }
+      delete_request_comment: { Args: { _id: string }; Returns: undefined }
       email_by_whatsapp: { Args: { _whatsapp: string }; Returns: string }
       find_community_duplicate: {
         Args: {
@@ -634,6 +672,16 @@ export type Database = {
         Returns: boolean
       }
       is_blocked: { Args: { _user_id: string }; Returns: boolean }
+      list_request_comments: {
+        Args: { _request_id: string }
+        Returns: {
+          author_initials: string
+          body: string
+          created_at: string
+          id: string
+          mine: boolean
+        }[]
+      }
       mask_name: { Args: { _name: string }; Returns: string }
       normalize_phone: { Args: { _phone: string }; Returns: string }
       rate_limit_check_and_hit: {
