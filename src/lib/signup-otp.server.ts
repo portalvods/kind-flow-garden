@@ -83,8 +83,9 @@ export function verifySignupOtp(params: { token: string; whatsapp: string; code:
   }
 
   const payload = decodePayload(encoded);
-  const whatsapp = sanitizePhone(params.whatsapp);
+  const whatsapp = normalizePhone(params.whatsapp);
   const code = (params.code ?? "").trim();
+
   if (payload.purpose !== "signup" || payload.whatsapp !== whatsapp) {
     throw new Error("Código inválido. Solicite um novo.");
   }
