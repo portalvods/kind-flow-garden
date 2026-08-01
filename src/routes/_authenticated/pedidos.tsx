@@ -724,16 +724,62 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
 
       <div>
-        <Label htmlFor="notes">Observações (opcional)</Label>
+        <Label htmlFor="notes">
+          {kind === "conserto" ? "O que está com problema? *" : "Observações (opcional)"}
+        </Label>
         <Textarea
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ex: temporada específica, qualidade preferida..."
+          placeholder={
+            kind === "conserto"
+              ? "Ex: áudio fora de sincronia no episódio 3, sem legenda, travando..."
+              : "Ex: temporada específica, qualidade preferida..."
+          }
           maxLength={500}
           rows={3}
         />
+        {kind === "conserto" && notes.trim().length < 5 && (
+          <p className="text-[11px] text-amber-300 mt-1">
+            Descreva o motivo da solicitação (mínimo 5 caracteres).
+          </p>
+        )}
       </div>
+
+      {kind === "conserto" && (
+        <div>
+          <Label htmlFor="req-image">Foto do problema (opcional)</Label>
+          <Input
+            id="req-image"
+            type="file"
+            accept="image/*"
+            className="mt-1"
+            disabled={uploading}
+            onChange={(e) => handleImage(e.target.files?.[0] ?? null)}
+          />
+          {uploading && (
+            <p className="text-[11px] text-muted-foreground mt-1 inline-flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> enviando imagem...
+            </p>
+          )}
+          {imagePreview && (
+            <div className="mt-2 flex items-center gap-2">
+              <img src={imagePreview} alt="Prévia da foto do problema" className="h-20 rounded-md border border-border/40 object-cover" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setImagePath(null);
+                  setImagePreview(null);
+                }}
+              >
+                Remover
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
 
 
       <div className="flex justify-end gap-2 pt-2">
