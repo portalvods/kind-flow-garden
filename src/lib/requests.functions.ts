@@ -211,6 +211,24 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
                 ? "rejected"
                 : null;
 
+    // Custom message overrides the automatic template for this status change.
+    const custom = (data.custom_message ?? "").trim();
+    if (custom) {
+      try {
+        const text = renderTemplate(custom, {
+          cliente: profile?.full_name ?? "Cliente",
+          titulo: current.title,
+          tipo: KIND_LABEL[current.request_kind as string] ?? "",
+          formato: (current.format as string | null) ?? "—",
+          motivo: data.rejection_reason ?? "—",
+        });
+        await sendWhatsapp(profile?.whatsapp ?? "", text, { supabase: supabase as never });
+      } catch (err) {
+        console.error("Custom client notification failed", err);
+      }
+      return { ok: true };
+    }
+
     if (key) {
       try {
         // On rejection, try to append 3 catalog alternatives (same kind).
