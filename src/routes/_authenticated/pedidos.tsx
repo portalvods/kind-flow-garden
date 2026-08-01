@@ -390,6 +390,37 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   });
 
 
+  // Duplicate check against community (same title/year/kind already requested by someone)
+  const dupTitle = selected?.title ?? manualTitle.trim();
+  const dupType: "movie" | "tv" = selected ? selected.type : manualType;
+  const { data: dupData } = useQuery({
+    queryKey: ["community-dup", dupTitle, dupType, selected?.year ?? null, kind],
+    queryFn: () =>
+      dupFn({
+        data: {
+          title: dupTitle,
+          year: selected?.year ?? null,
+          content_type: dupType,
+          request_kind: kind,
+        },
+      }),
+    enabled: dupTitle.length >= 2,
+    staleTime: 15_000,
+  });
+  const duplicate = dupData?.duplicate ?? null;
+  const blockedByCommunity = !!duplicate && !duplicate.mine && !forceDuplicate;
+
+  const voteDup = useMutation({
+    mutationFn: (id: string) => voteFn({ data: { request_id: id } }),
+    onSuccess: () => {
+      toast.success("Curtida registrada! Seu voto ajuda esse pedido a sair mais rápido.");
+      qc.invalidateQueries({ queryKey: ["community-dup"] });
+      qc.invalidateQueries({ queryKey: ["community-requests"] });
+      onDone();
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao curtir"),
+  });
+
   const blockedByCatalog = kind === "adicao" && availability?.exists === true;
 
   const create = useMutation({
