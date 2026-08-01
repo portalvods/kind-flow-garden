@@ -522,7 +522,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setQuery("");
       setSelected(null);
       setManualTitle("");
-      setNotes("");
+      setNotes(""); setSeasons([]);
       setFormat("");
       setKind("adicao");
       setForceDuplicate(false);
