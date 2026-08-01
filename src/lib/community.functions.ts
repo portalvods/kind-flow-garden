@@ -14,6 +14,7 @@ export type CommunityRequest = {
   author_initials: string;
   votes: number;
   voted: boolean;
+  comments: number;
   created_at: string;
 };
 
