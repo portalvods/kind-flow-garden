@@ -24,6 +24,7 @@ const KIND_LABEL: Record<string, string> = {
 function NovidadesPage() {
   const { user } = Route.useRouteContext();
   const [days, setDays] = useState(7);
+  const [target, setTarget] = useState<ReviewTarget | null>(null);
   const listFn = useServerFn(listWeeklyNews);
   const broadcastFn = useServerFn(broadcastWeeklyNews);
 
