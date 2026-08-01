@@ -354,6 +354,14 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const contentType = selected ? selected.type : manualType;
+
+  useEffect(() => {
+    if (contentType === "movie" && kind === "atualizacao") {
+      setKind("adicao");
+    }
+  }, [contentType, kind]);
+
   async function handleImage(file: File | null) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
