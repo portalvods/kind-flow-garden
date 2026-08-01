@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authenticated/novidades'
+import { Route as AuthenticatedEmAltaRouteImport } from './routes/_authenticated/em-alta'
 import { Route as AuthenticatedComunidadeRouteImport } from './routes/_authenticated/comunidade'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
@@ -51,6 +52,11 @@ const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
 const AuthenticatedNovidadesRoute = AuthenticatedNovidadesRouteImport.update({
   id: '/novidades',
   path: '/novidades',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEmAltaRoute = AuthenticatedEmAltaRouteImport.update({
+  id: '/em-alta',
+  path: '/em-alta',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedComunidadeRoute = AuthenticatedComunidadeRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/comunidade': typeof AuthenticatedComunidadeRoute
+  '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/comunidade': typeof AuthenticatedComunidadeRoute
+  '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/comunidade': typeof AuthenticatedComunidadeRoute
+  '/_authenticated/em-alta': typeof AuthenticatedEmAltaRoute
   '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/comunidade'
+    | '/em-alta'
     | '/novidades'
     | '/pedidos'
     | '/admin/aparencia'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/comunidade'
+    | '/em-alta'
     | '/novidades'
     | '/pedidos'
     | '/admin/aparencia'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/comunidade'
+    | '/_authenticated/em-alta'
     | '/_authenticated/novidades'
     | '/_authenticated/pedidos'
     | '/_authenticated/admin/aparencia'
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       path: '/novidades'
       fullPath: '/novidades'
       preLoaderRoute: typeof AuthenticatedNovidadesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/em-alta': {
+      id: '/_authenticated/em-alta'
+      path: '/em-alta'
+      fullPath: '/em-alta'
+      preLoaderRoute: typeof AuthenticatedEmAltaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/comunidade': {
@@ -409,6 +428,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedComunidadeRoute: typeof AuthenticatedComunidadeRoute
+  AuthenticatedEmAltaRoute: typeof AuthenticatedEmAltaRoute
   AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
@@ -426,6 +446,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComunidadeRoute: AuthenticatedComunidadeRoute,
+  AuthenticatedEmAltaRoute: AuthenticatedEmAltaRoute,
   AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
@@ -454,13 +475,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

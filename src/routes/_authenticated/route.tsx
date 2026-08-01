@@ -79,6 +79,10 @@ function AuthedLayout() {
             <NavLink to="/novidades" active={pathname.startsWith("/novidades")} icon={<Sparkles className="h-4 w-4" />}>
               Novidades
             </NavLink>
+            <NavLink to="/em-alta" active={pathname.startsWith("/em-alta")} icon={<Flame className="h-4 w-4" />}>
+              Em alta
+            </NavLink>
+
 
             {isAdmin && (
               <Sheet>
