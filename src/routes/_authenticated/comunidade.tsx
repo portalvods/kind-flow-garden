@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, ImageOff, Film, Tv, ThumbsUp, Users2 } from "lucide-react";
+import { Loader2, ImageOff, Film, Tv, ThumbsUp, Users2, MessageSquare } from "lucide-react";
+import { CommentsDialog } from "@/components/community/CommentsDialog";
 import { listCommunityRequests, toggleRequestVote, type CommunityRequest } from "@/lib/community.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 function ComunidadePage() {
   const [sort, setSort] = useState<"votes" | "recent">("votes");
+  const [openComments, setOpenComments] = useState<{ id: string; title: string } | null>(null);
   const listFn = useServerFn(listCommunityRequests);
   const voteFn = useServerFn(toggleRequestVote);
   const qc = useQueryClient();
@@ -130,7 +132,7 @@ function ComunidadePage() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">por {it.author_initials}</p>
 
-                <div className="mt-auto pt-2">
+                <div className="mt-auto flex gap-2 pt-2">
                   <Button
                     size="sm"
                     variant={it.voted ? "default" : "outline"}
@@ -141,12 +143,29 @@ function ComunidadePage() {
                     <ThumbsUp className="h-4 w-4" />
                     {it.votes}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    onClick={() => setOpenComments({ id: it.request_id, title: it.title })}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {it.comments}
+                  </Button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <CommentsDialog
+        requestId={openComments?.id ?? null}
+        title={openComments?.title ?? ""}
+        onOpenChange={(open) => {
+          if (!open) setOpenComments(null);
+        }}
+      />
     </div>
   );
 }

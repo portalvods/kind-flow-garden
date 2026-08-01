@@ -14,6 +14,7 @@ export type CommunityRequest = {
   author_initials: string;
   votes: number;
   voted: boolean;
+  comments: number;
   created_at: string;
 };
 
@@ -85,4 +86,48 @@ export const findCommunityDuplicate = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const list = (rows ?? []) as CommunityDuplicate[];
     return { duplicate: list.length ? list[0] : null };
+  });
+
+export type RequestComment = {
+  id: string;
+  body: string;
+  author_initials: string;
+  mine: boolean;
+  created_at: string;
+};
+
+type RpcFn = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+
+export const listRequestComments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ request_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<{ items: RequestComment[] }> => {
+    const { data: rows, error } = await (context.supabase.rpc as never as RpcFn)("list_request_comments", {
+      _request_id: data.request_id,
+    });
+    if (error) throw new Error(error.message);
+    return { items: (rows ?? []) as RequestComment[] };
+  });
+
+export const addRequestComment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ request_id: z.string().uuid(), body: z.string().trim().min(2).max(500) }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await (context.supabase.rpc as never as RpcFn)("add_request_comment", {
+      _request_id: data.request_id,
+      _body: data.body,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteRequestComment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { error } = await (context.supabase.rpc as never as RpcFn)("delete_request_comment", { _id: data.id });
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
