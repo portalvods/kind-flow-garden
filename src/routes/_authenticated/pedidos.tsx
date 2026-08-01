@@ -350,10 +350,13 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
   const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [forceDuplicate, setForceDuplicate] = useState(false);
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
   const availFn = useServerFn(checkAvailability);
   const suggestFn = useServerFn(suggestAlternatives);
+  const dupFn = useServerFn(findCommunityDuplicate);
+  const voteFn = useServerFn(toggleRequestVote);
 
   const { data: search, isFetching } = useQuery({
     queryKey: ["tmdb", query],
