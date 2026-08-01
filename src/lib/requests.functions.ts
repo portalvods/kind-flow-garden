@@ -4,17 +4,24 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sendTemplate, getAdminWhatsappNumber, sendWhatsapp, renderTemplate } from "./whatsapp.server";
 import { normalizeTitle } from "./m3u.server";
 
-const createSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  content_type: z.enum(["movie", "tv"]),
-  request_kind: z.enum(["adicao", "atualizacao", "conserto"]).default("adicao"),
-  format: z.string().trim().max(50).nullable().optional(),
-  tmdb_id: z.number().int().nullable().optional(),
-  poster_path: z.string().max(300).nullable().optional(),
-  year: z.number().int().min(1900).max(2100).nullable().optional(),
-  overview: z.string().max(2000).nullable().optional(),
-  notes: z.string().max(500).nullable().optional(),
-});
+const createSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200),
+    content_type: z.enum(["movie", "tv"]),
+    request_kind: z.enum(["adicao", "atualizacao", "conserto"]).default("adicao"),
+    format: z.string().trim().max(50).nullable().optional(),
+    tmdb_id: z.number().int().nullable().optional(),
+    poster_path: z.string().max(300).nullable().optional(),
+    year: z.number().int().min(1900).max(2100).nullable().optional(),
+    overview: z.string().max(2000).nullable().optional(),
+    notes: z.string().max(500).nullable().optional(),
+    image_path: z.string().max(300).nullable().optional(),
+  })
+  .refine(
+    (d) => d.request_kind !== "conserto" || (d.notes ?? "").trim().length >= 5,
+    { path: ["notes"], message: "Para conserto, descreva o problema nas observações." },
+  );
+
 
 const KIND_LABEL: Record<string, string> = {
   adicao: "Adição",
@@ -115,6 +122,8 @@ export const createRequest = createServerFn({ method: "POST" })
         year: data.year ?? null,
         overview: data.overview ?? null,
         notes: data.notes ?? null,
+        image_path: data.image_path ?? null,
+
       })
       .select()
       .single();

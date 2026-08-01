@@ -350,6 +350,42 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
   const [kind, setKind] = useState<"adicao" | "atualizacao" | "conserto">("adicao");
   const [format, setFormat] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImage(file: File | null) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Envie apenas imagens.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx. 5MB).");
+      return;
+    }
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) throw new Error("Sessão expirada");
+      const ext = file.name.split(".").pop()?.toLowerCase().slice(0, 5) || "jpg";
+      const path = `${uid}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("request-images").upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+      if (error) throw error;
+      setImagePath(path);
+      setImagePreview(URL.createObjectURL(file));
+      toast.success("Imagem anexada!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar imagem");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   const [forceDuplicate, setForceDuplicate] = useState(false);
   const searchFn = useServerFn(searchTmdb);
   const createFn = useServerFn(createRequest);
@@ -432,6 +468,8 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
         request_kind: kind,
         format: format || null,
         notes: notes || null,
+        image_path: kind === "conserto" ? imagePath : null,
+
       };
       const payload = selected
         ? {
@@ -466,13 +504,20 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       setFormat("");
       setKind("adicao");
       setForceDuplicate(false);
+      setImagePath(null);
+      setImagePreview(null);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao enviar"),
   });
 
 
   const canSubmit =
-    (selected !== null || manualTitle.trim().length >= 2) && !blockedByCatalog && !blockedByCommunity;
+    (selected !== null || manualTitle.trim().length >= 2) &&
+    !blockedByCatalog &&
+    !blockedByCommunity &&
+    !uploading &&
+    (kind !== "conserto" || notes.trim().length >= 5);
+
 
   return (
     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -724,16 +769,62 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
 
       <div>
-        <Label htmlFor="notes">Observações (opcional)</Label>
+        <Label htmlFor="notes">
+          {kind === "conserto" ? "O que está com problema? *" : "Observações (opcional)"}
+        </Label>
         <Textarea
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ex: temporada específica, qualidade preferida..."
+          placeholder={
+            kind === "conserto"
+              ? "Ex: áudio fora de sincronia no episódio 3, sem legenda, travando..."
+              : "Ex: temporada específica, qualidade preferida..."
+          }
           maxLength={500}
           rows={3}
         />
+        {kind === "conserto" && notes.trim().length < 5 && (
+          <p className="text-[11px] text-amber-300 mt-1">
+            Descreva o motivo da solicitação (mínimo 5 caracteres).
+          </p>
+        )}
       </div>
+
+      {kind === "conserto" && (
+        <div>
+          <Label htmlFor="req-image">Foto do problema (opcional)</Label>
+          <Input
+            id="req-image"
+            type="file"
+            accept="image/*"
+            className="mt-1"
+            disabled={uploading}
+            onChange={(e) => handleImage(e.target.files?.[0] ?? null)}
+          />
+          {uploading && (
+            <p className="text-[11px] text-muted-foreground mt-1 inline-flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> enviando imagem...
+            </p>
+          )}
+          {imagePreview && (
+            <div className="mt-2 flex items-center gap-2">
+              <img src={imagePreview} alt="Prévia da foto do problema" className="h-20 rounded-md border border-border/40 object-cover" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setImagePath(null);
+                  setImagePreview(null);
+                }}
+              >
+                Remover
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
 
 
       <div className="flex justify-end gap-2 pt-2">

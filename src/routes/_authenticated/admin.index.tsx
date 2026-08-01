@@ -85,7 +85,32 @@ type StatusKey =
   | "fixed"
   | "rejected";
 
+function RequestImage({ path }: { path: string }) {
+  const { data: url } = useQuery({
+    queryKey: ["req-image", path],
+    queryFn: async () => {
+      const { data, error } = await supabase.storage
+        .from("request-images")
+        .createSignedUrl(path, 60 * 60);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+    staleTime: 50 * 60 * 1000,
+  });
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="mt-2 inline-block">
+      <img
+        src={url}
+        alt="Foto enviada pelo cliente"
+        className="h-24 rounded-md border border-border/40 object-cover hover:opacity-90"
+      />
+    </a>
+  );
+}
+
 type AdminRequest = {
+
   id: string;
   user_id: string;
   title: string;
@@ -96,6 +121,8 @@ type AdminRequest = {
   year: number | null;
   status: StatusKey;
   notes: string | null;
+  image_path?: string | null;
+
   rejection_reason: string | null;
   created_at: string;
   profiles?: { full_name: string | null; whatsapp: string | null } | null;
@@ -334,6 +361,8 @@ function AdminPage() {
                 {r.notes && (
                   <p className="text-xs text-muted-foreground mt-1">📝 {r.notes}</p>
                 )}
+                {r.image_path && <RequestImage path={r.image_path} />}
+
                 {r.rejection_reason && (
                   <p className="text-xs text-red-400 mt-1">Motivo: {r.rejection_reason}</p>
                 )}
