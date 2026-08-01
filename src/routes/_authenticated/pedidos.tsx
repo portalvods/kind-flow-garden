@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown, History } from "lucide-react";
+import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown, History, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { TrailerButton } from "@/components/TrailerButton";
