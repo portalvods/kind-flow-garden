@@ -822,7 +822,11 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
       <div>
         <Label htmlFor="notes">
-          {kind === "conserto" ? "O que está com problema? *" : "Observações (opcional)"}
+          {kind === "conserto"
+            ? "O que está com problema? *"
+            : isSeriesUpdate && seasons.length === 0
+              ? "Qual episódio/temporada falta? *"
+              : "Observações (opcional)"}
         </Label>
         <Textarea
           id="notes"
@@ -831,7 +835,9 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
           placeholder={
             kind === "conserto"
               ? "Ex: áudio fora de sincronia no episódio 3, sem legenda, travando..."
-              : "Ex: temporada específica, qualidade preferida..."
+              : isSeriesUpdate
+                ? "Ex: falta o episódio 5 da T2, ou os últimos episódios da temporada final..."
+                : "Ex: temporada específica, qualidade preferida..."
           }
           maxLength={500}
           rows={3}
@@ -841,7 +847,13 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             Descreva o motivo da solicitação (mínimo 5 caracteres).
           </p>
         )}
+        {isSeriesUpdate && seasons.length === 0 && notes.trim().length < 5 && (
+          <p className="text-[11px] text-amber-300 mt-1">
+            Marque a(s) temporada(s) acima ou descreva aqui o que falta (mínimo 5 caracteres).
+          </p>
+        )}
       </div>
+
 
       {kind === "conserto" && (
         <div>
