@@ -538,7 +538,8 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     !blockedByCatalog &&
     !blockedByCommunity &&
     !uploading &&
-    (kind !== "conserto" || notes.trim().length >= 5);
+    (kind !== "conserto" || notes.trim().length >= 5) &&
+    (!isSeriesUpdate || seasons.length > 0 || notes.trim().length >= 5);
 
 
   return (
