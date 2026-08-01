@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
+import { TrailerButton } from "@/components/TrailerButton";
 import { createRequest } from "@/lib/requests.functions";
 import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
@@ -177,6 +178,7 @@ type RequestRow = {
   rejection_reason: string | null;
   created_at: string;
   rating?: number | null;
+  tmdb_id?: number | null;
 };
 
 function RequestCard({ request }: { request: RequestRow }) {
@@ -240,6 +242,15 @@ function RequestCard({ request }: { request: RequestRow }) {
             <Badge variant="outline" className="text-[10px]">{request.format}</Badge>
           )}
         </div>
+        {request.tmdb_id && (
+          <div className="mt-3">
+            <TrailerButton
+              tmdbId={request.tmdb_id}
+              contentType={request.content_type}
+              title={request.title}
+            />
+          </div>
+        )}
         {request.notes && (
           <p className="text-xs text-muted-foreground mt-2 line-clamp-2">📝 {request.notes}</p>
         )}
