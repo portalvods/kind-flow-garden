@@ -151,9 +151,9 @@ function ProfilePage() {
                 <Film className="h-4 w-4 text-white" />
               </div>
               <span className="font-bold" style={{ color: form.theme_color }}>Seu Nome</span>
-              <Badge style={{ backgroundColor: `${form.accent_color}20`, color: form.accent_color, borderColor: `${form.accent_color}40` }}>
+              <div className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: `${form.accent_color}20`, color: form.accent_color, border: `1px solid ${form.accent_color}40` }}>
                 VIP
-              </Badge>
+              </div>
             </div>
           </div>
         </CardContent>

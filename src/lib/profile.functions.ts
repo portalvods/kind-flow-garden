@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-// Simple middleware-like helper since I can't find auth-helpers.server
+// Simple middleware-like helper
 async function getAuthenticatedContext() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: { user } } = await supabaseAdmin.auth.getUser();
