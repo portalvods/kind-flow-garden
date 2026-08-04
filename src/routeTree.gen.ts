@@ -21,6 +21,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminRankingRouteImport } from './routes/_authenticated/admin.ranking'
+import { Route as AuthenticatedAdminMonitoramentoRouteImport } from './routes/_authenticated/admin/monitoramento'
 import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
 import { Route as AuthenticatedAdminFerramentasRouteImport } from './routes/_authenticated/admin.ferramentas'
 import { Route as AuthenticatedAdminCurtidosRouteImport } from './routes/_authenticated/admin.curtidos'
@@ -93,6 +94,12 @@ const AuthenticatedAdminRankingRoute =
     path: '/admin/ranking',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminMonitoramentoRoute =
+  AuthenticatedAdminMonitoramentoRouteImport.update({
+    id: '/admin/monitoramento',
+    path: '/admin/monitoramento',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminMensagensRoute =
   AuthenticatedAdminMensagensRouteImport.update({
     id: '/admin/mensagens',
@@ -162,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
+  '/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
@@ -184,6 +192,7 @@ export interface FileRoutesByTo {
   '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
+  '/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
@@ -208,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/_authenticated/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
+  '/_authenticated/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
   '/_authenticated/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/admin/curtidos'
     | '/admin/ferramentas'
     | '/admin/mensagens'
+    | '/admin/monitoramento'
     | '/admin/ranking'
     | '/admin/usuarios'
     | '/admin/whatsapp'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/curtidos'
     | '/admin/ferramentas'
     | '/admin/mensagens'
+    | '/admin/monitoramento'
     | '/admin/ranking'
     | '/admin/usuarios'
     | '/admin/whatsapp'
@@ -277,6 +289,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/curtidos'
     | '/_authenticated/admin/ferramentas'
     | '/_authenticated/admin/mensagens'
+    | '/_authenticated/admin/monitoramento'
     | '/_authenticated/admin/ranking'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/whatsapp'
@@ -379,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRankingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/monitoramento': {
+      id: '/_authenticated/admin/monitoramento'
+      path: '/admin/monitoramento'
+      fullPath: '/admin/monitoramento'
+      preLoaderRoute: typeof AuthenticatedAdminMonitoramentoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/mensagens': {
       id: '/_authenticated/admin/mensagens'
       path: '/admin/mensagens'
@@ -458,6 +478,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminCurtidosRoute: typeof AuthenticatedAdminCurtidosRoute
   AuthenticatedAdminFerramentasRoute: typeof AuthenticatedAdminFerramentasRoute
   AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
+  AuthenticatedAdminMonitoramentoRoute: typeof AuthenticatedAdminMonitoramentoRoute
   AuthenticatedAdminRankingRoute: typeof AuthenticatedAdminRankingRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
@@ -477,6 +498,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminCurtidosRoute: AuthenticatedAdminCurtidosRoute,
   AuthenticatedAdminFerramentasRoute: AuthenticatedAdminFerramentasRoute,
   AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
+  AuthenticatedAdminMonitoramentoRoute: AuthenticatedAdminMonitoramentoRoute,
   AuthenticatedAdminRankingRoute: AuthenticatedAdminRankingRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
@@ -496,13 +518,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
