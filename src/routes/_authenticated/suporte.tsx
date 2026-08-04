@@ -70,7 +70,7 @@ function SupportPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold">Suporte ao Cliente</h1>
-          <p className="text-muted-foreground">Abra um chamado para dúvidas, problemas técnicos ou financeiro.</p>
+          <p className="text-muted-foreground">Abra um chamado para dúvidas, problemas técnicos.</p>
         </div>
         {!isCreating && (
           <Button onClick={() => setIsCreating(true)} className="glow-primary">
