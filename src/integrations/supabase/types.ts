@@ -286,6 +286,44 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_preferences: {
+        Row: {
+          accent_color: string | null
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          theme_color: string | null
+          tutorial_completed: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          theme_color?: string | null
+          tutorial_completed?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          theme_color?: string | null
+          tutorial_completed?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_preferences_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           blocked: boolean
