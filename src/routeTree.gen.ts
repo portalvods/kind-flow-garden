@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSuporteIdRouteImport } from './routes/_authenticated/suporte.$id'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
+import { Route as AuthenticatedAdminTicketsRouteImport } from './routes/_authenticated/admin/tickets'
 import { Route as AuthenticatedAdminRankingRouteImport } from './routes/_authenticated/admin.ranking'
 import { Route as AuthenticatedAdminMonitoramentoRouteImport } from './routes/_authenticated/admin/monitoramento'
 import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
@@ -98,6 +99,12 @@ const AuthenticatedAdminUsuariosRoute =
   AuthenticatedAdminUsuariosRouteImport.update({
     id: '/admin/usuarios',
     path: '/admin/usuarios',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTicketsRoute =
+  AuthenticatedAdminTicketsRouteImport.update({
+    id: '/admin/tickets',
+    path: '/admin/tickets',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminRankingRoute =
@@ -184,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
+  '/admin/tickets': typeof AuthenticatedAdminTicketsRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/suporte/$id': typeof AuthenticatedSuporteIdRoute
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
+  '/admin/tickets': typeof AuthenticatedAdminTicketsRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/suporte/$id': typeof AuthenticatedSuporteIdRoute
@@ -236,6 +245,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/_authenticated/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
   '/_authenticated/admin/ranking': typeof AuthenticatedAdminRankingRoute
+  '/_authenticated/admin/tickets': typeof AuthenticatedAdminTicketsRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/_authenticated/suporte/$id': typeof AuthenticatedSuporteIdRoute
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/admin/mensagens'
     | '/admin/monitoramento'
     | '/admin/ranking'
+    | '/admin/tickets'
     | '/admin/usuarios'
     | '/admin/whatsapp'
     | '/suporte/$id'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/admin/mensagens'
     | '/admin/monitoramento'
     | '/admin/ranking'
+    | '/admin/tickets'
     | '/admin/usuarios'
     | '/admin/whatsapp'
     | '/suporte/$id'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/mensagens'
     | '/_authenticated/admin/monitoramento'
     | '/_authenticated/admin/ranking'
+    | '/_authenticated/admin/tickets'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/whatsapp'
     | '/_authenticated/suporte/$id'
@@ -423,6 +436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/tickets': {
+      id: '/_authenticated/admin/tickets'
+      path: '/admin/tickets'
+      fullPath: '/admin/tickets'
+      preLoaderRoute: typeof AuthenticatedAdminTicketsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/ranking': {
       id: '/_authenticated/admin/ranking'
       path: '/admin/ranking'
@@ -530,6 +550,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
   AuthenticatedAdminMonitoramentoRoute: typeof AuthenticatedAdminMonitoramentoRoute
   AuthenticatedAdminRankingRoute: typeof AuthenticatedAdminRankingRoute
+  AuthenticatedAdminTicketsRoute: typeof AuthenticatedAdminTicketsRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -551,6 +572,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
   AuthenticatedAdminMonitoramentoRoute: AuthenticatedAdminMonitoramentoRoute,
   AuthenticatedAdminRankingRoute: AuthenticatedAdminRankingRoute,
+  AuthenticatedAdminTicketsRoute: AuthenticatedAdminTicketsRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
