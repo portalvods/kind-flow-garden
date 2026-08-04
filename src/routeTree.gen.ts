@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
 import { Route as AuthenticatedResenhasRouteImport } from './routes/_authenticated/resenhas'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authenticated/novidades'
 import { Route as AuthenticatedEmAltaRouteImport } from './routes/_authenticated/em-alta'
@@ -58,6 +59,11 @@ const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
 const AuthenticatedResenhasRoute = AuthenticatedResenhasRouteImport.update({
   id: '/resenhas',
   path: '/resenhas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/resenhas': typeof AuthenticatedResenhasRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/resenhas': typeof AuthenticatedResenhasRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/em-alta': typeof AuthenticatedEmAltaRoute
   '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/resenhas': typeof AuthenticatedResenhasRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/em-alta'
     | '/novidades'
     | '/pedidos'
+    | '/perfil'
     | '/resenhas'
     | '/suporte'
     | '/admin/aparencia'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/em-alta'
     | '/novidades'
     | '/pedidos'
+    | '/perfil'
     | '/resenhas'
     | '/suporte'
     | '/admin/aparencia'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/em-alta'
     | '/_authenticated/novidades'
     | '/_authenticated/pedidos'
+    | '/_authenticated/perfil'
     | '/_authenticated/resenhas'
     | '/_authenticated/suporte'
     | '/_authenticated/admin/aparencia'
@@ -391,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/resenhas'
       fullPath: '/resenhas'
       preLoaderRoute: typeof AuthenticatedResenhasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pedidos': {
@@ -559,6 +578,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEmAltaRoute: typeof AuthenticatedEmAltaRoute
   AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedResenhasRoute: typeof AuthenticatedResenhasRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRouteWithChildren
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
@@ -582,6 +602,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEmAltaRoute: AuthenticatedEmAltaRoute,
   AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedResenhasRoute: AuthenticatedResenhasRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRouteWithChildren,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,

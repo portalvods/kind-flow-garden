@@ -2,12 +2,14 @@ import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { trackUserActivity } from "@/lib/monitoring.functions";
-import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity, MessageSquare, BarChart3 } from "lucide-react";
+import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity, MessageSquare, BarChart3, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { getPublicSettings } from "@/lib/settings.functions";
+import { TutorialDialog } from "@/components/TutorialDialog";
+import { useState, useEffect } from "react";
 
 
 export const Route = createFileRoute("/_authenticated")({
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthedLayout() {
   const { user } = Route.useRouteContext();
+  const [tutorialOpen, setTutorialOpen] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -52,6 +55,20 @@ function AuthedLayout() {
     queryKey: ["public-settings"],
     queryFn: () => settingsFn(),
   });
+
+  const { data: prefs } = useQuery({
+    queryKey: ["profile-preferences", user.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profile_preferences").select("*").eq("id", user.id).maybeSingle();
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (prefs && prefs.tutorial_completed === false) {
+      setTutorialOpen(true);
+    }
+  }, [prefs]);
 
   const signOut = async () => {
     await qc.cancelQueries();
