@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { trackUserActivity } from "@/lib/monitoring.functions";
-import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity, MessageSquare } from "lucide-react";
+import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity, MessageSquare, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
@@ -139,6 +139,7 @@ function AuthedLayout() {
                   <div className="py-4 overflow-y-auto">
                     <SidebarGroup title="Principal" pathname={pathname}>
                       <SidebarLink to="/admin" icon={<LayoutDashboard className="h-4 w-4" />}>Dashboard</SidebarLink>
+                      <SidebarLink to="/admin/dashboard-stats" icon={<BarChart3 className="h-4 w-4" />}>Estatísticas</SidebarLink>
                       <SidebarLink to="/admin/monitoramento" icon={<Activity className="h-4 w-4" />}>Monitoramento</SidebarLink>
                       <SidebarLink to="/admin/curtidos" icon={<ThumbsUp className="h-4 w-4" />}>Mais curtidos</SidebarLink>
                       <SidebarLink to="/admin/ranking" icon={<Trophy className="h-4 w-4" />}>Ranking</SidebarLink>
