@@ -19,6 +19,7 @@ import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedEmAltaRouteImport } from './routes/_authenticated/em-alta'
 import { Route as AuthenticatedComunidadeRouteImport } from './routes/_authenticated/comunidade'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedSuporteIdRouteImport } from './routes/_authenticated/suporte.$id'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminRankingRouteImport } from './routes/_authenticated/admin.ranking'
@@ -81,6 +82,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSuporteIdRoute = AuthenticatedSuporteIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedSuporteRoute,
 } as any)
 const AuthenticatedAdminWhatsappRoute =
   AuthenticatedAdminWhatsappRouteImport.update({
@@ -168,7 +174,7 @@ export interface FileRoutesByFullPath {
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/resenhas': typeof AuthenticatedResenhasRoute
-  '/suporte': typeof AuthenticatedSuporteRoute
+  '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
+  '/suporte/$id': typeof AuthenticatedSuporteIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
   '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
@@ -192,7 +199,7 @@ export interface FileRoutesByTo {
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/resenhas': typeof AuthenticatedResenhasRoute
-  '/suporte': typeof AuthenticatedSuporteRoute
+  '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
+  '/suporte/$id': typeof AuthenticatedSuporteIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
   '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
@@ -218,7 +226,7 @@ export interface FileRoutesById {
   '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/resenhas': typeof AuthenticatedResenhasRoute
-  '/_authenticated/suporte': typeof AuthenticatedSuporteRoute
+  '/_authenticated/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/_authenticated/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -230,6 +238,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/ranking': typeof AuthenticatedAdminRankingRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
+  '/_authenticated/suporte/$id': typeof AuthenticatedSuporteIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/hooks/sync-catalog': typeof ApiPublicHooksSyncCatalogRoute
   '/api/public/webhooks/evolution': typeof ApiPublicWebhooksEvolutionRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/ranking'
     | '/admin/usuarios'
     | '/admin/whatsapp'
+    | '/suporte/$id'
     | '/admin/'
     | '/api/public/hooks/sync-catalog'
     | '/api/public/webhooks/evolution'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/admin/ranking'
     | '/admin/usuarios'
     | '/admin/whatsapp'
+    | '/suporte/$id'
     | '/admin'
     | '/api/public/hooks/sync-catalog'
     | '/api/public/webhooks/evolution'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ranking'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/whatsapp'
+    | '/_authenticated/suporte/$id'
     | '/_authenticated/admin/'
     | '/api/public/hooks/sync-catalog'
     | '/api/public/webhooks/evolution'
@@ -389,6 +401,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/suporte/$id': {
+      id: '/_authenticated/suporte/$id'
+      path: '/$id'
+      fullPath: '/suporte/$id'
+      preLoaderRoute: typeof AuthenticatedSuporteIdRouteImport
+      parentRoute: typeof AuthenticatedSuporteRoute
     }
     '/_authenticated/admin/whatsapp': {
       id: '/_authenticated/admin/whatsapp'
@@ -484,13 +503,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedSuporteRouteChildren {
+  AuthenticatedSuporteIdRoute: typeof AuthenticatedSuporteIdRoute
+}
+
+const AuthenticatedSuporteRouteChildren: AuthenticatedSuporteRouteChildren = {
+  AuthenticatedSuporteIdRoute: AuthenticatedSuporteIdRoute,
+}
+
+const AuthenticatedSuporteRouteWithChildren =
+  AuthenticatedSuporteRoute._addFileChildren(AuthenticatedSuporteRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedComunidadeRoute: typeof AuthenticatedComunidadeRoute
   AuthenticatedEmAltaRoute: typeof AuthenticatedEmAltaRoute
   AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedResenhasRoute: typeof AuthenticatedResenhasRoute
-  AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRoute
+  AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRouteWithChildren
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
   AuthenticatedAdminBotRoute: typeof AuthenticatedAdminBotRoute
@@ -511,7 +541,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedResenhasRoute: AuthenticatedResenhasRoute,
-  AuthenticatedSuporteRoute: AuthenticatedSuporteRoute,
+  AuthenticatedSuporteRoute: AuthenticatedSuporteRouteWithChildren,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,
   AuthenticatedAdminBotRoute: AuthenticatedAdminBotRoute,
