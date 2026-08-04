@@ -35,11 +35,12 @@ export const getSystemStatus = createServerFn({ method: "GET" })
         .from('site_settings')
         .select('key, value');
       
-      const url = allSettings?.find(s => s.key === 'evolution_api_url')?.value;
+      const url = allSettings?.find(s => s.key === 'evolution_url')?.value;
       const key = allSettings?.find(s => s.key === 'evolution_api_key')?.value;
+      const instance = allSettings?.find(s => s.key === 'evolution_instance')?.value;
       
-      if (url && key) {
-        const res = await fetch(`${url}/instance/status`, {
+      if (url && key && instance) {
+        const res = await fetch(`${url.replace(/\/$/, '')}/instance/connectionStatus/${instance}`, {
           headers: { 'apikey': key }
         });
         evoStatus = res.ok;
