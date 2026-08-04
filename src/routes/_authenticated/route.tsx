@@ -123,6 +123,7 @@ function AuthedLayout() {
                   <div className="py-4 overflow-y-auto">
                     <SidebarGroup title="Principal" pathname={pathname}>
                       <SidebarLink to="/admin" icon={<LayoutDashboard className="h-4 w-4" />}>Dashboard</SidebarLink>
+                      <SidebarLink to="/admin/monitoramento" icon={<Activity className="h-4 w-4" />}>Monitoramento</SidebarLink>
                       <SidebarLink to="/admin/curtidos" icon={<ThumbsUp className="h-4 w-4" />}>Mais curtidos</SidebarLink>
                       <SidebarLink to="/admin/ranking" icon={<Trophy className="h-4 w-4" />}>Ranking</SidebarLink>
                     </SidebarGroup>
