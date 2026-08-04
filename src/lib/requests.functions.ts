@@ -300,6 +300,8 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
     }
 
 
+    return { ok: true };
+  });
 
 export const requestCommunitySupport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
