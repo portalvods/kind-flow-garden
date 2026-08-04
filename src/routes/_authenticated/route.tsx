@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { trackUserActivity } from "@/lib/monitoring.functions";
-import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity } from "lucide-react";
+import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
@@ -98,6 +98,13 @@ function AuthedLayout() {
             >
               Resenhas
             </NavLink>
+            <NavLink 
+              to="/suporte" 
+              active={pathname.startsWith("/suporte") && !pathname.startsWith("/admin")} 
+              icon={<MessageCircle className="h-4 w-4" />}
+            >
+              Suporte
+            </NavLink>
 
 
 
@@ -139,6 +146,7 @@ function AuthedLayout() {
 
                     <SidebarGroup title="Gestão" pathname={pathname}>
                       <SidebarLink to="/admin/usuarios" icon={<Users className="h-4 w-4" />}>Usuários</SidebarLink>
+                      <SidebarLink to="/admin/tickets" icon={<MessageSquare className="h-4 w-4" />}>Tickets</SidebarLink>
                       <SidebarLink to="/admin/catalogo" icon={<ListVideo className="h-4 w-4" />}>Catálogo</SidebarLink>
                       <SidebarLink to="/admin/ferramentas" icon={<Wrench className="h-4 w-4" />}>Ferramentas</SidebarLink>
                     </SidebarGroup>
