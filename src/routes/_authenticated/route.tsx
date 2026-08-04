@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose 
 import { toast } from "sonner";
 import { getPublicSettings } from "@/lib/settings.functions";
 import { TutorialDialog } from "@/components/TutorialDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 
 export const Route = createFileRoute("/_authenticated")({

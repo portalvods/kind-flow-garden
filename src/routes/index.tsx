@@ -19,7 +19,7 @@ function Landing() {
   return (
     <div className="min-h-screen">
       <div className="bg-primary/10 py-2 px-4 text-center text-xs font-medium text-primary border-b border-primary/20 whitespace-pre-wrap">
-        Novidade: Estatísticas detalhadas agora disponíveis no Admin!
+        Modo Convidado, Customização de Perfil e Tutorial Interativo agora disponíveis!
       </div>
       {/* Nav */}
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/60">
