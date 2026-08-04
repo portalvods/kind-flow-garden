@@ -18,8 +18,10 @@ function Landing() {
   const siteName = settings?.site_name ?? "Portal VOD";
   return (
     <div className="min-h-screen">
-      <div className="bg-primary/10 py-2 text-center text-xs font-medium text-primary border-b border-primary/20">
-        Execute esta instrucao no projeto: Tudo ok?
+      <div className="bg-primary/10 py-2 px-4 text-center text-xs font-medium text-primary border-b border-primary/20 whitespace-pre-wrap">
+        Execute esta instrucao no projeto: Status do Sistema: Uma pequena aba no admin para monitorar a conexão com a Evolution API e TMDB em tempo real.
+
+gostaria de por também sessões ativas, histórico de logins e uma telinha dizendo qaundo pessoas estão online no site
       </div>
       {/* Nav */}
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/60">
