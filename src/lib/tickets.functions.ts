@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { sendWhatsAppNotification } from "./whatsapp.functions";
+import { sendWhatsapp } from "./whatsapp.server";
 
 const ticketSchema = z.object({
   subject: z.string().min(3),
@@ -10,11 +10,11 @@ const ticketSchema = z.object({
 
 export const createTicket = createServerFn({ method: "POST" })
   .inputValidator((data) => ticketSchema.parse(data))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data }) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const { data: ticket, error } = await supabase
+    const { data: ticket, error } = await (supabase as any)
       .from("tickets")
       .insert({
         user_id: user.id,
@@ -27,15 +27,6 @@ export const createTicket = createServerFn({ method: "POST" })
 
     if (error) throw error;
 
-    // Notificar admin via WhatsApp se configurado
-    try {
-      // Aqui poderíamos buscar o telefone do admin nas configurações e enviar
-      // Por enquanto vamos apenas registrar o ticket
-      console.log("Ticket criado:", ticket.id);
-    } catch (e) {
-      console.error("Erro ao notificar admin sobre ticket:", e);
-    }
-
     return ticket;
   });
 
@@ -44,7 +35,7 @@ export const getMyTickets = createServerFn({ method: "GET" })
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("tickets")
       .select("*")
       .eq("user_id", user.id)
@@ -57,7 +48,7 @@ export const getMyTickets = createServerFn({ method: "GET" })
 export const getTicketDetails = createServerFn({ method: "GET" })
   .inputValidator((id: string) => z.string().parse(id))
   .handler(async ({ data: id }) => {
-    const { data: ticket, error: tError } = await supabase
+    const { data: ticket, error: tError } = await (supabase as any)
       .from("tickets")
       .select("*, profile:user_id(full_name, whatsapp)")
       .eq("id", id)
@@ -65,7 +56,7 @@ export const getTicketDetails = createServerFn({ method: "GET" })
 
     if (tError) throw tError;
 
-    const { data: messages, error: mError } = await supabase
+    const { data: messages, error: mError } = await (supabase as any)
       .from("ticket_messages")
       .select("*")
       .eq("ticket_id", id)
@@ -82,8 +73,7 @@ export const replyTicket = createServerFn({ method: "POST" })
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    // Verificar se é admin
-    const { data: role } = await supabase
+    const { data: role } = await (supabase as any)
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
@@ -92,7 +82,7 @@ export const replyTicket = createServerFn({ method: "POST" })
 
     const isAdmin = !!role;
 
-    const { data: msg, error } = await supabase
+    const { data: msg, error } = await (supabase as any)
       .from("ticket_messages")
       .insert({
         ticket_id: data.ticketId,
@@ -105,33 +95,31 @@ export const replyTicket = createServerFn({ method: "POST" })
 
     if (error) throw error;
 
-    // Atualizar status se admin responder
     if (isAdmin) {
-      await supabase
+      await (supabase as any)
         .from("tickets")
         .update({ status: "em_atendimento" })
         .eq("id", data.ticketId);
         
-      // Notificar usuário via WhatsApp se admin responder
       try {
-        const { data: ticket } = await supabase
+        const { data: ticket } = await (supabase as any)
           .from("tickets")
           .select("user_id, subject")
           .eq("id", data.ticketId)
           .single();
           
         if (ticket) {
-          const { data: profile } = await supabase
+          const { data: profile } = await (supabase as any)
             .from("profiles")
             .select("whatsapp")
             .eq("id", ticket.user_id)
             .single();
             
           if (profile?.whatsapp) {
-            await sendWhatsAppNotification({
-              to: profile.whatsapp,
-              message: `🎫 *Suporte ${ticket.subject}*\n\nOlá! Sua solicitação de suporte recebeu uma nova resposta da nossa equipe.\n\n_Acesse o portal para conferir._`
-            });
+            await sendWhatsapp(
+              profile.whatsapp, 
+              `🎫 *Suporte ${ticket.subject}*\n\nOlá! Sua solicitação de suporte recebeu uma nova resposta da nossa equipe.\n\n_Acesse o portal para conferir._`
+            );
           }
         }
       } catch (e) {
@@ -145,10 +133,33 @@ export const replyTicket = createServerFn({ method: "POST" })
 export const closeTicket = createServerFn({ method: "POST" })
   .inputValidator((id: string) => z.string().parse(id))
   .handler(async ({ data: id }) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("tickets")
       .update({ status: "concluido" })
       .eq("id", id);
     if (error) throw error;
     return true;
+  });
+
+export const getAllTickets = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { data: role } = await (supabase as any)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!role) throw new Error("Forbidden");
+
+    const { data, error } = await (supabase as any)
+      .from("tickets")
+      .select("*, profile:user_id(full_name, whatsapp)")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
   });

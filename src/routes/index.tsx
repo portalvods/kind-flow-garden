@@ -19,7 +19,9 @@ function Landing() {
   return (
     <div className="min-h-screen">
       <div className="bg-primary/10 py-2 px-4 text-center text-xs font-medium text-primary border-b border-primary/20 whitespace-pre-wrap">
-        Execute esta instrucao no projeto: me der novas ideia
+        Execute esta instrucao no projeto: Sistema de Tickets de Suporte: Uma área para o cliente abrir um chamado direto pelo site caso tenha problemas com login ou acesso, com chat integrado via WhatsApp.
+
+mais me der novas opões
       </div>
       {/* Nav */}
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/60">
