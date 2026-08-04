@@ -300,5 +300,43 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
     }
 
 
+
+export const requestCommunitySupport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: request } = await supabase
+      .from("requests")
+      .select("title, user_id")
+      .eq("id", data.id)
+      .single();
+
+    if (!request) throw new Error("Pedido não encontrado");
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .maybeSingle();
+
+    try {
+      const adminNumber = await getAdminWhatsappNumber({ supabase: supabase as never });
+      if (adminNumber) {
+        await sendTemplate(
+          adminNumber,
+          "admin_request_support",
+          {
+            cliente: profile?.full_name ?? "Cliente",
+            titulo: request.title,
+          },
+          { supabase: supabase as never },
+        );
+      }
+    } catch (err) {
+      console.error("Support request notification failed", err);
+    }
+
     return { ok: true };
   });
