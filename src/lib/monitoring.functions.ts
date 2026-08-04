@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const trackUserActivity = createServerFn({ method: "POST" })
   .handler(async () => {
+    // We'll track using a simple update on the sessions table
+    // Since we're in a server function, we'd ideally have the user ID from context
+    // For now, the database function track_session handles this if called with a session
     const { error } = await supabaseAdmin.rpc('track_session');
     if (error) console.error('Error tracking session:', error);
     return { success: !error };
@@ -48,7 +51,6 @@ export const getSystemStatus = createServerFn({ method: "GET" })
     // Check TMDB
     let tmdbStatus = false;
     try {
-      // Use the provided key or env
       const tmdbKey = process.env['TMDB_API_KEY'] || 'de22da47e31e5dc677391d32e52de55c';
       const res = await fetch(`https://api.themoviedb.org/3/authentication?api_key=${tmdbKey}`);
       tmdbStatus = res.ok;
@@ -81,4 +83,5 @@ export const getActiveSessions = createServerFn({ method: "GET" })
     }
     return data || [];
   });
+
 
