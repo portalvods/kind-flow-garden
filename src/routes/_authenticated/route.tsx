@@ -98,13 +98,6 @@ function AuthedLayout() {
             >
               Resenhas
             </NavLink>
-            <NavLink 
-              to="/suporte" 
-              active={pathname.startsWith("/suporte") && !pathname.startsWith("/admin")} 
-              icon={<MessageCircle className="h-4 w-4" />}
-            >
-              Suporte
-            </NavLink>
 
 
 
@@ -147,7 +140,7 @@ function AuthedLayout() {
 
                     <SidebarGroup title="Gestão" pathname={pathname}>
                       <SidebarLink to="/admin/usuarios" icon={<Users className="h-4 w-4" />}>Usuários</SidebarLink>
-                      <SidebarLink to="/admin/tickets" icon={<MessageSquare className="h-4 w-4" />}>Tickets</SidebarLink>
+                      
                       <SidebarLink to="/admin/catalogo" icon={<ListVideo className="h-4 w-4" />}>Catálogo</SidebarLink>
                       <SidebarLink to="/admin/ferramentas" icon={<Wrench className="h-4 w-4" />}>Ferramentas</SidebarLink>
                     </SidebarGroup>
