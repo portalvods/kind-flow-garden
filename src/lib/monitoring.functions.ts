@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
 
 export const trackUserActivity = createServerFn({ method: "POST" })
   .handler(async () => {
@@ -77,8 +77,11 @@ export const getSystemStatus = createServerFn({ method: "GET" })
           });
           evoStatus = pingRes.ok;
         }
+      } else {
+        console.warn("[monitoring] Evolution API config missing in DB and local file");
       }
     } catch (e) {
+      console.error("[monitoring] Evolution API check error:", e);
       evoStatus = false;
     }
 
