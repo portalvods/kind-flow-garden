@@ -1,29 +1,39 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
 
 export const trackUserActivity = createServerFn({ method: "POST" })
   .handler(async () => {
-    // We'll track using a simple update on the sessions table
-    // Since we're in a server function, we'd ideally have the user ID from context
-    // For now, the database function track_session handles this if called with a session
-    const { error } = await supabaseAdmin.rpc('track_session');
-    if (error) console.error('Error tracking session:', error);
-    return { success: !error };
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      // Fallback if supabaseAdmin throws (no service role key)
+      const { error } = await supabaseAdmin.rpc('track_session');
+      if (error) console.error('Error tracking session RPC:', error);
+      return { success: !error };
+    } catch (err) {
+      // If we're on VPS and supabaseAdmin fails, we can't easily track without a key
+      // unless we use a public client, but track_session is auth-only.
+      // However, we want to fail silently for the user.
+      console.warn('[monitoring] trackUserActivity failed (probably missing service role key on VPS):', (err as Error).message);
+      return { success: false };
+    }
   });
 
 export const getOnlineUsersCount = createServerFn({ method: "GET" })
   .handler(async () => {
-    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const { count, error } = await supabaseAdmin
-      .from('user_sessions')
-      .select('*', { count: 'exact', head: true })
-      .gt('last_active_at', fiveMinsAgo);
-    
-    if (error) {
-      console.error('Error fetching online users:', error);
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { count, error } = await supabaseAdmin
+        .from('user_sessions')
+        .select('*', { count: 'exact', head: true })
+        .gt('last_active_at', fiveMinsAgo);
+      
+      if (error) throw error;
+      return count || 0;
+    } catch (err) {
+      console.error('Error fetching online users:', err);
       return 0;
     }
-    return count || 0;
   });
 
 export const getSystemStatus = createServerFn({ method: "GET" })
@@ -31,13 +41,20 @@ export const getSystemStatus = createServerFn({ method: "GET" })
     // Check Evolution API
     let evoStatus = false;
     try {
-      const { data: allSettings } = await supabaseAdmin
+      const { createServerPublicSupabase } = await import("./supabase-public.server");
+      const sb = createServerPublicSupabase();
+      if (!sb) throw new Error("Supabase public client unavailable");
+
+      const { data: allSettings } = await sb
         .from('site_settings')
         .select('key, value');
       
-      const url = allSettings?.find(s => s.key === 'evolution_url')?.value;
-      const key = allSettings?.find(s => s.key === 'evolution_api_key')?.value;
-      const instance = allSettings?.find(s => s.key === 'evolution_instance')?.value;
+      const { readLocalWhatsappConfig } = await import("./env.server");
+      const local = readLocalWhatsappConfig();
+
+      const url = allSettings?.find(s => s.key === 'evolution_url')?.value || local.evolution_url;
+      const key = allSettings?.find(s => s.key === 'evolution_api_key')?.value || local.evolution_api_key;
+      const instance = allSettings?.find(s => s.key === 'evolution_instance')?.value || local.evolution_instance;
       
       if (url && key && instance) {
         // First try the status endpoint
@@ -60,8 +77,11 @@ export const getSystemStatus = createServerFn({ method: "GET" })
           });
           evoStatus = pingRes.ok;
         }
+      } else {
+        console.warn("[monitoring] Evolution API config missing in DB and local file");
       }
     } catch (e) {
+      console.error("[monitoring] Evolution API check error:", e);
       evoStatus = false;
     }
 
@@ -80,25 +100,28 @@ export const getSystemStatus = createServerFn({ method: "GET" })
 
 export const getActiveSessions = createServerFn({ method: "GET" })
   .handler(async () => {
-    const { data, error } = await supabaseAdmin
-      .from('user_sessions')
-      .select(`
-        id,
-        last_active_at,
-        created_at,
-        profiles (
-          full_name,
-          whatsapp
-        )
-      `)
-      .order('last_active_at', { ascending: false })
-      .limit(50);
-    
-    if (error) {
-      console.error('Error fetching sessions:', error);
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data, error } = await supabaseAdmin
+        .from('user_sessions')
+        .select(`
+          id,
+          last_active_at,
+          created_at,
+          profiles (
+            full_name,
+            whatsapp
+          )
+        `)
+        .order('last_active_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error('Error fetching sessions:', err);
       return [];
     }
-    return data || [];
   });
 
 
