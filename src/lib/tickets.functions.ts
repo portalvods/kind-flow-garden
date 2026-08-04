@@ -48,11 +48,17 @@ export const getTicketDetails = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: ticket, error: tError } = await (supabase as any)
       .from("tickets")
-      .select("*, profile:profiles!tickets_user_id_fkey(full_name, whatsapp)")
+      .select("*")
       .eq("id", id)
       .single();
 
     if (tError) throw tError;
+
+    const { data: profile } = await (supabase as any)
+      .from("profiles")
+      .select("full_name, whatsapp")
+      .eq("id", ticket.user_id)
+      .maybeSingle();
 
     const { data: messages, error: mError } = await (supabase as any)
       .from("ticket_messages")
@@ -62,7 +68,7 @@ export const getTicketDetails = createServerFn({ method: "POST" })
 
     if (mError) throw mError;
 
-    return { ticket, messages: messages ?? [] };
+    return { ticket: { ...ticket, profile }, messages: messages ?? [] };
   });
 
 export const replyTicket = createServerFn({ method: "POST" })
@@ -150,9 +156,17 @@ export const getAllTickets = createServerFn({ method: "GET" })
 
     const { data, error } = await (supabase as any)
       .from("tickets")
-      .select("*, profile:profiles!tickets_user_id_fkey(full_name, whatsapp)")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data ?? [];
+
+    const rows = data ?? [];
+    const ids = [...new Set(rows.map((t: any) => t.user_id))];
+    const { data: profiles } = await (supabase as any)
+      .from("profiles")
+      .select("id, full_name, whatsapp")
+      .in("id", ids);
+    const byId = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+    return rows.map((t: any) => ({ ...t, profile: byId.get(t.user_id) ?? null }));
   });
