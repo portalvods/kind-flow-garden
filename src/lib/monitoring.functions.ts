@@ -40,10 +40,26 @@ export const getSystemStatus = createServerFn({ method: "GET" })
       const instance = allSettings?.find(s => s.key === 'evolution_instance')?.value;
       
       if (url && key && instance) {
+        // First try the status endpoint
         const res = await fetch(`${url.replace(/\/$/, '')}/instance/connectionStatus/${instance}`, {
           headers: { 'apikey': key }
         });
-        evoStatus = res.ok;
+        
+        if (res.ok) {
+          const data = await res.json();
+          // Connection status can be 'CONNECTED', 'CONNECTING', 'DISCONNECTED', etc.
+          // In some versions it returns an object with state or instance info
+          evoStatus = data.instance?.state === 'open' || data.state === 'open' || data.status === 'CONNECTED';
+          
+          // Fallback: If the response is OK but we can't parse the state, consider it online
+          if (!evoStatus && res.status === 200) evoStatus = true;
+        } else {
+          // If connectionStatus fails, try a simpler ping to the instance
+          const pingRes = await fetch(`${url.replace(/\/$/, '')}/instance/fetchInstances?instanceName=${instance}`, {
+            headers: { 'apikey': key }
+          });
+          evoStatus = pingRes.ok;
+        }
       }
     } catch (e) {
       evoStatus = false;
