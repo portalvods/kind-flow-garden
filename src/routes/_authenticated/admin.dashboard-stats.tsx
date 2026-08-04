@@ -18,8 +18,8 @@ function DashboardStatsPage() {
       // Pedidos totais e por status
       const { data: requests } = await supabase.from("requests").select("status, created_at");
       const totalRequests = requests?.length ?? 0;
-      const completedRequests = requests?.filter(r => r.status === 'concluido').length ?? 0;
-      const pendingRequests = requests?.filter(r => r.status === 'pendente').length ?? 0;
+      const completedRequests = requests?.filter(r => r.status === 'completed' || r.status === 'added').length ?? 0;
+      const pendingRequests = requests?.filter(r => r.status === 'pending' || r.status === 'processing' || r.status === 'analyzing').length ?? 0;
 
       // Usuários totais
       const { count: userCount } = await supabase.from("profiles").select("*", { count: 'exact', head: true });

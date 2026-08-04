@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminRankingRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminMonitoramentoRouteImport } from './routes/_authenticated/admin/monitoramento'
 import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authenticated/admin.mensagens'
 import { Route as AuthenticatedAdminFerramentasRouteImport } from './routes/_authenticated/admin.ferramentas'
+import { Route as AuthenticatedAdminDashboardStatsRouteImport } from './routes/_authenticated/admin.dashboard-stats'
 import { Route as AuthenticatedAdminCurtidosRouteImport } from './routes/_authenticated/admin.curtidos'
 import { Route as AuthenticatedAdminCatalogoRouteImport } from './routes/_authenticated/admin.catalogo'
 import { Route as AuthenticatedAdminBotRouteImport } from './routes/_authenticated/admin.bot'
@@ -131,6 +132,12 @@ const AuthenticatedAdminFerramentasRoute =
     path: '/admin/ferramentas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminDashboardStatsRoute =
+  AuthenticatedAdminDashboardStatsRouteImport.update({
+    id: '/admin/dashboard-stats',
+    path: '/admin/dashboard-stats',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminCurtidosRoute =
   AuthenticatedAdminCurtidosRouteImport.update({
     id: '/admin/curtidos',
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
+  '/admin/dashboard-stats': typeof AuthenticatedAdminDashboardStatsRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
+  '/admin/dashboard-stats': typeof AuthenticatedAdminDashboardStatsRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
@@ -241,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/bot': typeof AuthenticatedAdminBotRoute
   '/_authenticated/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
   '/_authenticated/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
+  '/_authenticated/admin/dashboard-stats': typeof AuthenticatedAdminDashboardStatsRoute
   '/_authenticated/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
   '/_authenticated/admin/mensagens': typeof AuthenticatedAdminMensagensRoute
   '/_authenticated/admin/monitoramento': typeof AuthenticatedAdminMonitoramentoRoute
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin/bot'
     | '/admin/catalogo'
     | '/admin/curtidos'
+    | '/admin/dashboard-stats'
     | '/admin/ferramentas'
     | '/admin/mensagens'
     | '/admin/monitoramento'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/admin/bot'
     | '/admin/catalogo'
     | '/admin/curtidos'
+    | '/admin/dashboard-stats'
     | '/admin/ferramentas'
     | '/admin/mensagens'
     | '/admin/monitoramento'
@@ -322,6 +334,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/bot'
     | '/_authenticated/admin/catalogo'
     | '/_authenticated/admin/curtidos'
+    | '/_authenticated/admin/dashboard-stats'
     | '/_authenticated/admin/ferramentas'
     | '/_authenticated/admin/mensagens'
     | '/_authenticated/admin/monitoramento'
@@ -471,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFerramentasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/dashboard-stats': {
+      id: '/_authenticated/admin/dashboard-stats'
+      path: '/admin/dashboard-stats'
+      fullPath: '/admin/dashboard-stats'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/curtidos': {
       id: '/_authenticated/admin/curtidos'
       path: '/admin/curtidos'
@@ -546,6 +566,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminBotRoute: typeof AuthenticatedAdminBotRoute
   AuthenticatedAdminCatalogoRoute: typeof AuthenticatedAdminCatalogoRoute
   AuthenticatedAdminCurtidosRoute: typeof AuthenticatedAdminCurtidosRoute
+  AuthenticatedAdminDashboardStatsRoute: typeof AuthenticatedAdminDashboardStatsRoute
   AuthenticatedAdminFerramentasRoute: typeof AuthenticatedAdminFerramentasRoute
   AuthenticatedAdminMensagensRoute: typeof AuthenticatedAdminMensagensRoute
   AuthenticatedAdminMonitoramentoRoute: typeof AuthenticatedAdminMonitoramentoRoute
@@ -568,6 +589,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminBotRoute: AuthenticatedAdminBotRoute,
   AuthenticatedAdminCatalogoRoute: AuthenticatedAdminCatalogoRoute,
   AuthenticatedAdminCurtidosRoute: AuthenticatedAdminCurtidosRoute,
+  AuthenticatedAdminDashboardStatsRoute: AuthenticatedAdminDashboardStatsRoute,
   AuthenticatedAdminFerramentasRoute: AuthenticatedAdminFerramentasRoute,
   AuthenticatedAdminMensagensRoute: AuthenticatedAdminMensagensRoute,
   AuthenticatedAdminMonitoramentoRoute: AuthenticatedAdminMonitoramentoRoute,
@@ -591,3 +613,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
