@@ -3,9 +3,9 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const trackUserActivity = createServerFn({ method: "POST" })
   .handler(async () => {
-    // In a real TanStack Start env, this would be called from a route loader or client effect
-    // We can't easily get auth.uid() here without middleware, but the logic is ready in DB
-    return { success: true };
+    const { error } = await supabaseAdmin.rpc('track_session');
+    if (error) console.error('Error tracking session:', error);
+    return { success: !error };
   });
 
 export const getOnlineUsersCount = createServerFn({ method: "GET" })

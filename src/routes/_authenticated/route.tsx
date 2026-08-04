@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { trackUserActivity } from "@/lib/monitoring.functions";
 import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,14 @@ function AuthedLayout() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Track activity
+  const trackFn = useServerFn(trackUserActivity);
+  useQuery({
+    queryKey: ["track-activity", user.id],
+    queryFn: () => trackFn(),
+    refetchInterval: 60000, // Refresh every minute
+  });
 
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin", user.id],
