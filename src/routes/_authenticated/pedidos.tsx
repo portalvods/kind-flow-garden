@@ -7,7 +7,7 @@ import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, T
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { TrailerButton } from "@/components/TrailerButton";
-import { createRequest } from "@/lib/requests.functions";
+import { createRequest, requestCommunitySupport } from "@/lib/requests.functions";
 import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
 import { getRequestTimeline } from "@/lib/admin-extras.functions";
@@ -184,6 +184,7 @@ type RequestRow = {
 function RequestCard({ request }: { request: RequestRow }) {
   const qc = useQueryClient();
   const rateFn = useServerFn(rateRequest);
+  const supportFn = useServerFn(requestCommunitySupport);
   const rate = useMutation({
     mutationFn: (rating: 1 | -1) => rateFn({ data: { id: request.id, rating } }),
     onSuccess: () => {
@@ -256,9 +257,17 @@ function RequestCard({ request }: { request: RequestRow }) {
             size="sm"
             variant="outline"
             className="mt-3 w-full gap-2"
-            onClick={() => {
+            onClick={async () => {
               const url = `${window.location.origin}/comunidade`;
               const text = `Pedi "${request.title}"${request.year ? ` (${request.year})` : ""} no portal. Entra e vota pra aprovarem mais rápido: ${url}`;
+
+              // Notify Admin
+              try {
+                await supportFn({ data: { id: request.id } });
+              } catch (err) {
+                console.warn("Notification error", err);
+              }
+
               if (typeof navigator !== "undefined" && navigator.share) {
                 navigator.share({ text }).catch(() => {});
                 return;
