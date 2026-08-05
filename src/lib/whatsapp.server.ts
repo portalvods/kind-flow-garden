@@ -30,7 +30,7 @@ function templateQuery(client: SupabaseReader): QueryBuilder {
 const DEFAULT_TEMPLATES: Record<string, string> = {
   received: "✅ Olá {cliente}, recebemos seu pedido: {titulo} ({tipo}).",
   admin_new_request: "📥 Novo pedido recebido\nCliente: {cliente}\nWhatsApp: {whatsapp}\nTítulo: {titulo}\nTipo: {tipo}\nFormato: {formato}\nObs: {obs}",
-  admin_request_support: "🆘 *Pedido de Apoio na Comunidade*\nCliente: {cliente}\nTítulo: {titulo}\n\nO cliente está pedindo apoio para este conteúdo entrar logo na comunidade.",
+  admin_request_support: "🆘 *Pedido de Apoio na Comunidade*\nCliente: {cliente}\nTítulo: {titulo}\n\nO cliente está pedindo apoio para este conteúdo entrar na comunidade. Clique abaixo para aprovar ou recusar:\n\n✅ Aprovar: {link_aprovar}\n❌ Recusar: {link_recusar}",
   analyzing: "🔎 Olá {cliente}, seu pedido {titulo} está em análise.",
   approved: "✅ Olá {cliente}, seu pedido {titulo} foi aprovado.",
   completed: "🎬 Olá {cliente}, seu pedido {titulo} foi concluído.",
