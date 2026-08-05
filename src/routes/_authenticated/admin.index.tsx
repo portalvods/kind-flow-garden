@@ -1,7 +1,7 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -36,6 +36,10 @@ import {
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    id: (search.id as string) || undefined,
+    action: (search.action as string) || undefined,
+  }),
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw redirect({ to: "/auth" });
@@ -132,6 +136,8 @@ type AdminRequest = {
 
 function AdminPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { id: queryId, action: queryAction } = Route.useSearch();
   const [tab, setTab] = useState<"pending" | "analyzing" | "approved" | "completed" | "rejected" | "all">("pending");
   const [search, setSearch] = useState("");
   const [sortByVotes, setSortByVotes] = useState(false);
@@ -139,6 +145,16 @@ function AdminPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [doneTarget, setDoneTarget] = useState<{ req: AdminRequest; status: StatusKey } | null>(null);
   const [doneMessage, setDoneMessage] = useState("");
+
+  useEffect(() => {
+    if (queryId && queryAction) {
+      setTab("all");
+      setSearch(queryId);
+      
+      // Limpar URL após carregar
+      navigate({ search: {}, replace: true });
+    }
+  }, [queryId, queryAction, navigate]);
 
 
   const updateFn = useServerFn(updateRequestStatus);
