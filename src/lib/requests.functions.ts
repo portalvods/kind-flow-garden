@@ -311,7 +311,7 @@ export const requestCommunitySupport = createServerFn({ method: "POST" })
 
     const { data: request } = await supabase
       .from("requests")
-      .select("title, user_id")
+      .select("title, user_id, id")
       .eq("id", data.id)
       .single();
 
@@ -326,12 +326,27 @@ export const requestCommunitySupport = createServerFn({ method: "POST" })
     try {
       const adminNumber = await getAdminWhatsappNumber({ supabase: supabase as never });
       if (adminNumber) {
+        // Obter URL base do site para os links de aprovação/recusa
+        // Na VPS window.location.origin não existe, mas podemos tentar pegar de settings ou usar um fallback
+        const { data: siteUrlRow } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "site_url")
+          .maybeSingle();
+        
+        // Se não tiver site_url nas configurações, usamos o que vier no header ou um placeholder
+        const baseUrl = siteUrlRow?.value || "https://portal.vod";
+        const linkAprovar = `${baseUrl}/admin/pedidos?id=${request.id}&action=approve_community`;
+        const linkRecusar = `${baseUrl}/admin/pedidos?id=${request.id}&action=reject_community`;
+
         await sendTemplate(
           adminNumber,
           "admin_request_support",
           {
             cliente: profile?.full_name ?? "Cliente",
             titulo: request.title,
+            link_aprovar: linkAprovar,
+            link_recusar: linkRecusar,
           },
           { supabase: supabase as never },
         );
