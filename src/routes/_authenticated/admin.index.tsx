@@ -152,7 +152,11 @@ function AdminPage() {
       setSearch(queryId);
       
       // Limpar URL após carregar
-      navigate({ search: (prev: any) => ({ ...prev, id: undefined, action: undefined }), replace: true });
+      navigate({ 
+        to: '/admin',
+        search: { id: undefined, action: undefined }, 
+        replace: true 
+      });
     }
   }, [queryId, queryAction, navigate]);
 
