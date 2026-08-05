@@ -311,20 +311,6 @@ export const requestCommunitySupport = createServerFn({ method: "POST" })
 
     const { data: request } = await supabase
       .from("requests")
-      .select("title, user_id")
-      .eq("id", data.id)
-      .single();
-
-    if (!request) throw new Error("Pedido não encontrado");
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", userId)
-      .maybeSingle();
-
-    const { data: request } = await supabase
-      .from("requests")
       .select("title, user_id, id")
       .eq("id", data.id)
       .single();
