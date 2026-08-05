@@ -76,8 +76,7 @@ function ComunidadePage() {
             Pedidos da comunidade
           </h1>
           <p className="text-sm text-muted-foreground">
-            Só aparecem aqui adições e atualizações pedidas por 3 ou mais clientes. Curta o que você também quer que
-            entre logo.
+            Aqui aparecem as adições e atualizações mais aguardadas pela comunidade. Curta o que você também quer que entre logo.
           </p>
         </div>
         <div className="flex gap-2">
