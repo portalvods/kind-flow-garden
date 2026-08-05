@@ -152,7 +152,7 @@ function AdminPage() {
       setSearch(queryId);
       
       // Limpar URL após carregar
-      navigate({ search: {}, replace: true });
+      navigate({ search: (prev: any) => ({ ...prev, id: undefined, action: undefined }), replace: true });
     }
   }, [queryId, queryAction, navigate]);
 
