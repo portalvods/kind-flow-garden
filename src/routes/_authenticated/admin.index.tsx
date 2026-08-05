@@ -151,12 +151,12 @@ function AdminPage() {
       setTab("all");
       setSearch(queryId);
       
-      // Limpar URL após carregar
-      navigate({ 
-        to: '/admin',
-        search: { id: undefined, action: undefined }, 
-        replace: true 
-      });
+      // Não limpamos imediatamente para manter o destaque enquanto o admin decide
+      // navigate({ 
+      //   to: '/admin',
+      //   search: { id: undefined, action: undefined }, 
+      //   replace: true 
+      // });
     }
   }, [queryId, queryAction, navigate]);
 
@@ -399,6 +399,11 @@ function AdminPage() {
               </div>
 
               <div className="flex flex-wrap gap-2 items-center">
+                {queryAction === "approve_community" && queryId === r.id && (
+                   <div className="w-full mb-2 p-2 bg-primary/10 border border-primary/30 rounded-lg text-xs text-primary animate-pulse flex items-center gap-2">
+                     <ThumbsUp className="h-3 w-3" /> Este pedido aguarda aprovação para a comunidade.
+                   </div>
+                )}
                 {r.status !== "analyzing" && (
                   <Button
                     size="sm"
