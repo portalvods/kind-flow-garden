@@ -71,6 +71,18 @@ function AuthedLayout() {
     }
   }, [prefs]);
 
+  // Aplica as cores escolhidas pelo cliente
+  useEffect(() => {
+    const root = document.documentElement;
+    if (prefs?.theme_color) {
+      root.style.setProperty("--primary", prefs.theme_color);
+      root.style.setProperty("--ring", prefs.theme_color);
+    }
+    if (prefs?.accent_color) {
+      root.style.setProperty("--accent", prefs.accent_color);
+    }
+  }, [prefs?.theme_color, prefs?.accent_color]);
+
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
