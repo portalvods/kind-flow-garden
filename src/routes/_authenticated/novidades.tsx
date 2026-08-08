@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Send, Sparkles, ImageOff, Film, Tv, TestTube2, Star } from "lucide-react";
+import { Loader2, Send, Sparkles, ImageOff, Film, Tv, TestTube2, Star, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { listWeeklyNews, broadcastWeeklyNews } from "@/lib/news.functions";
 import { getReviewStats } from "@/lib/reviews.functions";
@@ -25,6 +26,7 @@ function NovidadesPage() {
   const { user } = Route.useRouteContext();
   const [days, setDays] = useState(7);
   const [target, setTarget] = useState<ReviewTarget | null>(null);
+  const [search, setSearch] = useState("");
   const listFn = useServerFn(listWeeklyNews);
   const broadcastFn = useServerFn(broadcastWeeklyNews);
 
@@ -57,7 +59,8 @@ function NovidadesPage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao enviar"),
   });
 
-  const items = data?.items ?? [];
+  const q = search.trim().toLowerCase();
+  const items = (data?.items ?? []).filter((i) => (q ? i.title.toLowerCase().includes(q) : true));
 
   const keys = items.map((i) =>
     contentKeyFor({ content_type: i.content_type, title: i.title, year: i.year }),
