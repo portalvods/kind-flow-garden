@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, ImageOff, Film, Tv, ThumbsUp, Users2, MessageSquare } from "lucide-react";
+import { Loader2, ImageOff, Film, Tv, ThumbsUp, Users2, MessageSquare, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { CommentsDialog } from "@/components/community/CommentsDialog";
 import { listCommunityRequests, toggleRequestVote, type CommunityRequest } from "@/lib/community.functions";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 function ComunidadePage() {
   const [sort, setSort] = useState<"votes" | "recent">("votes");
+  const [search, setSearch] = useState("");
   const [openComments, setOpenComments] = useState<{ id: string; title: string } | null>(null);
   const listFn = useServerFn(listCommunityRequests);
   const voteFn = useServerFn(toggleRequestVote);
@@ -61,11 +63,14 @@ function ComunidadePage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao curtir"),
   });
 
-  const items: CommunityRequest[] = [...(data?.items ?? [])].sort((a, b) =>
-    sort === "votes"
-      ? b.votes - a.votes || +new Date(b.created_at) - +new Date(a.created_at)
-      : +new Date(b.created_at) - +new Date(a.created_at),
-  );
+  const q = search.trim().toLowerCase();
+  const items: CommunityRequest[] = [...(data?.items ?? [])]
+    .filter((it) => (q ? it.title.toLowerCase().includes(q) : true))
+    .sort((a, b) =>
+      sort === "votes"
+        ? b.votes - a.votes || +new Date(b.created_at) - +new Date(a.created_at)
+        : +new Date(b.created_at) - +new Date(a.created_at),
+    );
 
   return (
     <div className="space-y-6">
