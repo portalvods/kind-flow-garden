@@ -120,13 +120,15 @@ function PedidosPage() {
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-        <TabsList className="bg-card/60 border border-border/60">
-          <TabsTrigger value="all">Todos</TabsTrigger>
-          <TabsTrigger value="pending">Pendentes</TabsTrigger>
-          <TabsTrigger value="processing">Em andamento</TabsTrigger>
-          <TabsTrigger value="added">Adicionados</TabsTrigger>
-          <TabsTrigger value="rejected">Recusados</TabsTrigger>
-        </TabsList>
+        <div className="-mx-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
+          <TabsList className="bg-card/60 border border-border/60 w-max">
+            <TabsTrigger value="all">Todos</TabsTrigger>
+            <TabsTrigger value="pending">Pendentes</TabsTrigger>
+            <TabsTrigger value="processing">Em andamento</TabsTrigger>
+            <TabsTrigger value="added">Adicionados</TabsTrigger>
+            <TabsTrigger value="rejected">Recusados</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value={tab} className="mt-6">
           {isLoading ? (
             <div className="flex justify-center py-20">
