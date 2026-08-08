@@ -29,11 +29,13 @@ function AuthedLayout() {
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  // Track activity
-  const trackFn = useServerFn(trackUserActivity);
+  // Track activity (client-side so auth.uid() is available in the RPC)
   useQuery({
     queryKey: ["track-activity", user.id],
-    queryFn: () => trackFn(),
+    queryFn: async () => {
+      await supabase.rpc("track_session");
+      return true;
+    },
     refetchInterval: 60000, // Refresh every minute
   });
 
