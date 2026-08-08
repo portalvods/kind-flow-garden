@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Activity, ShieldCheck, Globe, Users, Clock, History } from "lucide-react";
-import { getSystemStatus, getActiveSessions, getOnlineUsersCount } from "@/lib/monitoring.functions";
+import { getSystemStatus } from "@/lib/monitoring.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -14,8 +15,6 @@ export const Route = createFileRoute("/_authenticated/admin/monitoramento")({
 
 function MonitoringPage() {
   const systemStatusFn = useServerFn(getSystemStatus);
-  const onlineCountFn = useServerFn(getOnlineUsersCount);
-  const activeSessionsFn = useServerFn(getActiveSessions);
 
   const { data: status, isLoading: statusLoading } = useQuery({
     queryKey: ["system-status"],
@@ -23,17 +22,34 @@ function MonitoringPage() {
     refetchInterval: 30000,
   });
 
-  const { data: onlineCount } = useQuery({
-    queryKey: ["online-users"],
-    queryFn: () => onlineCountFn(),
-    refetchInterval: 10000,
-  });
-
   const { data: sessions, isLoading: sessionsLoading } = useQuery({
     queryKey: ["active-sessions"],
-    queryFn: () => activeSessionsFn(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_sessions")
+        .select("id, user_id, last_active_at, created_at")
+        .order("last_active_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      const rows = data ?? [];
+      const ids = rows.map((r) => r.user_id);
+      let profilesById: Record<string, { full_name: string | null; whatsapp: string | null }> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name, whatsapp")
+          .in("id", ids);
+        for (const p of profs ?? []) profilesById[p.id] = { full_name: p.full_name, whatsapp: p.whatsapp };
+      }
+      return rows.map((r) => ({ ...r, profiles: profilesById[r.user_id] ?? null }));
+    },
     refetchInterval: 15000,
   });
+
+  const onlineCount = (sessions ?? []).filter(
+    (s: any) => s.last_active_at && new Date(s.last_active_at).getTime() > Date.now() - 5 * 60 * 1000,
+  ).length;
+
 
   return (
     <div className="space-y-6">

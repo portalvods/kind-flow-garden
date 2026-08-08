@@ -1,7 +1,6 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { trackUserActivity } from "@/lib/monitoring.functions";
 import { Film, LogOut, LayoutDashboard, ShoppingBag, MessageCircle, MessagesSquare, Palette, ListVideo, Users, Users2, Bot, Wrench, Trophy, MessageSquareCode, MessageSquareQuote, Sparkles, ThumbsUp, Menu, X, Flame, Activity, MessageSquare, BarChart3, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -29,11 +28,13 @@ function AuthedLayout() {
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  // Track activity
-  const trackFn = useServerFn(trackUserActivity);
+  // Track activity (client-side so auth.uid() is available in the RPC)
   useQuery({
     queryKey: ["track-activity", user.id],
-    queryFn: () => trackFn(),
+    queryFn: async () => {
+      await supabase.rpc("track_session");
+      return true;
+    },
     refetchInterval: 60000, // Refresh every minute
   });
 
@@ -96,25 +97,52 @@ function AuthedLayout() {
           </Link>
 
           <nav className="flex items-center gap-1">
-            <NavLink to="/pedidos" active={pathname === "/pedidos"} icon={<ShoppingBag className="h-4 w-4" />}>
-              Meus pedidos
-            </NavLink>
-            <NavLink to="/comunidade" active={pathname.startsWith("/comunidade")} icon={<Users2 className="h-4 w-4" />}>
-              Comunidade
-            </NavLink>
-            <NavLink to="/novidades" active={pathname.startsWith("/novidades")} icon={<Sparkles className="h-4 w-4" />}>
-              Novidades
-            </NavLink>
-            <NavLink to="/em-alta" active={pathname.startsWith("/em-alta")} icon={<Flame className="h-4 w-4" />}>
-              Em alta
-            </NavLink>
-            <NavLink
-              to="/resenhas"
-              active={pathname.startsWith("/resenhas")}
-              icon={<MessageSquareQuote className="h-4 w-4" />}
-            >
-              Resenhas
-            </NavLink>
+            {/* Menu do cliente (hambúrguer no mobile) */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="lg:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] p-0">
+                <SheetHeader className="px-4 py-4 border-b border-border/40">
+                  <SheetTitle className="font-display text-lg text-left">Navegação</SheetTitle>
+                </SheetHeader>
+                <div className="py-4 overflow-y-auto">
+                  <ul className="space-y-1">
+                    <SidebarLink to="/pedidos" icon={<ShoppingBag className="h-4 w-4" />}>Meus pedidos</SidebarLink>
+                    <SidebarLink to="/comunidade" icon={<Users2 className="h-4 w-4" />}>Comunidade</SidebarLink>
+                    <SidebarLink to="/novidades" icon={<Sparkles className="h-4 w-4" />}>Novidades</SidebarLink>
+                    <SidebarLink to="/em-alta" icon={<Flame className="h-4 w-4" />}>Em alta</SidebarLink>
+                    <SidebarLink to="/resenhas" icon={<MessageSquareQuote className="h-4 w-4" />}>Resenhas</SidebarLink>
+                    <SidebarLink to="/perfil" icon={<UserIcon className="h-4 w-4" />}>Meu perfil</SidebarLink>
+                  </ul>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <div className="hidden lg:flex items-center gap-1">
+              <NavLink to="/pedidos" active={pathname === "/pedidos"} icon={<ShoppingBag className="h-4 w-4" />}>
+                Meus pedidos
+              </NavLink>
+              <NavLink to="/comunidade" active={pathname.startsWith("/comunidade")} icon={<Users2 className="h-4 w-4" />}>
+                Comunidade
+              </NavLink>
+              <NavLink to="/novidades" active={pathname.startsWith("/novidades")} icon={<Sparkles className="h-4 w-4" />}>
+                Novidades
+              </NavLink>
+              <NavLink to="/em-alta" active={pathname.startsWith("/em-alta")} icon={<Flame className="h-4 w-4" />}>
+                Em alta
+              </NavLink>
+              <NavLink
+                to="/resenhas"
+                active={pathname.startsWith("/resenhas")}
+                icon={<MessageSquareQuote className="h-4 w-4" />}
+              >
+                Resenhas
+              </NavLink>
+            </div>
+
 
 
 
