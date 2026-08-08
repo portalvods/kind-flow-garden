@@ -71,6 +71,18 @@ function AuthedLayout() {
     }
   }, [prefs]);
 
+  // Aplica as cores escolhidas pelo cliente
+  useEffect(() => {
+    const root = document.documentElement;
+    if (prefs?.theme_color) {
+      root.style.setProperty("--primary", prefs.theme_color);
+      root.style.setProperty("--ring", prefs.theme_color);
+    }
+    if (prefs?.accent_color) {
+      root.style.setProperty("--accent", prefs.accent_color);
+    }
+  }, [prefs?.theme_color, prefs?.accent_color]);
+
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
@@ -82,7 +94,7 @@ function AuthedLayout() {
   return (
     <div className="min-h-screen">
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/70">
-        <div className="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
           <Link to="/pedidos" className="flex items-center gap-2">
             {settings?.logo_url ? (
               <img src={settings.logo_url} alt="" className="h-8 w-auto" />
@@ -213,7 +225,7 @@ function AuthedLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto w-full max-w-7xl overflow-x-hidden px-3 py-6 sm:px-4 sm:py-8">
         <Outlet />
       </main>
     </div>
