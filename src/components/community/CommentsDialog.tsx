@@ -81,7 +81,21 @@ export function CommentsDialog({ requestId, title, onOpenChange }: Props) {
             items.map((c) => (
               <div key={c.id} className="rounded-lg border border-border/60 bg-card/60 p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-primary">{c.author_initials}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    {c.avatar_url ? (
+                      <img
+                        src={c.avatar_url}
+                        alt={`Foto de ${c.author_initials}`}
+                        loading="lazy"
+                        className="h-6 w-6 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary">
+                        {c.author_initials.replace(/[^A-Za-zÀ-ÿ]/g, "").slice(0, 2).toUpperCase() || "?"}
+                      </span>
+                    )}
+                    <span className="truncate text-xs font-medium text-primary">{c.author_initials}</span>
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-muted-foreground">
                       {new Date(c.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}

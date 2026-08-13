@@ -871,6 +871,7 @@ export type Database = {
         Args: { _request_id: string }
         Returns: {
           author_initials: string
+          avatar_url: string
           body: string
           created_at: string
           id: string

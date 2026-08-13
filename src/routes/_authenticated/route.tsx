@@ -116,19 +116,45 @@ function AuthedLayout() {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] p-0">
+              <SheetContent side="right" className="w-[280px] p-0 overflow-y-auto">
                 <SheetHeader className="px-4 py-4 border-b border-border/40">
                   <SheetTitle className="font-display text-lg text-left">Navegação</SheetTitle>
                 </SheetHeader>
-                <div className="py-4 overflow-y-auto">
-                  <ul className="space-y-1">
+                <div className="py-4">
+                  <SidebarGroup title="Cliente" pathname={pathname}>
                     <SidebarLink to="/pedidos" icon={<ShoppingBag className="h-4 w-4" />}>Meus pedidos</SidebarLink>
                     <SidebarLink to="/comunidade" icon={<Users2 className="h-4 w-4" />}>Comunidade</SidebarLink>
                     <SidebarLink to="/novidades" icon={<Sparkles className="h-4 w-4" />}>Novidades</SidebarLink>
                     <SidebarLink to="/em-alta" icon={<Flame className="h-4 w-4" />}>Em alta</SidebarLink>
                     <SidebarLink to="/resenhas" icon={<MessageSquareQuote className="h-4 w-4" />}>Resenhas</SidebarLink>
                     <SidebarLink to="/perfil" icon={<UserIcon className="h-4 w-4" />}>Meu perfil</SidebarLink>
-                  </ul>
+                  </SidebarGroup>
+
+                  {isAdmin && (
+                    <>
+                      <SidebarGroup title="Admin · Principal" pathname={pathname}>
+                        <SidebarLink to="/admin" icon={<LayoutDashboard className="h-4 w-4" />}>Dashboard</SidebarLink>
+                        <SidebarLink to="/admin/dashboard-stats" icon={<BarChart3 className="h-4 w-4" />}>Estatísticas</SidebarLink>
+                        <SidebarLink to="/admin/monitoramento" icon={<Activity className="h-4 w-4" />}>Monitoramento</SidebarLink>
+                        <SidebarLink to="/admin/curtidos" icon={<ThumbsUp className="h-4 w-4" />}>Mais curtidos</SidebarLink>
+                        <SidebarLink to="/admin/ranking" icon={<Trophy className="h-4 w-4" />}>Ranking</SidebarLink>
+                      </SidebarGroup>
+                      <SidebarGroup title="Admin · Gestão" pathname={pathname}>
+                        <SidebarLink to="/admin/usuarios" icon={<Users className="h-4 w-4" />}>Usuários</SidebarLink>
+                        <SidebarLink to="/admin/catalogo" icon={<ListVideo className="h-4 w-4" />}>Catálogo</SidebarLink>
+                        <SidebarLink to="/admin/ferramentas" icon={<Wrench className="h-4 w-4" />}>Ferramentas</SidebarLink>
+                      </SidebarGroup>
+                      <SidebarGroup title="Admin · Comunicação" pathname={pathname}>
+                        <SidebarLink to="/admin/whatsapp" icon={<MessageCircle className="h-4 w-4" />}>WhatsApp</SidebarLink>
+                        <SidebarLink to="/admin/mensagens" icon={<MessagesSquare className="h-4 w-4" />}>Mensagens</SidebarLink>
+                        <SidebarLink to="/admin/bot" icon={<MessageSquareCode className="h-4 w-4" />}>Bot</SidebarLink>
+                      </SidebarGroup>
+                      <SidebarGroup title="Admin · Configurações" pathname={pathname}>
+                        <SidebarLink to="/admin/automacao" icon={<Bot className="h-4 w-4" />}>Automação IA</SidebarLink>
+                        <SidebarLink to="/admin/aparencia" icon={<Palette className="h-4 w-4" />}>Aparência</SidebarLink>
+                      </SidebarGroup>
+                    </>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
@@ -164,7 +190,7 @@ function AuthedLayout() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`hidden lg:inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       pathname.startsWith("/admin")
                         ? "bg-primary/15 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
