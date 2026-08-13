@@ -79,7 +79,7 @@ export const startSignup = createServerFn({ method: "POST" })
 
 
     if (await isWhatsappAlreadyRegistered(whatsapp)) {
-      throw new Error("Esse WhatsApp já está cadastrado. Entre com seu e-mail e senha ou use Esqueci a senha.");
+      throw new Error("Esse WhatsApp já está cadastrado. Entre com seu WhatsApp e senha ou use Esqueci a senha.");
     }
 
     const { code, token } = issueSignupOtp({

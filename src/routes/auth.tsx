@@ -166,7 +166,7 @@ function AuthPage() {
         const msg = signUpError.message || "";
         const status = "status" in signUpError ? Number(signUpError.status) : 0;
         if (status >= 500 || /database error saving new user|duplicate key|profiles_whatsapp_unique/i.test(msg)) {
-          throw new Error("Esse WhatsApp já está cadastrado. Entre com seu e-mail e senha ou use Esqueci a senha.");
+          throw new Error("Esse WhatsApp já está cadastrado. Entre com seu WhatsApp e senha ou use Esqueci a senha.");
         }
         // If user already exists, fall through to sign-in.
         if (!/registered|exists|já/i.test(msg)) throw signUpError;
@@ -221,7 +221,7 @@ function AuthPage() {
       toast.error(
         msg && msg !== "{}"
           ? msg
-          : "Não foi possível concluir o cadastro. Se esse WhatsApp já foi usado, entre com seu e-mail e senha ou use Esqueci a senha.",
+          : "Não foi possível concluir o cadastro. Se esse WhatsApp já foi usado, entre com seu WhatsApp e senha ou use Esqueci a senha.",
       );
     } finally {
       setLoading(false);
