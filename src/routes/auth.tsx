@@ -30,6 +30,12 @@ export const Route = createFileRoute("/auth")({
 type Mode = "signin" | "signup" | "forgot";
 type Step = "form" | "otp" | "reset-password";
 
+function phoneDigits(input: string): string {
+  const d = input.replace(/\D/g, "");
+  return d.length === 10 || d.length === 11 ? `55${d}` : d;
+}
+
+
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
