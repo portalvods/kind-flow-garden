@@ -137,7 +137,7 @@ function PedidosPage() {
           ) : filtered.length === 0 ? (
             <EmptyState onNew={() => setDialogOpen(true)} />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((r) => (
                 <RequestCard key={r.id} request={r} />
               ))}
