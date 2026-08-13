@@ -215,13 +215,13 @@ function RequestCard({ request }: { request: RequestRow }) {
             <ImageOff className="h-10 w-10" />
           </div>
         )}
-        <div className="absolute top-2 left-2">
-          <Badge className={`${STATUS_COLOR[request.status] ?? ""} border`}>
+        <div className="absolute top-1.5 left-1.5">
+          <Badge className={`${STATUS_COLOR[request.status] ?? ""} border text-[11px] px-1.5 py-0.5`}>
             {STATUS_LABEL[request.status] ?? request.status}
           </Badge>
         </div>
-        <div className="absolute top-2 right-2">
-          <Badge variant="secondary" className="bg-black/60 backdrop-blur">
+        <div className="absolute top-1.5 right-1.5">
+          <Badge variant="secondary" className="bg-black/60 backdrop-blur text-[11px] px-1.5 py-0.5">
             {request.content_type === "movie" ? (
               <><Film className="h-3 w-3 mr-1" /> Filme</>
             ) : (
@@ -230,19 +230,19 @@ function RequestCard({ request }: { request: RequestRow }) {
           </Badge>
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="font-semibold line-clamp-1">{request.title}</h3>
-        <p className="text-xs text-muted-foreground mt-1">
+      <div className="p-2.5 sm:p-4">
+        <h3 className="font-bold leading-tight text-base sm:text-lg line-clamp-2">{request.title}</h3>
+        <p className="text-[13px] sm:text-sm font-medium text-muted-foreground mt-1">
           {request.year ?? "—"} · {new Date(request.created_at).toLocaleDateString("pt-BR")}
         </p>
         <div className="flex gap-1 flex-wrap mt-2">
           {request.request_kind && (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-[12px] font-semibold">
               {KIND_LABEL[request.request_kind] ?? request.request_kind}
             </Badge>
           )}
           {request.format && (
-            <Badge variant="outline" className="text-[10px]">{request.format}</Badge>
+            <Badge variant="outline" className="text-[12px] font-semibold">{request.format}</Badge>
           )}
         </div>
         {request.tmdb_id && (
