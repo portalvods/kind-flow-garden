@@ -30,6 +30,12 @@ export const Route = createFileRoute("/auth")({
 type Mode = "signin" | "signup" | "forgot";
 type Step = "form" | "otp" | "reset-password";
 
+function phoneDigits(input: string): string {
+  const d = input.replace(/\D/g, "");
+  return d.length === 10 || d.length === 11 ? `55${d}` : d;
+}
+
+
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
@@ -108,20 +114,21 @@ function AuthPage() {
     e.preventDefault();
     const parse = z
       .object({
-        email: z.string().email("E-mail inválido"),
         password: z.string().min(6, "Senha: mínimo 6 caracteres"),
         fullName: z.string().trim().min(2, "Informe seu nome").max(80),
         whatsapp: z.string().trim().min(10, "WhatsApp inválido (DDD + número)").max(20),
       })
-      .safeParse({ email, password, fullName, whatsapp });
+      .safeParse({ password, fullName, whatsapp });
     if (!parse.success) {
       toast.error(parse.error.issues[0].message);
       return;
     }
+    const generatedEmail = `wa${phoneDigits(whatsapp)}@nao-usar.gpcine.shop`;
+    setEmail(generatedEmail);
     setLoading(true);
     try {
       const res = await startSignupFn({
-        data: { email, password, full_name: fullName, whatsapp },
+        data: { email: generatedEmail, password, full_name: fullName, whatsapp },
       });
       setOtpWhatsapp(res.whatsapp);
       setSignupToken(res.token);
@@ -134,6 +141,7 @@ function AuthPage() {
       setLoading(false);
     }
   };
+
 
   const handleSignupVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +166,7 @@ function AuthPage() {
         const msg = signUpError.message || "";
         const status = "status" in signUpError ? Number(signUpError.status) : 0;
         if (status >= 500 || /database error saving new user|duplicate key|profiles_whatsapp_unique/i.test(msg)) {
-          throw new Error("Esse WhatsApp já está cadastrado. Entre com seu e-mail e senha ou use Esqueci a senha.");
+          throw new Error("Esse WhatsApp já está cadastrado. Entre com seu WhatsApp e senha ou use Esqueci a senha.");
         }
         // If user already exists, fall through to sign-in.
         if (!/registered|exists|já/i.test(msg)) throw signUpError;
@@ -213,7 +221,7 @@ function AuthPage() {
       toast.error(
         msg && msg !== "{}"
           ? msg
-          : "Não foi possível concluir o cadastro. Se esse WhatsApp já foi usado, entre com seu e-mail e senha ou use Esqueci a senha.",
+          : "Não foi possível concluir o cadastro. Se esse WhatsApp já foi usado, entre com seu WhatsApp e senha ou use Esqueci a senha.",
       );
     } finally {
       setLoading(false);
@@ -279,18 +287,20 @@ function AuthPage() {
           {mode === "signin" && (
             <>
               <h1 className="font-display text-2xl font-bold mb-1">Bem-vindo de volta</h1>
-              <p className="text-sm text-muted-foreground mb-6">Entre com WhatsApp ou e-mail.</p>
+              <p className="text-sm text-muted-foreground mb-6">Entre com seu número de WhatsApp.</p>
               <form onSubmit={handleSignin} className="space-y-4">
                 <div>
-                  <Label htmlFor="identifier">WhatsApp ou e-mail</Label>
+                  <Label htmlFor="identifier">WhatsApp (DDD + número)</Label>
                   <Input
                     id="identifier"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="11999999999 (com DDD) ou voce@email.com"
+                    inputMode="numeric"
+                    placeholder="11999999999 (o 55 é adicionado automaticamente)"
                     required
                   />
                 </div>
+
 
                 <div>
                   <Label htmlFor="password">Senha</Label>
@@ -353,10 +363,6 @@ function AuthPage() {
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="mail">E-mail</Label>
-                  <Input id="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
                 <div>
                   <Label htmlFor="pwd">Senha</Label>
                   <Input id="pwd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />

@@ -179,7 +179,11 @@ function AuthedLayout() {
               >
                 Resenhas
               </NavLink>
+              <NavLink to="/perfil" active={pathname.startsWith("/perfil")} icon={<UserIcon className="h-4 w-4" />}>
+                Meu perfil
+              </NavLink>
             </div>
+
 
 
 
