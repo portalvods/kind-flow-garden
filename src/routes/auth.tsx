@@ -287,18 +287,20 @@ function AuthPage() {
           {mode === "signin" && (
             <>
               <h1 className="font-display text-2xl font-bold mb-1">Bem-vindo de volta</h1>
-              <p className="text-sm text-muted-foreground mb-6">Entre com WhatsApp ou e-mail.</p>
+              <p className="text-sm text-muted-foreground mb-6">Entre com seu número de WhatsApp.</p>
               <form onSubmit={handleSignin} className="space-y-4">
                 <div>
-                  <Label htmlFor="identifier">WhatsApp ou e-mail</Label>
+                  <Label htmlFor="identifier">WhatsApp (DDD + número)</Label>
                   <Input
                     id="identifier"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="11999999999 (com DDD) ou voce@email.com"
+                    inputMode="numeric"
+                    placeholder="11999999999 (o 55 é adicionado automaticamente)"
                     required
                   />
                 </div>
+
 
                 <div>
                   <Label htmlFor="password">Senha</Label>
