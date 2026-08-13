@@ -92,6 +92,7 @@ export type RequestComment = {
   id: string;
   body: string;
   author_initials: string;
+  avatar_url: string | null;
   mine: boolean;
   created_at: string;
 };
