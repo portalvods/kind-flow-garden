@@ -362,10 +362,6 @@ function AuthPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="mail">E-mail</Label>
-                  <Input id="mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-                <div>
                   <Label htmlFor="pwd">Senha</Label>
                   <Input id="pwd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                 </div>
