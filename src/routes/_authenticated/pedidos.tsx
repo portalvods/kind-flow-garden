@@ -201,7 +201,7 @@ function RequestCard({ request }: { request: RequestRow }) {
     ? `https://image.tmdb.org/t/p/w500${request.poster_path}`
     : null;
   return (
-    <div className="glass-card rounded-2xl overflow-hidden group hover:border-primary/40 transition">
+    <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden group hover:border-primary/40 transition">
       <div className="aspect-[2/3] bg-muted relative overflow-hidden">
         {poster ? (
           <img
