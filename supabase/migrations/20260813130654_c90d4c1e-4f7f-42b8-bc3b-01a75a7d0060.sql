@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.find_profile_by_wa(text) FROM authenticated, public;
