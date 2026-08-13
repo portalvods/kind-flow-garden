@@ -1,0 +1,13 @@
+REVOKE EXECUTE ON FUNCTION public.bot_config_by_secret(text) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.bot_create_request(text,text,text,text,text) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.bot_try_hit(text,text,integer) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.catalog_cron_append(text,uuid,jsonb) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.catalog_cron_due_sources(text) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.catalog_cron_finish(text,uuid,text,text,integer,integer) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.catalog_cron_replace(text,uuid,jsonb) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.email_by_whatsapp(text) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.whatsapp_exists(text) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.request_wa_password_reset(text,text,text,integer) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.complete_wa_password_reset(text,text,text) FROM authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.rate_limit_check_and_hit(text,text,integer) FROM authenticated, anon, public;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM authenticated, anon, public;
