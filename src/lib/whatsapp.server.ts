@@ -34,6 +34,9 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
   analyzing: "🔎 Olá {cliente}, seu pedido {titulo} está em análise.",
   approved: "✅ Olá {cliente}, seu pedido {titulo} foi aprovado.",
   completed: "🎬 Olá {cliente}, seu pedido {titulo} foi concluído.",
+  series_updated: "🔄 Série atualizada!\n\n\"{titulo}\" foi atualizada: {episodios} episódios adicionados. A série está na categoria \"{categoria}\".\n\n⏱ Pode levar até 10 a 30 minutos para aparecer no aplicativo. Atualize os conteúdos.",
+  otp_signup: "🔐 *{site}*\n\nSeu código para confirmação do seu cadastro é:\n\n*{codigo}*\n\nEle expira em 10 minutos. Se não foi você, ignore esta mensagem.",
+  otp_reset: "🔐 *{site}*\n\nSeu código para recuperação da sua senha é:\n\n*{codigo}*\n\nEle expira em 10 minutos. Se não foi você, ignore esta mensagem.",
   fixed: "🛠️ Olá {cliente}, seu pedido {titulo} foi corrigido.",
   rejected: "❌ Olá {cliente}, seu pedido {titulo} foi recusado. Motivo: {motivo}",
 };
@@ -175,10 +178,10 @@ export async function sendTemplate(
   }
 }
 
-export function sendOtpMessage(to: string, code: string, purpose: "signup" | "reset"): Promise<{ ok: boolean; error?: string }> {
-  const label = purpose === "signup" ? "confirmação do seu cadastro" : "recuperação da sua senha";
-  const msg =
-    `🔐 *Portal VOD*\n\nSeu código para ${label} é:\n\n*${code}*\n\nEle expira em 10 minutos. Se não foi você, ignore esta mensagem.`;
+export async function sendOtpMessage(to: string, code: string, purpose: "signup" | "reset"): Promise<{ ok: boolean; error?: string }> {
+  const key = purpose === "signup" ? "otp_signup" : "otp_reset";
+  const tpl = (await getTemplate(key)) ?? DEFAULT_TEMPLATES[key];
+  const msg = renderTemplate(tpl, { codigo: code, site: "Portal VOD" });
   return sendWhatsapp(to, msg);
 }
 
