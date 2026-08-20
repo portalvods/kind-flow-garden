@@ -23,6 +23,7 @@ import { getRejectionReasons, getCompletionMessages } from "@/lib/admin-extras.f
 import { TrailerButton } from "@/components/TrailerButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
