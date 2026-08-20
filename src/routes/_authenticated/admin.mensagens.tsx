@@ -32,6 +32,9 @@ const VARIABLES_HELP: Record<string, string> = {
   completed: "{cliente}, {titulo}",
   fixed: "{cliente}, {titulo}",
   rejected: "{cliente}, {titulo}, {motivo}",
+  series_updated: "{cliente}, {titulo}, {episodios}, {categoria}",
+  otp_signup: "{codigo}, {site}",
+  otp_reset: "{codigo}, {site}",
   admin_new_request: "{cliente}, {whatsapp}, {titulo}, {tipo}, {formato}, {obs}",
 };
 

@@ -34,6 +34,8 @@ const updateStatusSchema = z.object({
   status: z.enum(["pending", "processing", "analyzing", "approved", "added", "completed", "fixed", "rejected"]),
   rejection_reason: z.string().max(500).nullable().optional(),
   custom_message: z.string().max(1000).nullable().optional(),
+  episodes: z.string().max(20).nullable().optional(),
+  category: z.string().max(80).nullable().optional(),
 });
 
 export const createRequest = createServerFn({ method: "POST" })
@@ -230,6 +232,8 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
           tipo: KIND_LABEL[current.request_kind as string] ?? "",
           formato: (current.format as string | null) ?? "—",
           motivo: data.rejection_reason ?? "—",
+          episodios: data.episodes ?? "—",
+          categoria: data.category ?? "—",
         });
         await sendWhatsapp(profile?.whatsapp ?? "", text, { supabase: supabase as never });
       } catch (err) {
@@ -242,6 +246,10 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
       try {
         // On rejection, try to append 3 catalog alternatives (same kind).
         let templateKey = key;
+        // Atualização de série concluída → mensagem específica.
+        if (key === "completed" && current.request_kind === "atualizacao") {
+          templateKey = "series_updated";
+        }
         let alternativasStr = "";
         if (key === "rejected") {
           try {
@@ -291,6 +299,8 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
             formato: (current.format as string | null) ?? "—",
             motivo: data.rejection_reason ?? "—",
             alternativas: alternativasStr || "—",
+            episodios: data.episodes ?? "—",
+            categoria: data.category ?? "—",
           },
           { supabase: supabase as never },
         );

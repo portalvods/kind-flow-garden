@@ -288,7 +288,7 @@ function WhatsappAdminPage() {
         <div>
           <h2 className="font-display text-lg font-bold">WhatsApp do administrador</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Número que recebe a notificação toda vez que um cliente faz um novo pedido. DDD + número (o 55 é adicionado automaticamente).
+            Número que recebe a notificação toda vez que um cliente faz um novo pedido. 
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -718,7 +718,7 @@ function TestMessageCard({
       <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
         <div className="space-y-2">
           <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Número (DDD + número)
+            Número
           </label>
           <Input
             placeholder="11999999999"

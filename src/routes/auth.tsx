@@ -116,7 +116,7 @@ function AuthPage() {
       .object({
         password: z.string().min(6, "Senha: mínimo 6 caracteres"),
         fullName: z.string().trim().min(2, "Informe seu nome").max(80),
-        whatsapp: z.string().trim().min(10, "WhatsApp inválido (DDD + número)").max(20),
+        whatsapp: z.string().trim().min(10, "WhatsApp inválido").max(20),
       })
       .safeParse({ password, fullName, whatsapp });
     if (!parse.success) {
@@ -230,7 +230,7 @@ function AuthPage() {
 
   const handleForgotStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (whatsapp.trim().length < 10) return toast.error("Informe seu WhatsApp com DDD (o 55 é opcional).");
+    if (whatsapp.trim().length < 10) return toast.error("Informe seu WhatsApp.");
 
     setLoading(true);
     try {
@@ -290,13 +290,13 @@ function AuthPage() {
               <p className="text-sm text-muted-foreground mb-6">Entre com seu número de WhatsApp.</p>
               <form onSubmit={handleSignin} className="space-y-4">
                 <div>
-                  <Label htmlFor="identifier">WhatsApp (DDD + número)</Label>
+                  <Label htmlFor="identifier">WhatsApp</Label>
                   <Input
                     id="identifier"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     inputMode="numeric"
-                    placeholder="11999999999 (o 55 é adicionado automaticamente)"
+                    placeholder="11999999999"
                     required
                   />
                 </div>
@@ -352,12 +352,12 @@ function AuthPage() {
                   <Input id="full" value={fullName} onChange={(e) => setFullName(e.target.value)} required maxLength={80} />
                 </div>
                 <div>
-                  <Label htmlFor="wa">WhatsApp (DDD + número) *</Label>
+                  <Label htmlFor="wa">WhatsApp *</Label>
                   <Input
                     id="wa"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="11999999999 (o 55 é adicionado automaticamente)"
+                    placeholder="11999999999"
                     required
                     maxLength={20}
                   />
@@ -423,12 +423,12 @@ function AuthPage() {
               </p>
               <form onSubmit={handleForgotStart} className="space-y-4">
                 <div>
-                  <Label htmlFor="fwa">WhatsApp cadastrado (DDD + número)</Label>
+                  <Label htmlFor="fwa">WhatsApp cadastrado</Label>
                   <Input
                     id="fwa"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="11999999999 (o 55 é adicionado automaticamente)"
+                    placeholder="11999999999"
                     required
                     maxLength={20}
                   />

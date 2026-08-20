@@ -23,6 +23,7 @@ import { getRejectionReasons, getCompletionMessages } from "@/lib/admin-extras.f
 import { TrailerButton } from "@/components/TrailerButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -235,12 +236,17 @@ function AdminPage() {
     );
 
 
+  const [doneEpisodes, setDoneEpisodes] = useState("");
+  const [doneCategory, setDoneCategory] = useState("");
+
   const changeStatus = useMutation({
     mutationFn: async (input: {
       id: string;
       status: StatusKey;
       rejection_reason?: string | null;
       custom_message?: string | null;
+      episodes?: string | null;
+      category?: string | null;
     }) => updateFn({ data: input }),
     onSuccess: (_, vars) => {
       toast.success(
@@ -253,6 +259,8 @@ function AdminPage() {
       setRejectReason("");
       setDoneTarget(null);
       setDoneMessage("");
+      setDoneEpisodes("");
+      setDoneCategory("");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Erro ao atualizar"),
   });
@@ -445,6 +453,8 @@ function AdminPage() {
                     className="bg-emerald-600 hover:bg-emerald-500"
                     onClick={() => {
                       setDoneMessage("");
+                      setDoneEpisodes("");
+                      setDoneCategory("");
                       setDoneTarget({ req: r, status: "completed" });
                     }}
                     disabled={changeStatus.isPending}
@@ -494,6 +504,30 @@ function AdminPage() {
             <code className="text-primary">{"{cliente}"}</code>,{" "}
             <code className="text-primary">{"{titulo}"}</code>.
           </p>
+          {doneTarget?.req.request_kind === "atualizacao" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="eps" className="text-xs">Episódios adicionados</Label>
+                <Input
+                  id="eps"
+                  value={doneEpisodes}
+                  onChange={(e) => setDoneEpisodes(e.target.value)}
+                  placeholder="Ex: 8"
+                  maxLength={20}
+                />
+              </div>
+              <div>
+                <Label htmlFor="cat" className="text-xs">Categoria</Label>
+                <Input
+                  id="cat"
+                  value={doneCategory}
+                  onChange={(e) => setDoneCategory(e.target.value)}
+                  placeholder="Ex: Séries | Netflix"
+                  maxLength={80}
+                />
+              </div>
+            </div>
+          )}
           {(presetDoneMsgs?.messages?.length ?? 0) > 0 && (
             <div className="space-y-2">
               {presetDoneMsgs!.messages.map((m) => (
@@ -524,7 +558,12 @@ function AdminPage() {
               variant="ghost"
               onClick={() =>
                 doneTarget &&
-                changeStatus.mutate({ id: doneTarget.req.id, status: doneTarget.status })
+                changeStatus.mutate({
+                  id: doneTarget.req.id,
+                  status: doneTarget.status,
+                  episodes: doneEpisodes.trim() || null,
+                  category: doneCategory.trim() || null,
+                })
               }
               disabled={changeStatus.isPending}
             >
@@ -538,6 +577,8 @@ function AdminPage() {
                   id: doneTarget.req.id,
                   status: doneTarget.status,
                   custom_message: doneMessage.trim() || null,
+                  episodes: doneEpisodes.trim() || null,
+                  category: doneCategory.trim() || null,
                 })
               }
               disabled={changeStatus.isPending || !doneMessage.trim()}

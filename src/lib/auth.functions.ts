@@ -73,7 +73,7 @@ export const startSignup = createServerFn({ method: "POST" })
     await enforceOtpRateLimit("otp:signup:wa", whatsapp, 3, 3600);
 
     if (whatsapp.length < 10) {
-      throw new Error("WhatsApp inválido. Informe o número com DDD (o 55 é opcional).");
+      throw new Error("WhatsApp inválido. Verifique o número informado.");
     }
 
 
@@ -175,7 +175,7 @@ export const startPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => startResetSchema.parse(d))
   .handler(async ({ data }) => {
     const whatsapp = normalizePhone(data.whatsapp);
-    if (whatsapp.length < 10) throw new Error("WhatsApp inválido. Informe o número com DDD (o 55 é opcional).");
+    if (whatsapp.length < 10) throw new Error("WhatsApp inválido. Verifique o número informado.");
 
     // Rate limit: max 3 reset OTPs per IP/hour, 3 per whatsapp/hour.
 
