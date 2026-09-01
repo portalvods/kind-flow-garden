@@ -27,8 +27,8 @@ const STEPS = [
     color: "bg-blue-500/10"
   },
   {
-    title: "Votos da Comunidade",
-    description: "Pedidos com muitos votos na aba 'Comunidade' são priorizados pelo administrador!",
+    title: "Novidades e Em alta",
+    description: "Veja na aba 'Novidades' o que foi adicionado recentemente e em 'Em alta' os títulos do momento.",
     icon: <Users2 className="h-12 w-12 text-emerald-400" />,
     color: "bg-emerald-500/10"
   },
