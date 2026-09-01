@@ -3,11 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown, History, Share2 } from "lucide-react";
+import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, ThumbsDown, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { TrailerButton } from "@/components/TrailerButton";
-import { createRequest, requestCommunitySupport } from "@/lib/requests.functions";
+import { createRequest } from "@/lib/requests.functions";
 import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
 import { getRequestTimeline } from "@/lib/admin-extras.functions";
@@ -186,7 +186,6 @@ type RequestRow = {
 function RequestCard({ request }: { request: RequestRow }) {
   const qc = useQueryClient();
   const rateFn = useServerFn(rateRequest);
-  const supportFn = useServerFn(requestCommunitySupport);
   const rate = useMutation({
     mutationFn: (rating: 1 | -1) => rateFn({ data: { id: request.id, rating } }),
     onSuccess: () => {
@@ -253,26 +252,6 @@ function RequestCard({ request }: { request: RequestRow }) {
               title={request.title}
             />
           </div>
-        )}
-        {["pending", "analyzing", "approved", "processing"].includes(request.status) && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="mt-3 w-full gap-2"
-            onClick={async () => {
-              // Notify Admin
-              try {
-                await supportFn({ data: { id: request.id } });
-                toast.success("Solicitação enviada ao administrador!");
-              } catch (err) {
-                toast.error("Erro ao enviar solicitação.");
-                console.warn("Notification error", err);
-              }
-            }}
-          >
-            <Share2 className="h-3.5 w-3.5" />
-            Pedir apoio na comunidade
-          </Button>
         )}
 
         {request.notes && (
@@ -644,7 +623,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
       ) : (
         <>
           <div>
-            <Label htmlFor="tmdb-search">Buscar no catálogo (TMDB)</Label>
+            <Label htmlFor="tmdb-search">Buscar filme ou série</Label>
             <div className="relative mt-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -696,7 +675,7 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
           {search && !search.configured && query.trim().length >= 2 && (
             <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-200">
-              A busca automática (TMDB) ainda não foi configurada. Você pode digitar o título manualmente abaixo.
+              A busca automática ainda não foi configurada. Você pode digitar o título manualmente abaixo.
             </div>
           )}
 
@@ -740,15 +719,15 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
       <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border/40">
         <div>
-          <Label htmlFor="kind">Tipo do pedido *</Label>
+          <Label htmlFor="kind">{contentType === "tv" ? "O que você quer pedir? *" : "Tipo do pedido *"}</Label>
           <select
             id="kind"
             value={kind}
             onChange={(e) => setKind(e.target.value as typeof kind)}
             className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="adicao">Adição</option>
-            {contentType === "tv" && <option value="atualizacao">Atualização</option>}
+            <option value="adicao">{contentType === "tv" ? "Série inteira (adição)" : "Adição"}</option>
+            {contentType === "tv" && <option value="atualizacao">Temporadas faltantes (atualização)</option>}
             <option value="conserto">Conserto</option>
           </select>
         </div>

@@ -59,7 +59,7 @@ function EmAltaPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : data?.configured === false ? (
-        <p className="text-sm text-muted-foreground">TMDB não configurado.</p>
+        <p className="text-sm text-muted-foreground">Busca não configurada.</p>
       ) : items.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nada encontrado no momento.</p>
       ) : (
