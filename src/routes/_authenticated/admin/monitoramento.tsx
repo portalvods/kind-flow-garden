@@ -76,7 +76,7 @@ function MonitoringPage() {
 
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">TMDB API</CardTitle>
+            <CardTitle className="text-sm font-medium">Busca de conteúdos</CardTitle>
             <Globe className={`h-4 w-4 ${status?.tmdb ? "text-green-500" : "text-red-500 animate-pulse"}`} />
           </CardHeader>
           <CardContent>

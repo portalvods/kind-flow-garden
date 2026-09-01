@@ -18,9 +18,6 @@ function Landing() {
   const siteName = settings?.site_name ?? "Portal VOD";
   return (
     <div className="min-h-screen">
-      <div className="bg-primary/10 py-2 px-4 text-center text-xs font-medium text-primary border-b border-primary/20 whitespace-pre-wrap">
-        Peça apoio na comunidade e acelere a aprovação do seu conteúdo!
-      </div>
       {/* Nav */}
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/60">
         <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
@@ -62,7 +59,7 @@ function Landing() {
           </span>
         </h1>
         <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-          Busca inteligente conectada ao TMDB, painel administrativo completo e
+          Busca inteligente de filmes e séries, painel administrativo completo e
           notificações automáticas via WhatsApp quando seu conteúdo estiver disponível.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -82,7 +79,7 @@ function Landing() {
         <div className="grid gap-4 md:grid-cols-3">
           <Feature
             icon={<Zap className="h-5 w-5" />}
-            title="Busca inteligente TMDB"
+            title="Busca inteligente"
             desc="Digite o nome e o pôster, ano e sinopse aparecem automaticamente."
           />
           <Feature

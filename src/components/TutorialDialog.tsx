@@ -22,7 +22,7 @@ const STEPS = [
   },
   {
     title: "Faça seus Pedidos",
-    description: "Na aba 'Meus pedidos', você pode buscar qualquer filme ou série do TMDB e solicitar a adição.",
+    description: "Na aba 'Meus pedidos', você pode buscar qualquer filme ou série e solicitar a adição.",
     icon: <ShoppingBag className="h-12 w-12 text-blue-400" />,
     color: "bg-blue-500/10"
   },
