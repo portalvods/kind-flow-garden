@@ -13,12 +13,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
-import { Route as AuthenticatedResenhasRouteImport } from './routes/_authenticated/resenhas'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authenticated/novidades'
 import { Route as AuthenticatedEmAltaRouteImport } from './routes/_authenticated/em-alta'
-import { Route as AuthenticatedComunidadeRouteImport } from './routes/_authenticated/comunidade'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedSuporteIdRouteImport } from './routes/_authenticated/suporte.$id'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
@@ -56,11 +54,6 @@ const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   path: '/suporte',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedResenhasRoute = AuthenticatedResenhasRouteImport.update({
-  id: '/resenhas',
-  path: '/resenhas',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -79,11 +72,6 @@ const AuthenticatedNovidadesRoute = AuthenticatedNovidadesRouteImport.update({
 const AuthenticatedEmAltaRoute = AuthenticatedEmAltaRouteImport.update({
   id: '/em-alta',
   path: '/em-alta',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedComunidadeRoute = AuthenticatedComunidadeRouteImport.update({
-  id: '/comunidade',
-  path: '/comunidade',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -189,12 +177,10 @@ const ApiPublicHooksSyncCatalogRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/comunidade': typeof AuthenticatedComunidadeRoute
   '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/perfil': typeof AuthenticatedPerfilRoute
-  '/resenhas': typeof AuthenticatedResenhasRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
@@ -217,12 +203,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/comunidade': typeof AuthenticatedComunidadeRoute
   '/em-alta': typeof AuthenticatedEmAltaRoute
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/perfil': typeof AuthenticatedPerfilRoute
-  '/resenhas': typeof AuthenticatedResenhasRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
@@ -247,12 +231,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/comunidade': typeof AuthenticatedComunidadeRoute
   '/_authenticated/em-alta': typeof AuthenticatedEmAltaRoute
   '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
-  '/_authenticated/resenhas': typeof AuthenticatedResenhasRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
@@ -277,12 +259,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/comunidade'
     | '/em-alta'
     | '/novidades'
     | '/pedidos'
     | '/perfil'
-    | '/resenhas'
     | '/suporte'
     | '/admin/aparencia'
     | '/admin/automacao'
@@ -305,12 +285,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/comunidade'
     | '/em-alta'
     | '/novidades'
     | '/pedidos'
     | '/perfil'
-    | '/resenhas'
     | '/suporte'
     | '/admin/aparencia'
     | '/admin/automacao'
@@ -334,12 +312,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/_authenticated/comunidade'
     | '/_authenticated/em-alta'
     | '/_authenticated/novidades'
     | '/_authenticated/pedidos'
     | '/_authenticated/perfil'
-    | '/_authenticated/resenhas'
     | '/_authenticated/suporte'
     | '/_authenticated/admin/aparencia'
     | '/_authenticated/admin/automacao'
@@ -398,13 +374,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuporteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/resenhas': {
-      id: '/_authenticated/resenhas'
-      path: '/resenhas'
-      fullPath: '/resenhas'
-      preLoaderRoute: typeof AuthenticatedResenhasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
@@ -431,13 +400,6 @@ declare module '@tanstack/react-router' {
       path: '/em-alta'
       fullPath: '/em-alta'
       preLoaderRoute: typeof AuthenticatedEmAltaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/comunidade': {
-      id: '/_authenticated/comunidade'
-      path: '/comunidade'
-      fullPath: '/comunidade'
-      preLoaderRoute: typeof AuthenticatedComunidadeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/': {
@@ -574,12 +536,10 @@ const AuthenticatedSuporteRouteWithChildren =
   AuthenticatedSuporteRoute._addFileChildren(AuthenticatedSuporteRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedComunidadeRoute: typeof AuthenticatedComunidadeRoute
   AuthenticatedEmAltaRoute: typeof AuthenticatedEmAltaRoute
   AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
-  AuthenticatedResenhasRoute: typeof AuthenticatedResenhasRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRouteWithChildren
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
@@ -598,12 +558,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedComunidadeRoute: AuthenticatedComunidadeRoute,
   AuthenticatedEmAltaRoute: AuthenticatedEmAltaRoute,
   AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
-  AuthenticatedResenhasRoute: AuthenticatedResenhasRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRouteWithChildren,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,
