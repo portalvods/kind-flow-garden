@@ -3,12 +3,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Send, Sparkles, ImageOff, Film, Tv, TestTube2, Star, Search } from "lucide-react";
+import { Loader2, Send, Sparkles, ImageOff, Film, Tv, TestTube2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { listWeeklyNews, broadcastWeeklyNews } from "@/lib/news.functions";
-import { getReviewStats } from "@/lib/reviews.functions";
-import { ReviewDialog, contentKeyFor, type ReviewTarget } from "@/components/reviews/ReviewDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,7 +23,6 @@ const KIND_LABEL: Record<string, string> = {
 function NovidadesPage() {
   const { user } = Route.useRouteContext();
   const [days, setDays] = useState(7);
-  const [target, setTarget] = useState<ReviewTarget | null>(null);
   const [search, setSearch] = useState("");
   const listFn = useServerFn(listWeeklyNews);
   const broadcastFn = useServerFn(broadcastWeeklyNews);
@@ -61,17 +58,6 @@ function NovidadesPage() {
 
   const q = search.trim().toLowerCase();
   const items = (data?.items ?? []).filter((i) => (q ? i.title.toLowerCase().includes(q) : true));
-
-  const keys = items.map((i) =>
-    contentKeyFor({ content_type: i.content_type, title: i.title, year: i.year }),
-  );
-  const statsFn = useServerFn(getReviewStats);
-  const { data: statsData } = useQuery({
-    queryKey: ["review-stats", keys],
-    queryFn: () => statsFn({ data: { keys } }),
-    enabled: keys.length > 0,
-  });
-  const statsByKey = new Map((statsData?.items ?? []).map((s) => [s.content_key, s]));
 
   return (
     <div className="space-y-6">
@@ -172,45 +158,11 @@ function NovidadesPage() {
               <p className="text-[11px] text-muted-foreground">
                 {i.year ?? ""} · {new Date(i.completed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
               </p>
-              {(() => {
-                const key = contentKeyFor({
-                  content_type: i.content_type,
-                  title: i.title,
-                  year: i.year,
-                });
-                const st = statsByKey.get(key);
-                return (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 w-full gap-1 text-xs"
-                    onClick={() =>
-                      setTarget({
-                        content_key: key,
-                        title: i.title,
-                        year: i.year,
-                        content_type: i.content_type === "tv" ? "tv" : "movie",
-                        poster_path: i.poster_path,
-                        my_rating: st?.my_rating ?? null,
-                      })
-                    }
-                  >
-                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    {st ? `${st.avg_rating} (${st.total})` : "Avaliar"}
-                  </Button>
-                );
-              })()}
             </div>
           ))}
         </div>
       )}
 
-      <ReviewDialog
-        target={target}
-        onOpenChange={(open) => {
-          if (!open) setTarget(null);
-        }}
-      />
     </div>
   );
 }
