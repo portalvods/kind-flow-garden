@@ -95,6 +95,54 @@ function AuthedLayout() {
     <div className="min-h-screen">
       <header className="border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/70">
         <div className="mx-auto max-w-7xl px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+          {/* Menu do cliente (hambúrguer no mobile) */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="lg:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] p-0 overflow-y-auto">
+              <SheetHeader className="px-4 py-4 border-b border-border/40">
+                <SheetTitle className="font-display text-lg text-left">Navegação</SheetTitle>
+              </SheetHeader>
+              <div className="py-4">
+                <SidebarGroup title="Cliente" pathname={pathname}>
+                  <SidebarLink to="/pedidos" icon={<ShoppingBag className="h-4 w-4" />}>Meus pedidos</SidebarLink>
+                  <SidebarLink to="/novidades" icon={<Sparkles className="h-4 w-4" />}>Novidades</SidebarLink>
+                  <SidebarLink to="/em-alta" icon={<Flame className="h-4 w-4" />}>Em alta</SidebarLink>
+                  <SidebarLink to="/perfil" icon={<UserIcon className="h-4 w-4" />}>Meu perfil</SidebarLink>
+                </SidebarGroup>
+
+                {isAdmin && (
+                  <>
+                    <SidebarGroup title="Admin · Principal" pathname={pathname}>
+                      <SidebarLink to="/admin" icon={<LayoutDashboard className="h-4 w-4" />}>Dashboard</SidebarLink>
+                      <SidebarLink to="/admin/dashboard-stats" icon={<BarChart3 className="h-4 w-4" />}>Estatísticas</SidebarLink>
+                      <SidebarLink to="/admin/monitoramento" icon={<Activity className="h-4 w-4" />}>Monitoramento</SidebarLink>
+                      <SidebarLink to="/admin/curtidos" icon={<ThumbsUp className="h-4 w-4" />}>Mais curtidos</SidebarLink>
+                      <SidebarLink to="/admin/ranking" icon={<Trophy className="h-4 w-4" />}>Ranking</SidebarLink>
+                    </SidebarGroup>
+                    <SidebarGroup title="Admin · Gestão" pathname={pathname}>
+                      <SidebarLink to="/admin/usuarios" icon={<Users className="h-4 w-4" />}>Usuários</SidebarLink>
+                      <SidebarLink to="/admin/catalogo" icon={<ListVideo className="h-4 w-4" />}>Catálogo</SidebarLink>
+                      <SidebarLink to="/admin/ferramentas" icon={<Wrench className="h-4 w-4" />}>Ferramentas</SidebarLink>
+                    </SidebarGroup>
+                    <SidebarGroup title="Admin · Comunicação" pathname={pathname}>
+                      <SidebarLink to="/admin/whatsapp" icon={<MessageCircle className="h-4 w-4" />}>WhatsApp</SidebarLink>
+                      <SidebarLink to="/admin/mensagens" icon={<MessagesSquare className="h-4 w-4" />}>Mensagens</SidebarLink>
+                      <SidebarLink to="/admin/bot" icon={<MessageSquareCode className="h-4 w-4" />}>Bot</SidebarLink>
+                    </SidebarGroup>
+                    <SidebarGroup title="Admin · Configurações" pathname={pathname}>
+                      <SidebarLink to="/admin/automacao" icon={<Bot className="h-4 w-4" />}>Automação IA</SidebarLink>
+                      <SidebarLink to="/admin/aparencia" icon={<Palette className="h-4 w-4" />}>Aparência</SidebarLink>
+                    </SidebarGroup>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
           <Link to="/pedidos" className="flex items-center gap-2">
             {settings?.logo_url ? (
               <img src={settings.logo_url} alt="" className="h-8 w-auto" />
@@ -107,55 +155,9 @@ function AuthedLayout() {
               {settings?.site_name ?? "Portal VOD"}
             </span>
           </Link>
+          </div>
 
           <nav className="flex items-center gap-1">
-            {/* Menu do cliente (hambúrguer no mobile) */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="lg:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] p-0 overflow-y-auto">
-                <SheetHeader className="px-4 py-4 border-b border-border/40">
-                  <SheetTitle className="font-display text-lg text-left">Navegação</SheetTitle>
-                </SheetHeader>
-                <div className="py-4">
-                  <SidebarGroup title="Cliente" pathname={pathname}>
-                    <SidebarLink to="/pedidos" icon={<ShoppingBag className="h-4 w-4" />}>Meus pedidos</SidebarLink>
-                    <SidebarLink to="/novidades" icon={<Sparkles className="h-4 w-4" />}>Novidades</SidebarLink>
-                    <SidebarLink to="/em-alta" icon={<Flame className="h-4 w-4" />}>Em alta</SidebarLink>
-                    <SidebarLink to="/perfil" icon={<UserIcon className="h-4 w-4" />}>Meu perfil</SidebarLink>
-                  </SidebarGroup>
-
-                  {isAdmin && (
-                    <>
-                      <SidebarGroup title="Admin · Principal" pathname={pathname}>
-                        <SidebarLink to="/admin" icon={<LayoutDashboard className="h-4 w-4" />}>Dashboard</SidebarLink>
-                        <SidebarLink to="/admin/dashboard-stats" icon={<BarChart3 className="h-4 w-4" />}>Estatísticas</SidebarLink>
-                        <SidebarLink to="/admin/monitoramento" icon={<Activity className="h-4 w-4" />}>Monitoramento</SidebarLink>
-                        <SidebarLink to="/admin/curtidos" icon={<ThumbsUp className="h-4 w-4" />}>Mais curtidos</SidebarLink>
-                        <SidebarLink to="/admin/ranking" icon={<Trophy className="h-4 w-4" />}>Ranking</SidebarLink>
-                      </SidebarGroup>
-                      <SidebarGroup title="Admin · Gestão" pathname={pathname}>
-                        <SidebarLink to="/admin/usuarios" icon={<Users className="h-4 w-4" />}>Usuários</SidebarLink>
-                        <SidebarLink to="/admin/catalogo" icon={<ListVideo className="h-4 w-4" />}>Catálogo</SidebarLink>
-                        <SidebarLink to="/admin/ferramentas" icon={<Wrench className="h-4 w-4" />}>Ferramentas</SidebarLink>
-                      </SidebarGroup>
-                      <SidebarGroup title="Admin · Comunicação" pathname={pathname}>
-                        <SidebarLink to="/admin/whatsapp" icon={<MessageCircle className="h-4 w-4" />}>WhatsApp</SidebarLink>
-                        <SidebarLink to="/admin/mensagens" icon={<MessagesSquare className="h-4 w-4" />}>Mensagens</SidebarLink>
-                        <SidebarLink to="/admin/bot" icon={<MessageSquareCode className="h-4 w-4" />}>Bot</SidebarLink>
-                      </SidebarGroup>
-                      <SidebarGroup title="Admin · Configurações" pathname={pathname}>
-                        <SidebarLink to="/admin/automacao" icon={<Bot className="h-4 w-4" />}>Automação IA</SidebarLink>
-                        <SidebarLink to="/admin/aparencia" icon={<Palette className="h-4 w-4" />}>Aparência</SidebarLink>
-                      </SidebarGroup>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
 
             <div className="hidden lg:flex items-center gap-1">
               <NavLink to="/pedidos" active={pathname === "/pedidos"} icon={<ShoppingBag className="h-4 w-4" />}>
