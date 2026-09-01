@@ -7,7 +7,7 @@ import { Search, Loader2, Plus, Film, Tv, ImageOff, X, CheckCircle2, ThumbsUp, T
 import { supabase } from "@/integrations/supabase/client";
 import { searchTmdb, type TmdbResult } from "@/lib/tmdb.functions";
 import { TrailerButton } from "@/components/TrailerButton";
-import { createRequest, requestCommunitySupport } from "@/lib/requests.functions";
+import { createRequest } from "@/lib/requests.functions";
 import { rateRequest } from "@/lib/rating.functions";
 import { getDailyLimit } from "@/lib/settings.functions";
 import { getRequestTimeline } from "@/lib/admin-extras.functions";
@@ -186,7 +186,6 @@ type RequestRow = {
 function RequestCard({ request }: { request: RequestRow }) {
   const qc = useQueryClient();
   const rateFn = useServerFn(rateRequest);
-  const supportFn = useServerFn(requestCommunitySupport);
   const rate = useMutation({
     mutationFn: (rating: 1 | -1) => rateFn({ data: { id: request.id, rating } }),
     onSuccess: () => {
