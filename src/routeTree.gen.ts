@@ -28,6 +28,7 @@ import { Route as AuthenticatedAdminMensagensRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminFerramentasRouteImport } from './routes/_authenticated/admin.ferramentas'
 import { Route as AuthenticatedAdminDashboardStatsRouteImport } from './routes/_authenticated/admin.dashboard-stats'
 import { Route as AuthenticatedAdminCurtidosRouteImport } from './routes/_authenticated/admin.curtidos'
+import { Route as AuthenticatedAdminConversasRouteImport } from './routes/_authenticated/admin.conversas'
 import { Route as AuthenticatedAdminCatalogoRouteImport } from './routes/_authenticated/admin.catalogo'
 import { Route as AuthenticatedAdminBotRouteImport } from './routes/_authenticated/admin.bot'
 import { Route as AuthenticatedAdminAutomacaoRouteImport } from './routes/_authenticated/admin.automacao'
@@ -138,6 +139,12 @@ const AuthenticatedAdminCurtidosRoute =
     path: '/admin/curtidos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminConversasRoute =
+  AuthenticatedAdminConversasRouteImport.update({
+    id: '/admin/conversas',
+    path: '/admin/conversas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminCatalogoRoute =
   AuthenticatedAdminCatalogoRouteImport.update({
     id: '/admin/catalogo',
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/admin/conversas': typeof AuthenticatedAdminConversasRoute
   '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/admin/dashboard-stats': typeof AuthenticatedAdminDashboardStatsRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
   '/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/admin/conversas': typeof AuthenticatedAdminConversasRoute
   '/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/admin/dashboard-stats': typeof AuthenticatedAdminDashboardStatsRoute
   '/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
@@ -240,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/_authenticated/admin/bot': typeof AuthenticatedAdminBotRoute
   '/_authenticated/admin/catalogo': typeof AuthenticatedAdminCatalogoRoute
+  '/_authenticated/admin/conversas': typeof AuthenticatedAdminConversasRoute
   '/_authenticated/admin/curtidos': typeof AuthenticatedAdminCurtidosRoute
   '/_authenticated/admin/dashboard-stats': typeof AuthenticatedAdminDashboardStatsRoute
   '/_authenticated/admin/ferramentas': typeof AuthenticatedAdminFerramentasRoute
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/admin/automacao'
     | '/admin/bot'
     | '/admin/catalogo'
+    | '/admin/conversas'
     | '/admin/curtidos'
     | '/admin/dashboard-stats'
     | '/admin/ferramentas'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/admin/automacao'
     | '/admin/bot'
     | '/admin/catalogo'
+    | '/admin/conversas'
     | '/admin/curtidos'
     | '/admin/dashboard-stats'
     | '/admin/ferramentas'
@@ -321,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/automacao'
     | '/_authenticated/admin/bot'
     | '/_authenticated/admin/catalogo'
+    | '/_authenticated/admin/conversas'
     | '/_authenticated/admin/curtidos'
     | '/_authenticated/admin/dashboard-stats'
     | '/_authenticated/admin/ferramentas'
@@ -479,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCurtidosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/conversas': {
+      id: '/_authenticated/admin/conversas'
+      path: '/admin/conversas'
+      fullPath: '/admin/conversas'
+      preLoaderRoute: typeof AuthenticatedAdminConversasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/catalogo': {
       id: '/_authenticated/admin/catalogo'
       path: '/admin/catalogo'
@@ -545,6 +565,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
   AuthenticatedAdminBotRoute: typeof AuthenticatedAdminBotRoute
   AuthenticatedAdminCatalogoRoute: typeof AuthenticatedAdminCatalogoRoute
+  AuthenticatedAdminConversasRoute: typeof AuthenticatedAdminConversasRoute
   AuthenticatedAdminCurtidosRoute: typeof AuthenticatedAdminCurtidosRoute
   AuthenticatedAdminDashboardStatsRoute: typeof AuthenticatedAdminDashboardStatsRoute
   AuthenticatedAdminFerramentasRoute: typeof AuthenticatedAdminFerramentasRoute
@@ -567,6 +588,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,
   AuthenticatedAdminBotRoute: AuthenticatedAdminBotRoute,
   AuthenticatedAdminCatalogoRoute: AuthenticatedAdminCatalogoRoute,
+  AuthenticatedAdminConversasRoute: AuthenticatedAdminConversasRoute,
   AuthenticatedAdminCurtidosRoute: AuthenticatedAdminCurtidosRoute,
   AuthenticatedAdminDashboardStatsRoute: AuthenticatedAdminDashboardStatsRoute,
   AuthenticatedAdminFerramentasRoute: AuthenticatedAdminFerramentasRoute,
