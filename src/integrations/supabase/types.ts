@@ -677,6 +677,33 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_messages: {
+        Row: {
+          body: string
+          contact_name: string | null
+          created_at: string
+          direction: string
+          id: string
+          whatsapp: string
+        }
+        Insert: {
+          body: string
+          contact_name?: string | null
+          created_at?: string
+          direction: string
+          id?: string
+          whatsapp: string
+        }
+        Update: {
+          body?: string
+          contact_name?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -746,6 +773,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      bot_client_status: {
+        Args: { _secret: string; _whatsapp: string }
+        Returns: Json
+      }
       bot_config_by_secret: {
         Args: { _secret: string }
         Returns: {
@@ -763,6 +794,16 @@ export type Database = {
           _whatsapp: string
         }
         Returns: Json
+      }
+      bot_log_message: {
+        Args: {
+          _body: string
+          _direction: string
+          _name?: string
+          _secret: string
+          _whatsapp: string
+        }
+        Returns: undefined
       }
       bot_try_hit: {
         Args: { _key: string; _secret: string; _ttl_seconds?: number }
