@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Loader2, Flame, Film, Tv, ImageOff, Star } from "lucide-react";
+import { Loader2, Flame, Film, Tv, ImageOff, Star, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { listTrendingWeek } from "@/lib/trending.functions";
+import { checkAvailabilityBatch } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrailerButton } from "@/components/TrailerButton";
@@ -21,6 +22,7 @@ const TABS = [
 function EmAltaPage() {
   const [kind, setKind] = useState<"all" | "movie" | "tv">("all");
   const trendingFn = useServerFn(listTrendingWeek);
+  const availabilityFn = useServerFn(checkAvailabilityBatch);
 
   const { data, isLoading } = useQuery({
     queryKey: ["trending-week", kind],
@@ -28,6 +30,22 @@ function EmAltaPage() {
   });
 
   const items = data?.items ?? [];
+
+  const { data: availability } = useQuery({
+    queryKey: ["trending-availability", kind, items.map((i) => `${i.type}-${i.id}`).join(",")],
+    enabled: items.length > 0,
+    queryFn: () =>
+      availabilityFn({
+        data: {
+          items: items.map((i) => ({
+            key: `${i.type}-${i.id}`,
+            tmdb_id: i.id,
+            title: i.title,
+            kind: i.type === "movie" ? ("movie" as const) : ("series" as const),
+          })),
+        },
+      }),
+  });
 
   return (
     <div className="space-y-6">
