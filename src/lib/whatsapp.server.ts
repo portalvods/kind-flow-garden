@@ -128,6 +128,11 @@ export async function sendWhatsapp(to: string, message: string, options?: Whatsa
       console.warn("[whatsapp] send failed", res.status, text);
       return { ok: false, error: `http_${res.status}` };
     }
+    // Registra no histórico de conversas do painel
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("wa_messages").insert({ whatsapp: number, direction: "out", body: message });
+    } catch { /* histórico é opcional */ }
     return { ok: true };
   } catch (err) {
     console.error("[whatsapp] send exception", err);
