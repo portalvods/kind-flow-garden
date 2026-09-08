@@ -136,7 +136,7 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
               _whatsapp: number,
               _direction: direction,
               _body: body,
-              _name: contactName,
+              _name: contactName ?? undefined,
             });
           } catch (err) {
             console.warn("[bot] log failed", (err as Error).message);
