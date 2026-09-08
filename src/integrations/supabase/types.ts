@@ -50,6 +50,33 @@ export type Database = {
         }
         Relationships: []
       }
+      availability_overrides: {
+        Row: {
+          available: boolean
+          id: string
+          kind: string
+          title: string | null
+          tmdb_id: number
+          updated_at: string
+        }
+        Insert: {
+          available: boolean
+          id?: string
+          kind: string
+          title?: string | null
+          tmdb_id: number
+          updated_at?: string
+        }
+        Update: {
+          available?: boolean
+          id?: string
+          kind?: string
+          title?: string | null
+          tmdb_id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       catalog_items: {
         Row: {
           category: string | null
@@ -970,6 +997,15 @@ export type Database = {
           _year: number
         }
         Returns: string
+      }
+      wa_log: {
+        Args: {
+          _body: string
+          _direction: string
+          _name?: string
+          _whatsapp: string
+        }
+        Returns: undefined
       }
       weekly_news: {
         Args: { _days?: number }
