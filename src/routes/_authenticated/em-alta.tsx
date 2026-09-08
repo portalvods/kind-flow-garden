@@ -106,6 +106,10 @@ function EmAltaPage() {
               </div>
               <div className="p-3 space-y-1.5 flex-1 flex flex-col">
                 <p className="text-sm font-medium leading-snug line-clamp-2">{it.title}</p>
+                <StatusTag
+                  released={it.released}
+                  inServer={availability?.results?.[`${it.type}-${it.id}`]?.exists}
+                />
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-1">
                   <Badge variant="secondary" className="gap-1">
                     {it.type === "movie" ? <Film className="h-3 w-3" /> : <Tv className="h-3 w-3" />}
