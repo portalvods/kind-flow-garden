@@ -126,34 +126,102 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
           return Response.json({ ok: true, skipped: "noise" });
         }
 
-        const parsed = parseCommand(text);
-
+        const contactName: string | null = msgData?.pushName ?? null;
         const { sendWhatsapp } = await import("@/lib/whatsapp.server");
 
-        // Se não parece pedido, aplica anti-flood e manda mensagem padrão.
-        if (!parsed) {
+        const log = async (direction: "in" | "out", body: string) => {
+          try {
+            await supabase.rpc("bot_log_message", {
+              _secret: providedSecret,
+              _whatsapp: number,
+              _direction: direction,
+              _body: body,
+              _name: contactName ?? undefined,
+            });
+          } catch (err) {
+            console.warn("[bot] log failed", (err as Error).message);
+          }
+        };
 
+        const say = async (body: string) => {
+          try {
+            await sendWhatsapp(number, body, { supabase: supabase as never });
+            await log("out", body);
+          } catch (err) {
+            console.error("[bot] reply failed", err);
+          }
+        };
+
+        await log("in", text);
+
+        // Situação do cliente (pedidos, limite diário, bloqueio)
+        const { data: statusRaw } = await supabase.rpc("bot_client_status", {
+          _secret: providedSecret,
+          _whatsapp: number,
+        });
+        const status = (statusRaw ?? { ok: false, code: "unknown" }) as any;
+
+        if (status?.code === "not_registered") {
+          await say(
+            "Olá! Não encontrei seu número cadastrado no site. Crie uma conta em nosso portal usando este mesmo WhatsApp e depois é só falar comigo por aqui. 🙂",
+          );
+          return Response.json({ ok: true, code: "not_registered" });
+        }
+        if (status?.blocked) {
+          await say("Sua conta está bloqueada. Entre em contato com o suporte.");
+          return Response.json({ ok: true, code: "blocked" });
+        }
+
+        // Histórico recente para dar contexto à IA
+        const { data: hist } = await supabase
+          .from("wa_messages")
+          .select("direction, body")
+          .eq("whatsapp", number)
+          .order("created_at", { ascending: false })
+          .limit(7);
+        const history = ((hist ?? []) as Array<{ direction: "in" | "out"; body: string }>)
+          .slice(1)
+          .reverse();
+
+        const { askBotAi } = await import("@/lib/bot-ai.server");
+        const decision = await askBotAi({
+          message: text,
+          status,
+          ordersEnabled: row.orders_enabled !== false,
+          history,
+        });
+
+        const parsed =
+          decision?.action === "create_request" && decision.title
+            ? {
+                title: decision.title.slice(0, 200),
+                kind: decision.request_kind ?? "adicao",
+                contentType: decision.content_type ?? "movie",
+              }
+            : parseCommand(text);
+
+        // Sem pedido identificado: responde com a IA (ou mensagem padrão do painel)
+        if (!parsed) {
+          if (decision?.reply) {
+            await say(decision.reply);
+            return Response.json({ ok: true, replied: "ai" });
+          }
           const { data: allowed } = await supabase.rpc("bot_try_hit", {
             _secret: providedSecret,
             _key: number,
             _ttl_seconds: 3600,
           });
           if (!allowed) return Response.json({ ok: true, skipped: "rate_limited" });
-          try {
-            await sendWhatsapp(number, row.message ?? "Olá!", { supabase: supabase as never });
-          } catch (err) { console.error("[bot] greet failed", err); }
+          await say(row.message ?? "Olá!");
           return Response.json({ ok: true, replied: "greeting" });
         }
 
         // Pedidos pelo WhatsApp desativados no painel
         if (row.orders_enabled === false) {
-          try {
-            await sendWhatsapp(
-              number,
+          await say(
+            decision?.reply ??
               "⚠️ Os pedidos pelo WhatsApp estão temporariamente desativados. Por favor, faça sua solicitação diretamente no nosso site. 🙂",
-              { supabase: supabase as never },
-            );
-          } catch (err) { console.error("[bot] orders-disabled reply failed", err); }
+          );
           return Response.json({ ok: true, skipped: "orders_disabled" });
         }
 
@@ -174,7 +242,9 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
         let reply = "";
         switch (r.code) {
           case "created":
-            reply = `✅ Pedido registrado!\n\n🎬 *${parsed.title}*\nTipo: ${parsed.contentType === "tv" ? "Série" : "Filme"}\n\nVocê já usou ${r.used}/${r.limit} pedidos hoje. Vamos te avisar por aqui assim que estiver disponível.`;
+            reply =
+              decision?.reply ??
+              `✅ Pedido registrado!\n\n🎬 *${parsed.title}*\nTipo: ${parsed.contentType === "tv" ? "Série" : "Filme"}\n\nVocê já usou ${r.used}/${r.limit} pedidos hoje. Vamos te avisar por aqui assim que estiver disponível.`;
             break;
           case "not_registered":
             reply = `Olá! Não encontrei seu número cadastrado no site. Crie uma conta em nosso portal usando este mesmo WhatsApp e depois é só mandar seu pedido por aqui. 🙂`;
@@ -192,11 +262,7 @@ export const Route = createFileRoute("/api/public/webhooks/evolution")({
             reply = `Não consegui processar seu pedido agora. Tente novamente em instantes.`;
         }
 
-        try {
-          await sendWhatsapp(number, reply, { supabase: supabase as never });
-        } catch (err) {
-          console.error("[bot] reply failed", err);
-        }
+        await say(reply);
 
         return Response.json({ ok: true, code: r.code, request_id: (result as any)?.request_id });
       },

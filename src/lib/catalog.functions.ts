@@ -194,3 +194,56 @@ export const checkAvailability = createServerFn({ method: "GET" })
     }
     return { exists: false, category: null, match: null };
   });
+
+// Verifica vários títulos de uma vez (usado na aba "Em alta")
+const batchSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        key: z.string().max(60),
+        tmdb_id: z.number().int().nullable().optional(),
+        title: z.string().trim().min(1).max(200),
+        kind: z.enum(["movie", "series"]),
+      }),
+    )
+    .max(40),
+});
+
+export const checkAvailabilityBatch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => batchSchema.parse(d))
+  .handler(async ({ data, context }): Promise<{ results: Record<string, { exists: boolean; category: string | null }> }> => {
+    const { normalizeTitle } = await import("./m3u.server");
+    const results: Record<string, { exists: boolean; category: string | null }> = {};
+    if (!data.items.length) return { results };
+
+    const norms = data.items.map((i) => normalizeTitle(i.title));
+    const tmdbIds = data.items.map((i) => i.tmdb_id).filter((x): x is number => typeof x === "number");
+
+    const { data: byTitle } = await context.supabase
+      .from("catalog_items")
+      .select("title_normalized, tmdb_id, kind, category")
+      .in("title_normalized", [...new Set(norms)])
+      .limit(2000);
+
+    let rows = (byTitle ?? []) as Array<{ title_normalized: string; tmdb_id: number | null; kind: string; category: string | null }>;
+
+    if (tmdbIds.length) {
+      const { data: byTmdb } = await context.supabase
+        .from("catalog_items")
+        .select("title_normalized, tmdb_id, kind, category")
+        .in("tmdb_id", [...new Set(tmdbIds)])
+        .limit(2000);
+      rows = rows.concat((byTmdb ?? []) as typeof rows);
+    }
+
+    data.items.forEach((item, idx) => {
+      const norm = norms[idx];
+      const hit = rows.find(
+        (r) => r.kind === item.kind && (r.title_normalized === norm || (item.tmdb_id != null && r.tmdb_id === item.tmdb_id)),
+      );
+      results[item.key] = { exists: !!hit, category: hit?.category ?? null };
+    });
+
+    return { results };
+  });

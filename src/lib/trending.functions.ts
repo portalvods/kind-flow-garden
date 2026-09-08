@@ -14,6 +14,8 @@ export type TrendingItem = {
   poster_path: string | null;
   overview: string;
   vote_average: number;
+  release_date: string | null;
+  released: boolean;
 };
 
 type Cached = { at: number; items: TrendingItem[] };
@@ -66,6 +68,8 @@ function mapItems(payload: unknown, kind: "all" | "movie" | "tv"): TrendingItem[
         poster_path: (r.poster_path as string | null) ?? null,
         overview: (r.overview as string) ?? "",
         vote_average: Math.round(((r.vote_average as number) ?? 0) * 10) / 10,
+        release_date: dateStr ?? null,
+        released: dateStr ? new Date(dateStr).getTime() <= Date.now() : false,
       } satisfies TrendingItem;
     })
     .filter((x): x is TrendingItem => x !== null)

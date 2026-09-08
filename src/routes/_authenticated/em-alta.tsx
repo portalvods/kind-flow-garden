@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Loader2, Flame, Film, Tv, ImageOff, Star } from "lucide-react";
+import { Loader2, Flame, Film, Tv, ImageOff, Star, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { listTrendingWeek } from "@/lib/trending.functions";
+import { checkAvailabilityBatch } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrailerButton } from "@/components/TrailerButton";
@@ -21,6 +22,7 @@ const TABS = [
 function EmAltaPage() {
   const [kind, setKind] = useState<"all" | "movie" | "tv">("all");
   const trendingFn = useServerFn(listTrendingWeek);
+  const availabilityFn = useServerFn(checkAvailabilityBatch);
 
   const { data, isLoading } = useQuery({
     queryKey: ["trending-week", kind],
@@ -28,6 +30,22 @@ function EmAltaPage() {
   });
 
   const items = data?.items ?? [];
+
+  const { data: availability } = useQuery({
+    queryKey: ["trending-availability", kind, items.map((i) => `${i.type}-${i.id}`).join(",")],
+    enabled: items.length > 0,
+    queryFn: () =>
+      availabilityFn({
+        data: {
+          items: items.map((i) => ({
+            key: `${i.type}-${i.id}`,
+            tmdb_id: i.id,
+            title: i.title,
+            kind: i.type === "movie" ? ("movie" as const) : ("series" as const),
+          })),
+        },
+      }),
+  });
 
   return (
     <div className="space-y-6">
@@ -88,6 +106,10 @@ function EmAltaPage() {
               </div>
               <div className="p-3 space-y-1.5 flex-1 flex flex-col">
                 <p className="text-sm font-medium leading-snug line-clamp-2">{it.title}</p>
+                <StatusTag
+                  released={it.released}
+                  inServer={availability?.results?.[`${it.type}-${it.id}`]?.exists}
+                />
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto pt-1">
                   <Badge variant="secondary" className="gap-1">
                     {it.type === "movie" ? <Film className="h-3 w-3" /> : <Tv className="h-3 w-3" />}
@@ -116,5 +138,30 @@ function EmAltaPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function StatusTag({ released, inServer }: { released: boolean; inServer?: boolean }) {
+  if (!released) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-500 w-fit">
+        <Clock className="h-3 w-3" />
+        Ainda não lançado
+      </span>
+    );
+  }
+  if (inServer === undefined) {
+    return <span className="text-[11px] text-muted-foreground">Verificando...</span>;
+  }
+  return inServer ? (
+    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-500 w-fit">
+      <CheckCircle2 className="h-3 w-3" />
+      No servidor
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 rounded-md bg-destructive/15 px-2 py-0.5 text-[11px] font-medium text-destructive w-fit">
+      <XCircle className="h-3 w-3" />
+      Fora do servidor
+    </span>
   );
 }
