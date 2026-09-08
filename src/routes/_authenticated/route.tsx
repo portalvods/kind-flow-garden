@@ -131,6 +131,7 @@ function AuthedLayout() {
                     </SidebarGroup>
                     <SidebarGroup title="Admin · Comunicação" pathname={pathname}>
                       <SidebarLink to="/admin/whatsapp" icon={<MessageCircle className="h-4 w-4" />}>WhatsApp</SidebarLink>
+                      <SidebarLink to="/admin/conversas" icon={<MessageSquare className="h-4 w-4" />}>Conversas</SidebarLink>
                       <SidebarLink to="/admin/mensagens" icon={<MessagesSquare className="h-4 w-4" />}>Mensagens</SidebarLink>
                       <SidebarLink to="/admin/bot" icon={<MessageSquareCode className="h-4 w-4" />}>Bot</SidebarLink>
                     </SidebarGroup>
@@ -217,6 +218,7 @@ function AuthedLayout() {
 
                     <SidebarGroup title="Comunicação" pathname={pathname}>
                       <SidebarLink to="/admin/whatsapp" icon={<MessageCircle className="h-4 w-4" />}>WhatsApp</SidebarLink>
+                      <SidebarLink to="/admin/conversas" icon={<MessageSquare className="h-4 w-4" />}>Conversas</SidebarLink>
                       <SidebarLink to="/admin/mensagens" icon={<MessagesSquare className="h-4 w-4" />}>Mensagens</SidebarLink>
                       <SidebarLink to="/admin/bot" icon={<MessageSquareCode className="h-4 w-4" />}>Bot</SidebarLink>
                     </SidebarGroup>
