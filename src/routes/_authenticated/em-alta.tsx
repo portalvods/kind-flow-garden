@@ -140,3 +140,28 @@ function EmAltaPage() {
     </div>
   );
 }
+
+function StatusTag({ released, inServer }: { released: boolean; inServer?: boolean }) {
+  if (!released) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-500 w-fit">
+        <Clock className="h-3 w-3" />
+        Ainda não lançado
+      </span>
+    );
+  }
+  if (inServer === undefined) {
+    return <span className="text-[11px] text-muted-foreground">Verificando...</span>;
+  }
+  return inServer ? (
+    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-500 w-fit">
+      <CheckCircle2 className="h-3 w-3" />
+      No servidor
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 rounded-md bg-destructive/15 px-2 py-0.5 text-[11px] font-medium text-destructive w-fit">
+      <XCircle className="h-3 w-3" />
+      Fora do servidor
+    </span>
+  );
+}
