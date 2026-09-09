@@ -247,3 +247,33 @@ export const checkAvailabilityBatch = createServerFn({ method: "POST" })
 
     return { results };
   });
+
+// ---- Ajuste manual de disponibilidade (admin) ----
+const overrideSchema = z.object({
+  tmdb_id: z.number().int().positive(),
+  kind: z.enum(["movie", "series"]),
+  title: z.string().trim().max(200).nullable().optional(),
+  available: z.boolean().nullable(), // null = remover ajuste manual
+});
+
+export const setAvailabilityOverride = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => overrideSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    await context.supabase
+      .from("availability_overrides")
+      .delete()
+      .eq("tmdb_id", data.tmdb_id)
+      .eq("kind", data.kind);
+    if (data.available !== null) {
+      const { error } = await context.supabase.from("availability_overrides").insert({
+        tmdb_id: data.tmdb_id,
+        kind: data.kind,
+        title: data.title ?? null,
+        available: data.available,
+      });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
