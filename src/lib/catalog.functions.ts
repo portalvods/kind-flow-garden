@@ -237,12 +237,22 @@ export const checkAvailabilityBatch = createServerFn({ method: "POST" })
       rows = rows.concat((byTmdb ?? []) as typeof rows);
     }
 
+    let overrides: Array<{ tmdb_id: number; kind: string; available: boolean }> = [];
+    if (tmdbIds.length) {
+      const { data: ov } = await context.supabase
+        .from("availability_overrides")
+        .select("tmdb_id, kind, available")
+        .in("tmdb_id", [...new Set(tmdbIds)]);
+      overrides = (ov ?? []) as typeof overrides;
+    }
+
     data.items.forEach((item, idx) => {
       const norm = norms[idx];
       const hit = rows.find(
         (r) => r.kind === item.kind && (r.title_normalized === norm || (item.tmdb_id != null && r.tmdb_id === item.tmdb_id)),
       );
-      results[item.key] = { exists: !!hit, category: hit?.category ?? null };
+      const ov = overrides.find((o) => o.kind === item.kind && o.tmdb_id === item.tmdb_id);
+      results[item.key] = { exists: ov ? ov.available : !!hit, category: hit?.category ?? null };
     });
 
     return { results };
