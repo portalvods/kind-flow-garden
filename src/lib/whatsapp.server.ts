@@ -128,14 +128,21 @@ export async function sendWhatsapp(to: string, message: string, options?: Whatsa
       console.warn("[whatsapp] send failed", res.status, text);
       return { ok: false, error: `http_${res.status}` };
     }
-    // Registra no histórico de conversas do painel (quem passa um client próprio
-    // — webhook do bot e painel admin — registra por conta própria).
-    if (!options?.supabase) {
-      try {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        await supabaseAdmin.from("wa_messages").insert({ whatsapp: number, direction: "out", body: message });
-      } catch { /* histórico é opcional */ }
-    }
+    // Registra no histórico de conversas do painel (sem service-role key).
+    try {
+      const client =
+        (options?.supabase as unknown as { rpc?: (n: string, a: Record<string, unknown>) => Promise<unknown> } | undefined)
+          ?.rpc
+          ? (options!.supabase as unknown as { rpc: (n: string, a: Record<string, unknown>) => Promise<unknown> })
+          : (await import("./supabase-public.server")).createServerPublicSupabase();
+      if (client) {
+        await (client as { rpc: (n: string, a: Record<string, unknown>) => Promise<unknown> }).rpc("wa_log", {
+          _whatsapp: number,
+          _direction: "out",
+          _body: message,
+        });
+      }
+    } catch { /* histórico é opcional */ }
     return { ok: true };
   } catch (err) {
     console.error("[whatsapp] send exception", err);
