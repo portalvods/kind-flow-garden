@@ -105,13 +105,7 @@ export const replyConversation = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const c = context.supabase as unknown as Client;
     const res = await sendWhatsapp(data.whatsapp, data.message, { supabase: context.supabase as never });
     if (!res.ok) throw new Error(`Falha ao enviar: ${res.error ?? "desconhecido"}`);
-    await c.from("wa_messages").insert({
-      whatsapp: data.whatsapp.replace(/\D/g, ""),
-      direction: "out",
-      body: data.message,
-    });
     return { ok: true };
   });

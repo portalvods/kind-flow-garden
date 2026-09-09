@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Loader2, Flame, Film, Tv, ImageOff, Star, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { listTrendingWeek } from "@/lib/trending.functions";
-import { checkAvailabilityBatch } from "@/lib/catalog.functions";
+import { checkAvailabilityBatch, setAvailabilityOverride } from "@/lib/catalog.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrailerButton } from "@/components/TrailerButton";
@@ -20,9 +22,27 @@ const TABS = [
 ] as const;
 
 function EmAltaPage() {
+  const qc = useQueryClient();
   const [kind, setKind] = useState<"all" | "movie" | "tv">("all");
   const trendingFn = useServerFn(listTrendingWeek);
   const availabilityFn = useServerFn(checkAvailabilityBatch);
+  const overrideFn = useServerFn(setAvailabilityOverride);
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return false;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", u.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      return !!data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["trending-week", kind],
@@ -31,8 +51,10 @@ function EmAltaPage() {
 
   const items = data?.items ?? [];
 
+  const availabilityKey = ["trending-availability", kind, items.map((i) => `${i.type}-${i.id}`).join(",")];
+
   const { data: availability } = useQuery({
-    queryKey: ["trending-availability", kind, items.map((i) => `${i.type}-${i.id}`).join(",")],
+    queryKey: availabilityKey,
     enabled: items.length > 0,
     queryFn: () =>
       availabilityFn({
@@ -45,6 +67,16 @@ function EmAltaPage() {
           })),
         },
       }),
+  });
+
+  const override = useMutation({
+    mutationFn: (vars: { tmdb_id: number; kind: "movie" | "series"; title: string; available: boolean | null }) =>
+      overrideFn({ data: vars }),
+    onSuccess: () => {
+      toast.success("Disponibilidade atualizada.");
+      qc.invalidateQueries({ queryKey: ["trending-availability"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   return (
@@ -104,7 +136,7 @@ function EmAltaPage() {
                   #{i + 1}
                 </span>
               </div>
-              <div className="p-3 space-y-1.5 flex-1 flex flex-col">
+              <div className="p-3 space-y-2 flex-1 flex flex-col">
                 <p className="text-sm font-medium leading-snug line-clamp-2">{it.title}</p>
                 <StatusTag
                   released={it.released}
@@ -122,7 +154,8 @@ function EmAltaPage() {
                       {it.vote_average}
                     </span>
                   )}
-                <div className="pt-1">
+                </div>
+                <div className="w-full [&>button]:w-full">
                   <TrailerButton
                     tmdbId={it.id}
                     contentType={it.type === "movie" ? "movie" : "tv"}
@@ -131,8 +164,36 @@ function EmAltaPage() {
                     variant="secondary"
                   />
                 </div>
+                {isAdmin && (
+                  <div className="flex flex-wrap gap-1.5 border-t border-border/40 pt-2">
+                    {(
+                      [
+                        { label: "Tenho", value: true as boolean | null },
+                        { label: "Não tenho", value: false as boolean | null },
+                        { label: "Auto", value: null as boolean | null },
+                      ]
+                    ).map((opt) => (
+                      <Button
+                        key={opt.label}
+                        size="sm"
+                        variant="outline"
+                        className="h-7 flex-1 px-1 text-[11px]"
+                        disabled={override.isPending}
+                        onClick={() =>
+                          override.mutate({
+                            tmdb_id: it.id,
+                            kind: it.type === "movie" ? "movie" : "series",
+                            title: it.title,
+                            available: opt.value,
+                          })
+                        }
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
             </div>
           ))}
         </div>

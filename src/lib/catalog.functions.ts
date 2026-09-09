@@ -237,13 +237,53 @@ export const checkAvailabilityBatch = createServerFn({ method: "POST" })
       rows = rows.concat((byTmdb ?? []) as typeof rows);
     }
 
+    let overrides: Array<{ tmdb_id: number; kind: string; available: boolean }> = [];
+    if (tmdbIds.length) {
+      const { data: ov } = await context.supabase
+        .from("availability_overrides")
+        .select("tmdb_id, kind, available")
+        .in("tmdb_id", [...new Set(tmdbIds)]);
+      overrides = (ov ?? []) as typeof overrides;
+    }
+
     data.items.forEach((item, idx) => {
       const norm = norms[idx];
       const hit = rows.find(
         (r) => r.kind === item.kind && (r.title_normalized === norm || (item.tmdb_id != null && r.tmdb_id === item.tmdb_id)),
       );
-      results[item.key] = { exists: !!hit, category: hit?.category ?? null };
+      const ov = overrides.find((o) => o.kind === item.kind && o.tmdb_id === item.tmdb_id);
+      results[item.key] = { exists: ov ? ov.available : !!hit, category: hit?.category ?? null };
     });
 
     return { results };
+  });
+
+// ---- Ajuste manual de disponibilidade (admin) ----
+const overrideSchema = z.object({
+  tmdb_id: z.number().int().positive(),
+  kind: z.enum(["movie", "series"]),
+  title: z.string().trim().max(200).nullable().optional(),
+  available: z.boolean().nullable(), // null = remover ajuste manual
+});
+
+export const setAvailabilityOverride = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => overrideSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as never);
+    await context.supabase
+      .from("availability_overrides")
+      .delete()
+      .eq("tmdb_id", data.tmdb_id)
+      .eq("kind", data.kind);
+    if (data.available !== null) {
+      const { error } = await context.supabase.from("availability_overrides").insert({
+        tmdb_id: data.tmdb_id,
+        kind: data.kind,
+        title: data.title ?? null,
+        available: data.available,
+      });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
   });
