@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
+import { Route as AuthenticatedRevendedorRouteImport } from './routes/_authenticated/revendedor'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authenticated/novidades'
@@ -53,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRevendedorRoute = AuthenticatedRevendedorRouteImport.update({
+  id: '/revendedor',
+  path: '/revendedor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/revendedor': typeof AuthenticatedRevendedorRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/novidades': typeof AuthenticatedNovidadesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/revendedor': typeof AuthenticatedRevendedorRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/revendedor': typeof AuthenticatedRevendedorRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRouteWithChildren
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/novidades'
     | '/pedidos'
     | '/perfil'
+    | '/revendedor'
     | '/suporte'
     | '/admin/aparencia'
     | '/admin/automacao'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/novidades'
     | '/pedidos'
     | '/perfil'
+    | '/revendedor'
     | '/suporte'
     | '/admin/aparencia'
     | '/admin/automacao'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/_authenticated/novidades'
     | '/_authenticated/pedidos'
     | '/_authenticated/perfil'
+    | '/_authenticated/revendedor'
     | '/_authenticated/suporte'
     | '/_authenticated/admin/aparencia'
     | '/_authenticated/admin/automacao'
@@ -385,6 +397,13 @@ declare module '@tanstack/react-router' {
       path: '/suporte'
       fullPath: '/suporte'
       preLoaderRoute: typeof AuthenticatedSuporteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/revendedor': {
+      id: '/_authenticated/revendedor'
+      path: '/revendedor'
+      fullPath: '/revendedor'
+      preLoaderRoute: typeof AuthenticatedRevendedorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/perfil': {
@@ -560,6 +579,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedRevendedorRoute: typeof AuthenticatedRevendedorRoute
   AuthenticatedSuporteRoute: typeof AuthenticatedSuporteRouteWithChildren
   AuthenticatedAdminAparenciaRoute: typeof AuthenticatedAdminAparenciaRoute
   AuthenticatedAdminAutomacaoRoute: typeof AuthenticatedAdminAutomacaoRoute
@@ -583,6 +603,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedRevendedorRoute: AuthenticatedRevendedorRoute,
   AuthenticatedSuporteRoute: AuthenticatedSuporteRouteWithChildren,
   AuthenticatedAdminAparenciaRoute: AuthenticatedAdminAparenciaRoute,
   AuthenticatedAdminAutomacaoRoute: AuthenticatedAdminAutomacaoRoute,

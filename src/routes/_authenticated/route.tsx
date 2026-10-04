@@ -8,6 +8,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose 
 import { toast } from "sonner";
 import { getPublicSettings } from "@/lib/settings.functions";
 import { TutorialDialog } from "@/components/TutorialDialog";
+import { NotificationBell } from "@/components/NotificationBell";
+import { MaintenanceBanner } from "@/components/MaintenanceBanner";
+import { Store } from "lucide-react";
 import { useState, useEffect } from "react";
 
 
@@ -38,18 +41,15 @@ function AuthedLayout() {
     refetchInterval: 60000, // Refresh every minute
   });
 
-  const { data: isAdmin } = useQuery({
-    queryKey: ["is-admin", user.id],
+  const { data: roles } = useQuery({
+    queryKey: ["my-roles", user.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      return !!data;
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      return (data ?? []).map((r) => r.role as string);
     },
   });
+  const isAdmin = !!roles?.includes("admin");
+  const isReseller = isAdmin || !!roles?.includes("revendedor");
 
   const settingsFn = useServerFn(getPublicSettings);
   const { data: settings } = useQuery({
@@ -113,6 +113,9 @@ function AuthedLayout() {
                   <SidebarLink to="/novidades" icon={<Sparkles className="h-4 w-4" />}>Novidades</SidebarLink>
                   <SidebarLink to="/em-alta" icon={<Flame className="h-4 w-4" />}>Em alta</SidebarLink>
                   <SidebarLink to="/perfil" icon={<UserIcon className="h-4 w-4" />}>Meu perfil</SidebarLink>
+                  {isReseller && (
+                    <SidebarLink to="/revendedor" icon={<Store className="h-4 w-4" />}>Revenda</SidebarLink>
+                  )}
                 </SidebarGroup>
 
                 {isAdmin && (
@@ -173,7 +176,15 @@ function AuthedLayout() {
               <NavLink to="/perfil" active={pathname.startsWith("/perfil")} icon={<UserIcon className="h-4 w-4" />}>
                 Meu perfil
               </NavLink>
+              {isReseller && (
+                <NavLink to="/revendedor" active={pathname.startsWith("/revendedor")} icon={<Store className="h-4 w-4" />}>
+                  Revenda
+                </NavLink>
+              )}
             </div>
+
+            <NotificationBell userId={user.id} />
+
 
 
 
