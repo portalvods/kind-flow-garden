@@ -241,6 +241,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       otp_codes: {
         Row: {
           attempts: number
@@ -360,6 +390,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          reseller_id: string | null
           updated_at: string
           whatsapp: string
         }
@@ -371,6 +402,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          reseller_id?: string | null
           updated_at?: string
           whatsapp: string
         }
@@ -382,6 +414,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          reseller_id?: string | null
           updated_at?: string
           whatsapp?: string
         }
@@ -777,6 +810,10 @@ export type Database = {
         Args: { _blocked: boolean; _user_id: string }
         Returns: undefined
       }
+      admin_set_user_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"]; _user: string }
+        Returns: undefined
+      }
       admin_soft_delete_user: { Args: { _user_id: string }; Returns: undefined }
       admin_top_clients: {
         Args: { _limit?: number }
@@ -970,6 +1007,33 @@ export type Database = {
         }
         Returns: undefined
       }
+      reseller_client_requests: {
+        Args: { _client: string }
+        Returns: {
+          content_type: string
+          created_at: string
+          id: string
+          request_kind: string
+          status: string
+          title: string
+        }[]
+      }
+      reseller_link_client: { Args: { _whatsapp: string }; Returns: Json }
+      reseller_list_clients: {
+        Args: never
+        Returns: {
+          completed: number
+          created_at: string
+          full_name: string
+          id: string
+          last_request: string
+          pending: number
+          today: number
+          total: number
+          whatsapp: string
+        }[]
+      }
+      reseller_unlink_client: { Args: { _client: string }; Returns: undefined }
       toggle_request_vote: { Args: { _request_id: string }; Returns: Json }
       top_reviewed_content: {
         Args: { _limit?: number }
