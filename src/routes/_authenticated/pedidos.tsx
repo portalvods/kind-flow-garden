@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useMaintenance } from "@/components/MaintenanceBanner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/pedidos")({
@@ -83,6 +84,7 @@ function PedidosPage() {
     queryFn: () => limitFn(),
   });
 
+  const { data: maint } = useMaintenance();
   const filtered = (requests ?? []).filter((r) => tab === "all" || r.status === tab);
 
   return (
@@ -104,12 +106,12 @@ function PedidosPage() {
                   : "border-primary/40 text-primary"
               }
             >
-              {quota.used}/{quota.limit} pedidos hoje
+              {quota.remaining === 0 ? "Limite de hoje atingido" : `${quota.remaining} de ${quota.limit} pedidos restantes hoje`}
             </Badge>
           )}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="lg" className="glow-primary" disabled={quota?.remaining === 0}>
+              <Button size="lg" className="glow-primary" disabled={quota?.remaining === 0 || !!maint?.enabled}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo pedido
               </Button>

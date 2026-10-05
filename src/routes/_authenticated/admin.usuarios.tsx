@@ -202,9 +202,23 @@ function UsersPage() {
                           <ShieldCheck className="h-3 w-3 mr-1" /> Admin
                         </Badge>
                       ) : (
-                        <Badge variant="outline">
-                          <User className="h-3 w-3 mr-1" /> {u.role}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline">
+                            <User className="h-3 w-3 mr-1" /> {u.role}
+                          </Badge>
+                          <button
+                            className="text-[11px] text-primary hover:underline"
+                            onClick={async () => {
+                              const next = u.role === "revendedor" ? "cliente" : "revendedor";
+                              const { error } = await supabase.rpc("admin_set_user_role", { _user: u.id, _role: next });
+                              if (error) return toast.error(error.message);
+                              toast.success(next === "revendedor" ? "Agora é revendedor." : "Agora é cliente.");
+                              qc.invalidateQueries({ queryKey: ["admin-users"] });
+                            }}
+                          >
+                            {u.role === "revendedor" ? "Tornar cliente" : "Tornar revendedor"}
+                          </button>
+                        </div>
                       )}
                     </td>
                     <td className="p-3">

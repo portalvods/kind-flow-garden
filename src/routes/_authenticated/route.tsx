@@ -250,6 +250,7 @@ function AuthedLayout() {
 
         </div>
       </header>
+      <MaintenanceBanner />
 
       <main className="mx-auto w-full max-w-7xl overflow-x-hidden px-3 py-6 sm:px-4 sm:py-8">
         <Outlet />

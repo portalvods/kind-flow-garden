@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Film, Zap, Bell, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import { getPublicSettings } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/")({
@@ -43,6 +44,7 @@ function Landing() {
           </div>
         </div>
       </header>
+      <MaintenanceBanner />
 
 
       {/* Hero */}

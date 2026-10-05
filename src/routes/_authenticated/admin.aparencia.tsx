@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MaintenanceCard } from "@/components/MaintenanceCard";
 import { getPublicSettings, uploadLogo, clearLogo, updateSiteName, getAdminDailyLimit, updateDailyLimit } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/aparencia")({
@@ -107,6 +108,7 @@ function AppearancePage() {
         <h1 className="font-display text-3xl font-bold">Aparência</h1>
         <p className="text-muted-foreground text-sm mt-1">Personalize logo e nome do portal.</p>
       </div>
+      <MaintenanceCard />
 
       {isLoading ? (
         <div className="flex justify-center py-20">
