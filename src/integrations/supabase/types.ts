@@ -794,6 +794,15 @@ export type Database = {
           year: number
         }[]
       }
+      admin_list_resellers: {
+        Args: never
+        Returns: {
+          clients: number
+          full_name: string
+          id: string
+          whatsapp: string
+        }[]
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -805,6 +814,10 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
           whatsapp: string
         }[]
+      }
+      admin_set_reseller_by_wa: {
+        Args: { _make: boolean; _whatsapp: string }
+        Returns: Json
       }
       admin_set_user_blocked: {
         Args: { _blocked: boolean; _user_id: string }
