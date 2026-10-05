@@ -153,3 +153,70 @@ function ClientRequests({ clientId }: { clientId: string }) {
     </ul>
   );
 }
+
+type Reseller = { id: string; full_name: string | null; whatsapp: string; clients: number };
+
+function AdminResellers() {
+  const qc = useQueryClient();
+  const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return false;
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
+      return !!data;
+    },
+  });
+  const { data: resellers } = useQuery({
+    queryKey: ["admin-resellers"],
+    enabled: !!isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_resellers");
+      if (error) throw error;
+      return (data ?? []) as Reseller[];
+    },
+  });
+  if (!isAdmin) return null;
+
+  async function setReseller(whatsapp: string, make: boolean) {
+    setBusy(true);
+    const { data, error } = await supabase.rpc("admin_set_reseller_by_wa", { _whatsapp: whatsapp, _make: make });
+    setBusy(false);
+    const res = data as { ok: boolean; error?: string } | null;
+    if (error || !res?.ok) return toast.error(error?.message ?? res?.error ?? "Erro");
+    toast.success(make ? "Revenda criada." : "Revenda removida.");
+    setPhone("");
+    qc.invalidateQueries({ queryKey: ["admin-resellers"] });
+    qc.invalidateQueries({ queryKey: ["admin-users"] });
+  }
+
+  return (
+    <div className="rounded-xl border border-primary/30 bg-card/50 p-4 space-y-3">
+      <div>
+        <h2 className="font-semibold">Revendas (admin)</h2>
+        <p className="text-xs text-muted-foreground">Digite o WhatsApp de uma conta já cadastrada para torná-la revenda.</p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Input placeholder="WhatsApp da nova revenda" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <Button onClick={() => phone.trim() && setReseller(phone, true)} disabled={busy}>
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />} Criar revenda
+        </Button>
+      </div>
+      {resellers && resellers.length > 0 && (
+        <ul className="divide-y divide-border/20">
+          {resellers.map((r) => (
+            <li key={r.id} className="py-2 flex items-center justify-between gap-2 text-sm">
+              <span>{r.full_name ?? "Sem nome"} <span className="text-xs text-muted-foreground">{r.whatsapp}</span></span>
+              <span className="flex items-center gap-2">
+                <Badge variant="outline">{r.clients} clientes</Badge>
+                <Button size="sm" variant="ghost" onClick={() => confirm("Remover esta revenda?") && setReseller(r.whatsapp, false)} title="Remover revenda"><X className="h-4 w-4" /></Button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
