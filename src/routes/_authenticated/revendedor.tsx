@@ -77,6 +77,8 @@ function ResellerPage() {
         <p className="text-muted-foreground text-sm mt-1">Seus clientes e os pedidos deles.</p>
       </div>
 
+      <AdminResellers />
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[["Clientes", list.length], ["Pedidos", totals.total], ["Em aberto", totals.pending], ["Hoje", totals.today]].map(([l, v]) => (
           <div key={l as string} className="rounded-xl border border-border/50 bg-card/50 p-4">
