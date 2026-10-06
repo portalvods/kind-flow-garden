@@ -693,18 +693,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          referral_code: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          referral_code?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          referral_code?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
@@ -1041,6 +1044,7 @@ export type Database = {
           title: string
         }[]
       }
+      reseller_ensure_referral_code: { Args: never; Returns: string }
       reseller_link_client: { Args: { _whatsapp: string }; Returns: Json }
       reseller_list_clients: {
         Args: never
@@ -1057,6 +1061,7 @@ export type Database = {
         }[]
       }
       reseller_unlink_client: { Args: { _client: string }; Returns: undefined }
+      resolve_referral_code: { Args: { _code: string }; Returns: string }
       toggle_request_vote: { Args: { _request_id: string }; Returns: Json }
       top_reviewed_content: {
         Args: { _limit?: number }
