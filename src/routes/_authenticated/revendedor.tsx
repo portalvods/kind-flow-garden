@@ -79,6 +79,8 @@ function ResellerPage() {
 
       <AdminResellers />
 
+      <ReferralLink />
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[["Clientes", list.length], ["Pedidos", totals.total], ["Em aberto", totals.pending], ["Hoje", totals.today]].map(([l, v]) => (
           <div key={l as string} className="rounded-xl border border-border/50 bg-card/50 p-4">
@@ -151,6 +153,25 @@ function ClientRequests({ clientId }: { clientId: string }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function ReferralLink() {
+  const { data: uid } = useQuery({
+    queryKey: ["me-id"],
+    queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
+  });
+  if (!uid) return null;
+  const url = `${window.location.origin}/auth?mode=signup&ref=${uid}`;
+  return (
+    <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-2">
+      <h2 className="font-semibold">Seu link de indicação</h2>
+      <p className="text-xs text-muted-foreground">Quem criar a conta por este link entra automaticamente na sua lista de clientes.</p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
+        <Button onClick={() => { navigator.clipboard.writeText(url); toast.success("Link copiado!"); }}>Copiar link</Button>
+      </div>
+    </div>
   );
 }
 

@@ -20,6 +20,7 @@ import { getPublicSettings } from "@/lib/settings.functions";
 
 const searchSchema = z.object({
   mode: z.enum(["signin", "signup", "forgot"]).optional(),
+  ref: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -39,7 +40,10 @@ function phoneDigits(input: string): string {
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [mode, setMode] = useState<Mode>(search.mode ?? "signin");
+  const [mode, setMode] = useState<Mode>(search.mode ?? (search.ref ? "signup" : "signin"));
+  useEffect(() => {
+    if (search.ref) localStorage.setItem("vod_ref", search.ref);
+  }, [search.ref]);
   const [step, setStep] = useState<Step>("form");
   const [loading, setLoading] = useState(false);
 
@@ -199,6 +203,11 @@ function AuthPage() {
           insert: (values: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
         }).insert({ user_id: userData.user.id, role: "cliente" });
         if (roleErr) console.warn("[signup] user_roles insert:", roleErr);
+        const ref = search.ref ?? (typeof window !== "undefined" ? localStorage.getItem("vod_ref") : null);
+        if (ref) {
+          await supabase.rpc("claim_reseller_referral", { _reseller: ref });
+          localStorage.removeItem("vod_ref");
+        }
       }
       toast.success("Conta criada!");
       navigate({ to: "/pedidos" });
