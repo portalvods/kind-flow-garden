@@ -15,6 +15,13 @@
       "when": 1791168609859,
       "tag": "0001_admin_reseller_by_whatsapp",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791255503493,
+      "tag": "0002_referral_and_admin_notify",
+      "breakpoints": true
     }
   ]
 }

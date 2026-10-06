@@ -815,6 +815,15 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      admin_send_notification: {
+        Args: {
+          _body: string
+          _link: string
+          _title: string
+          _whatsapp: string
+        }
+        Returns: Json
+      }
       admin_set_reseller_by_wa: {
         Args: { _make: boolean; _whatsapp: string }
         Returns: Json
@@ -913,6 +922,7 @@ export type Database = {
         Args: { _items: Json; _secret: string; _source_id: string }
         Returns: number
       }
+      claim_reseller_referral: { Args: { _reseller: string }; Returns: Json }
       community_requests: {
         Args: { _limit?: number }
         Returns: {
