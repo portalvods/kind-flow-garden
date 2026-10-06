@@ -18,6 +18,7 @@ import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedRevendedorRouteImport } from './routes/_authenticated/revendedor'
 import { Route as AuthenticatedSuporteRouteImport } from './routes/_authenticated/suporte'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAparenciaRouteImport } from './routes/_authenticated/admin.aparencia'
 import { Route as AuthenticatedAdminAutomacaoRouteImport } from './routes/_authenticated/admin.automacao'
@@ -80,6 +81,11 @@ const AuthenticatedSuporteRoute = AuthenticatedSuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/revendedor': typeof AuthenticatedRevendedorRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
+  '/r/$code': typeof RCodeRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/revendedor': typeof AuthenticatedRevendedorRoute
   '/suporte': typeof AuthenticatedSuporteRouteWithChildren
+  '/r/$code': typeof RCodeRoute
   '/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/revendedor': typeof AuthenticatedRevendedorRoute
   '/_authenticated/suporte': typeof AuthenticatedSuporteRouteWithChildren
+  '/r/$code': typeof RCodeRoute
   '/_authenticated/admin/aparencia': typeof AuthenticatedAdminAparenciaRoute
   '/_authenticated/admin/automacao': typeof AuthenticatedAdminAutomacaoRoute
   '/_authenticated/admin/bot': typeof AuthenticatedAdminBotRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/revendedor'
     | '/suporte'
+    | '/r/$code'
     | '/admin/aparencia'
     | '/admin/automacao'
     | '/admin/bot'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/revendedor'
     | '/suporte'
+    | '/r/$code'
     | '/admin/aparencia'
     | '/admin/automacao'
     | '/admin/bot'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/revendedor'
     | '/_authenticated/suporte'
+    | '/r/$code'
     | '/_authenticated/admin/aparencia'
     | '/_authenticated/admin/automacao'
     | '/_authenticated/admin/bot'
@@ -365,6 +377,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  RCodeRoute: typeof RCodeRoute
   ApiPublicHooksSyncCatalogRoute: typeof ApiPublicHooksSyncCatalogRoute
   ApiPublicWebhooksEvolutionRoute: typeof ApiPublicWebhooksEvolutionRoute
 }
@@ -433,6 +446,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/suporte'
       preLoaderRoute: typeof AuthenticatedSuporteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -629,6 +649,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  RCodeRoute: RCodeRoute,
   ApiPublicHooksSyncCatalogRoute: ApiPublicHooksSyncCatalogRoute,
   ApiPublicWebhooksEvolutionRoute: ApiPublicWebhooksEvolutionRoute,
 }
