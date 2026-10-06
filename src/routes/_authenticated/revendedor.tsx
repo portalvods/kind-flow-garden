@@ -161,15 +161,23 @@ function ReferralLink() {
     queryKey: ["me-id"],
     queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
   });
+  const { data: code } = useQuery({
+    queryKey: ["referral-code", uid],
+    enabled: !!uid,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("reseller_ensure_referral_code");
+      return (data as string | null) ?? null;
+    },
+  });
   if (!uid) return null;
-  const url = `${window.location.origin}/auth?mode=signup&ref=${uid}`;
+  const url = code ? `${window.location.origin}/r/${code}` : null;
   return (
     <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-2">
       <h2 className="font-semibold">Seu link de indicação</h2>
       <p className="text-xs text-muted-foreground">Quem criar a conta por este link entra automaticamente na sua lista de clientes.</p>
       <div className="flex flex-col sm:flex-row gap-2">
-        <Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
-        <Button onClick={() => { navigator.clipboard.writeText(url); toast.success("Link copiado!"); }}>Copiar link</Button>
+        <Input readOnly value={url ?? (code === undefined ? "" : "Gerando link...")} onFocus={(e) => e.currentTarget.select()} />
+        <Button onClick={() => url && navigator.clipboard.writeText(url)} disabled={!url}>Copiar link</Button>
       </div>
     </div>
   );
