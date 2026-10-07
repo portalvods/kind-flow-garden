@@ -161,7 +161,7 @@ function ReferralLink() {
     queryKey: ["me-id"],
     queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null,
   });
-  const { data: code } = useQuery({
+  const { data: code, isLoading } = useQuery({
     queryKey: ["referral-code", uid],
     enabled: !!uid,
     queryFn: async () => {
@@ -170,14 +170,30 @@ function ReferralLink() {
     },
   });
   if (!uid) return null;
-  const url = code ? `${window.location.origin}/r/${code}` : null;
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-2">
+        <h2 className="font-semibold">Seu link de indicação</h2>
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+  if (!code) {
+    return (
+      <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-2">
+        <h2 className="font-semibold">Seu link de indicação</h2>
+        <p className="text-xs text-muted-foreground">O link de indicação fica disponível para contas de revenda. Crie uma revenda em Admin → Usuários.</p>
+      </div>
+    );
+  }
+  const url = `${window.location.origin}/r/${code}`;
   return (
     <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-2">
       <h2 className="font-semibold">Seu link de indicação</h2>
       <p className="text-xs text-muted-foreground">Quem criar a conta por este link entra automaticamente na sua lista de clientes.</p>
       <div className="flex flex-col sm:flex-row gap-2">
-        <Input readOnly value={url ?? (code === undefined ? "" : "Gerando link...")} onFocus={(e) => e.currentTarget.select()} />
-        <Button onClick={() => url && navigator.clipboard.writeText(url)} disabled={!url}>Copiar link</Button>
+        <Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} />
+        <Button onClick={() => { navigator.clipboard.writeText(url); toast.success("Link copiado!"); }}>Copiar link</Button>
       </div>
     </div>
   );
