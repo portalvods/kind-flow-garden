@@ -20,6 +20,7 @@ export const resolveReferralCode = createServerFn({ method: "GET" })
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data: uid, error } = await sb.rpc("resolve_referral_code", { _code: code });
+    console.log("[referral] rpc result", uid, error?.message);
     if (error) {
       console.warn("[referral] resolve failed:", error.message);
       return { reseller: null };
