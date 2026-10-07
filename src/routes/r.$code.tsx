@@ -5,19 +5,18 @@ import { resolveReferralCode } from "@/lib/referral.functions";
 export const Route = createFileRoute("/r/$code")({
   ssr: true,
   beforeLoad: async ({ params }) => {
+    let ref: string | null = null;
     try {
       const res = await resolveReferralCode({ data: { code: params.code } });
-      if (res?.reseller) {
-        throw redirect({
-          to: "/auth",
-          search: { mode: "signup", ref: res.reseller },
-        });
-      }
+      ref = res?.reseller ?? null;
     } catch (err) {
-      if (err && typeof err === "object" && "to" in (err as Record<string, unknown>)) throw err;
+      console.warn("[referral] lookup failed:", err instanceof Error ? err.message : err);
       // lookup failed: fall through to plain signup
     }
-    throw redirect({ to: "/auth", search: { mode: "signup" } });
+    throw redirect({
+      to: "/auth",
+      search: ref ? { mode: "signup", ref } : { mode: "signup" },
+    });
   },
   component: () => null,
 });
