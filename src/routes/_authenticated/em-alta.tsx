@@ -217,7 +217,7 @@ function StatusTag({ released, inServer }: { released: boolean; inServer?: boole
   return inServer ? (
     <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-500 w-fit">
       <CheckCircle2 className="h-3 w-3" />
-      No servidor
+      Disponível
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 rounded-md bg-destructive/15 px-2 py-0.5 text-[11px] font-medium text-destructive w-fit">
