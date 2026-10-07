@@ -222,7 +222,7 @@ function StatusTag({ released, inServer }: { released: boolean; inServer?: boole
   ) : (
     <span className="inline-flex items-center gap-1 rounded-md bg-destructive/15 px-2 py-0.5 text-[11px] font-medium text-destructive w-fit">
       <XCircle className="h-3 w-3" />
-      Fora do servidor
+      Indisponível
     </span>
   );
 }
