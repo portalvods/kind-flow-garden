@@ -16,7 +16,6 @@ export const resolveReferralCode = createServerFn({ method: "GET" })
       process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
     if (!url || !key) return { reseller: null };
 
-    console.log("[referral] lookup", code, "url?", !!url, "key?", !!key);
     const sb = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
