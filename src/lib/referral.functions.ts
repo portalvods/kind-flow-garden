@@ -16,10 +16,12 @@ export const resolveReferralCode = createServerFn({ method: "GET" })
       process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
     if (!url || !key) return { reseller: null };
 
+    console.log("[referral] lookup", code, "url?", !!url, "key?", !!key);
     const sb = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data: uid, error } = await sb.rpc("resolve_referral_code", { _code: code });
+    console.log("[referral] rpc result", uid, error?.message);
     if (error) {
       console.warn("[referral] resolve failed:", error.message);
       return { reseller: null };
