@@ -579,10 +579,11 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
 
   return (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
+    <DialogContent className="inset-0! left-0! top-0! h-[100dvh]! max-h-none! w-full! max-w-none! translate-x-0! translate-y-0! grid-rows-[auto_minmax(0,1fr)_auto]! gap-0! rounded-none! border-0! p-0! sm:inset-auto! sm:left-[50%]! sm:top-[50%]! sm:h-auto! sm:max-h-[90vh]! sm:max-w-2xl! sm:translate-x-[-50%]! sm:translate-y-[-50%]! sm:gap-4! sm:grid-rows-none! sm:rounded-lg! sm:border! sm:p-6! sm:overflow-y-auto">
+      <DialogHeader className="border-b border-border/40 p-4 pr-12 sm:border-b-0 sm:p-0 sm:pr-10">
         <DialogTitle className="font-display text-xl">Novo pedido</DialogTitle>
       </DialogHeader>
+      <div className="min-h-0 overflow-y-auto px-4 py-4 sm:min-h-0 sm:overflow-visible sm:p-0">
 
       {selected ? (
         <div className="glass-card rounded-xl p-4 flex gap-4">
