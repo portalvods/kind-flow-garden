@@ -14,6 +14,7 @@ import { getRequestTimeline } from "@/lib/admin-extras.functions";
 import { suggestAlternatives } from "@/lib/suggest.functions";
 
 import { checkAvailability } from "@/lib/catalog.functions";
+import { getTmdbCast } from "@/lib/tmdb.functions";
 import { findCommunityDuplicate, toggleRequestVote } from "@/lib/community.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -493,7 +494,26 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     onError: (err) => toast.error(err instanceof Error ? err.message : "Falha ao curtir"),
   });
 
-  const blockedByCatalog = kind === "adicao" && availability?.exists === true;
+  const blockedByCatalog = false;
+  const [autoSwitched, setAutoSwitched] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selected) { setAutoSwitched(null); return; }
+    if (kind === "adicao" && availability?.exists === true) {
+      setKind(selected.type === "tv" ? "atualizacao" : "conserto");
+      setAutoSwitched(availability.category ?? "");
+    }
+  }, [availability, selected, kind]);
+  useEffect(() => {
+    setAutoSwitched(null);
+    setKind("adicao");
+  }, [selected?.id]);
+  const castFn = useServerFn(getTmdbCast);
+  const { data: castData } = useQuery({
+    queryKey: ["tmdb-cast", selected?.type, selected?.id],
+    queryFn: () => castFn({ data: { id: selected!.id, type: selected!.type } }),
+    enabled: !!selected,
+    staleTime: 10 * 60_000,
+  });
 
   const create = useMutation({
     mutationFn: async () => {
@@ -594,6 +614,25 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             {selected.overview && (
               <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{selected.overview}</p>
             )}
+            {castData && castData.cast.length > 0 && (
+              <div className="mt-2">
+                <p className="text-[11px] font-medium text-muted-foreground mb-1">Elenco</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {castData.cast.map((c) => (
+                    <div key={c.name} className="flex w-14 shrink-0 flex-col items-center text-center" title={c.character ? `${c.name} — ${c.character}` : c.name}>
+                      {c.profile_path ? (
+                        <img src={`https://image.tmdb.org/t/p/w92${c.profile_path}`} alt={c.name} loading="lazy" className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold">
+                          {c.name.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+                        </div>
+                      )}
+                      <span className="mt-1 text-[10px] leading-tight line-clamp-2">{c.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="mt-3">
               <TrailerButton
                 tmdbId={selected.id}
@@ -607,16 +646,15 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
                 <Loader2 className="h-3 w-3 animate-spin" /> verificando disponibilidade...
               </p>
             )}
-            {blockedByCatalog && (
-              <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-200">
-                <div className="inline-flex items-center gap-1 font-semibold">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Já está no catálogo
+            {autoSwitched !== null && (
+              <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs">
+                <div className="inline-flex items-center gap-1 font-semibold text-emerald-500">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Já está no servidor
                 </div>
-                {availability?.category && (
-                  <p className="mt-1 opacity-90">Categoria: <strong>{availability.category}</strong></p>
-                )}
+                {autoSwitched && <p className="mt-1 opacity-90">Categoria: <strong>{autoSwitched}</strong></p>}
                 <p className="mt-1 opacity-80">
-                  Para pedir mesmo assim, mude o tipo do pedido para <em>Atualização</em> ou <em>Conserto</em>.
+                  Mudamos o pedido para {selected.type === "tv" ? <em>Atualização</em> : <em>Conserto</em>}
+                  {selected.type === "tv" ? " (você pode trocar para Conserto)." : "."}
                 </p>
               </div>
             )}
