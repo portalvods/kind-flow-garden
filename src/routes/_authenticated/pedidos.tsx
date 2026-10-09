@@ -954,14 +954,18 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
 
 
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button variant="ghost" onClick={onDone}>
-          Cancelar
-        </Button>
-        <Button onClick={() => create.mutate()} disabled={!canSubmit || create.isPending}>
-          {create.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Enviar pedido
-        </Button>
+      </div>
+
+      <div className="border-t border-border/40 bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:border-t-0 sm:bg-transparent sm:p-0">
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onDone}>
+            Cancelar
+          </Button>
+          <Button onClick={() => create.mutate()} disabled={!canSubmit || create.isPending}>
+            {create.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Enviar pedido
+          </Button>
+        </div>
       </div>
     </DialogContent>
   );
