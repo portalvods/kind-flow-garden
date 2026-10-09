@@ -296,15 +296,15 @@ function AdminPage() {
       </div>
 
       {/* Search + Tabs */}
-      <div className="flex flex-wrap gap-3 items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-          <TabsList className="bg-card/60 border border-border/60 flex-wrap">
-            <TabsTrigger value="pending">Recebidos</TabsTrigger>
-            <TabsTrigger value="analyzing">Em análise</TabsTrigger>
-            <TabsTrigger value="approved">Aprovados</TabsTrigger>
-            <TabsTrigger value="completed">Concluídos</TabsTrigger>
-            <TabsTrigger value="rejected">Recusados</TabsTrigger>
-            <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsList className="bg-card/60 border border-border/60 h-auto w-full justify-start gap-1 overflow-x-auto py-1.5 whitespace-nowrap sm:w-auto">
+            <TabsTrigger value="pending" className="shrink-0">Recebidos</TabsTrigger>
+            <TabsTrigger value="analyzing" className="shrink-0">Em análise</TabsTrigger>
+            <TabsTrigger value="approved" className="shrink-0">Aprovados</TabsTrigger>
+            <TabsTrigger value="completed" className="shrink-0">Concluídos</TabsTrigger>
+            <TabsTrigger value="rejected" className="shrink-0">Recusados</TabsTrigger>
+            <TabsTrigger value="all" className="shrink-0">Todos</TabsTrigger>
           </TabsList>
           <TabsContent value={tab} className="hidden" />
         </Tabs>
@@ -312,11 +312,11 @@ function AdminPage() {
           size="sm"
           variant={sortByVotes ? "default" : "outline"}
           onClick={() => setSortByVotes((v) => !v)}
-          className="gap-1"
+          className="w-full justify-center gap-1 sm:w-auto"
         >
           <ThumbsUp className="h-4 w-4" /> Mais curtidos
         </Button>
-        <div className="relative flex-1 max-w-xs min-w-[200px]">
+        <div className="relative w-full sm:max-w-xs sm:flex-1">
 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
