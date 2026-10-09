@@ -658,11 +658,6 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
                 </p>
               </div>
             )}
-                <p className="mt-1 opacity-80">
-                  Para pedir mesmo assim, mude o tipo do pedido para <em>Atualização</em> ou <em>Conserto</em>.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       ) : (
