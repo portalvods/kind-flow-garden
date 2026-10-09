@@ -65,3 +65,32 @@ function mapResults(payload: unknown): TmdbResult[] {
       };
     });
 }
+
+export type TmdbCastMember = { name: string; character: string | null; profile_path: string | null };
+
+export const getTmdbCast = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.number().int().positive(), type: z.enum(["movie", "tv"]) }).parse(data),
+  )
+  .handler(async ({ data }): Promise<{ cast: TmdbCastMember[] }> => {
+    const apiKey = getServerEnv("TMDB_API_KEY");
+    if (!apiKey) return { cast: [] };
+    const path = data.type === "tv" ? `tv/${data.id}/aggregate_credits` : `movie/${data.id}/credits`;
+    try {
+      let res = await fetch(`https://api.themoviedb.org/3/${path}?language=pt-BR`, {
+        headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+      });
+      if (!res.ok) res = await fetch(`https://api.themoviedb.org/3/${path}?api_key=${apiKey}&language=pt-BR`);
+      if (!res.ok) return { cast: [] };
+      const json = (await res.json()) as { cast?: Array<Record<string, any>> };
+      return {
+        cast: (json.cast ?? []).slice(0, 8).map((c) => ({
+          name: String(c.name ?? ""),
+          character: (c.character ?? c.roles?.[0]?.character ?? null) || null,
+          profile_path: c.profile_path ?? null,
+        })),
+      };
+    } catch {
+      return { cast: [] };
+    }
+  });
