@@ -10,7 +10,6 @@ import { getPublicSettings } from "@/lib/settings.functions";
 import { TutorialDialog } from "@/components/TutorialDialog";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MaintenanceBanner } from "@/components/MaintenanceBanner";
-import { Store } from "lucide-react";
 import { useState, useEffect } from "react";
 
 
@@ -49,7 +48,6 @@ function AuthedLayout() {
     },
   });
   const isAdmin = !!roles?.includes("admin");
-  const isReseller = isAdmin || !!roles?.includes("revendedor");
 
   const settingsFn = useServerFn(getPublicSettings);
   const { data: settings } = useQuery({
@@ -113,9 +111,6 @@ function AuthedLayout() {
                   <SidebarLink to="/novidades" icon={<Sparkles className="h-4 w-4" />}>Novidades</SidebarLink>
                   <SidebarLink to="/em-alta" icon={<Flame className="h-4 w-4" />}>Em alta</SidebarLink>
                   <SidebarLink to="/perfil" icon={<UserIcon className="h-4 w-4" />}>Meu perfil</SidebarLink>
-                  {isReseller && (
-                    <SidebarLink to="/revendedor" icon={<Store className="h-4 w-4" />}>Revenda</SidebarLink>
-                  )}
                 </SidebarGroup>
 
                 {isAdmin && (
@@ -176,11 +171,6 @@ function AuthedLayout() {
               <NavLink to="/perfil" active={pathname.startsWith("/perfil")} icon={<UserIcon className="h-4 w-4" />}>
                 Meu perfil
               </NavLink>
-              {isReseller && (
-                <NavLink to="/revendedor" active={pathname.startsWith("/revendedor")} icon={<Store className="h-4 w-4" />}>
-                  Revenda
-                </NavLink>
-              )}
             </div>
 
             <NotificationBell userId={user.id} />
