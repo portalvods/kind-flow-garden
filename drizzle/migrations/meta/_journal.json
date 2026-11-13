@@ -29,6 +29,13 @@
       "when": 1791255743585,
       "tag": "0003_referral_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794610980811,
+      "tag": "0004_tighten_select_policies",
+      "breakpoints": true
     }
   ]
 }
