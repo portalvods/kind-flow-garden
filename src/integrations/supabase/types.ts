@@ -548,6 +548,7 @@ export type Database = {
           id: string
           image_path: string | null
           notes: string | null
+          origin: string | null
           overview: string | null
           poster_path: string | null
           rated_at: string | null
@@ -569,6 +570,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           notes?: string | null
+          origin?: string | null
           overview?: string | null
           poster_path?: string | null
           rated_at?: string | null
@@ -590,6 +592,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           notes?: string | null
+          origin?: string | null
           overview?: string | null
           poster_path?: string | null
           rated_at?: string | null

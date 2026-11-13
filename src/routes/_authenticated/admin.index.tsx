@@ -129,6 +129,7 @@ type AdminRequest = {
   notes: string | null;
   image_path?: string | null;
   tmdb_id?: number | null;
+  origin?: string | null;
 
   rejection_reason: string | null;
   created_at: string;
@@ -401,6 +402,9 @@ function AdminPage() {
                 )}
                 {r.image_path && <RequestImage path={r.image_path} />}
 
+                {r.origin && (
+                  <p className="text-xs text-primary mt-1">{r.origin}</p>
+                )}
                 {r.rejection_reason && (
                   <p className="text-xs text-red-400 mt-1">Motivo: {r.rejection_reason}</p>
                 )}

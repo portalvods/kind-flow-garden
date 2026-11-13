@@ -94,3 +94,33 @@ export const getTmdbCast = createServerFn({ method: "GET" })
       return { cast: [] };
     }
   });
+
+export async function fetchTmdbOrigin(id: number, type: "movie" | "tv", apiKey: string): Promise<string | null> {
+  const get = async (path: string) => {
+    let res = await fetch(`https://api.themoviedb.org/3/${path}`, { headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" } });
+    if (!res.ok) res = await fetch(`https://api.themoviedb.org/3/${path}${path.includes("?") ? "&" : "?"}api_key=${apiKey}`);
+    return res.ok ? ((await res.json()) as Record<string, any>) : null;
+  };
+  try {
+    const [det, prov] = await Promise.all([get(`${type}/${id}?language=pt-BR`), get(`${type}/${id}/watch/providers`)]);
+    const parts: string[] = [];
+    const br = prov?.results?.BR ?? prov?.results?.US;
+    const platforms = [...(br?.flatrate ?? []), ...(br?.free ?? [])].map((p: any) => String(p.provider_name));
+    if (platforms.length) parts.push(`Plataforma: ${[...new Set(platforms)].slice(0, 4).join(", ")}`);
+    const networks = (det?.networks ?? []).map((n: any) => String(n.name)).slice(0, 3);
+    if (networks.length) parts.push(`Canal: ${networks.join(", ")}`);
+    const prods = (det?.production_companies ?? []).map((c: any) => String(c.name)).slice(0, 3);
+    if (prods.length) parts.push(`Produção: ${prods.join(", ")}`);
+    return parts.length ? parts.join(" • ").slice(0, 400) : null;
+  } catch {
+    return null;
+  }
+}
+
+export const getTmdbOrigin = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ id: z.number().int().positive(), type: z.enum(["movie", "tv"]) }).parse(data))
+  .handler(async ({ data }): Promise<{ origin: string | null }> => {
+    const apiKey = getServerEnv("TMDB_API_KEY");
+    if (!apiKey) return { origin: null };
+    return { origin: await fetchTmdbOrigin(data.id, data.type, apiKey) };
+  });
