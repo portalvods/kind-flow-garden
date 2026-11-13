@@ -111,6 +111,13 @@ export const createRequest = createServerFn({ method: "POST" })
     }
 
 
+    let origin: string | null = null;
+    if (data.tmdb_id) {
+      const { fetchTmdbOrigin } = await import("./tmdb.functions");
+      const { getServerEnv } = await import("./env.server").catch(() => ({ getServerEnv: (k: string) => process.env[k] }));
+      const key = getServerEnv("TMDB_API_KEY");
+      if (key) origin = await fetchTmdbOrigin(data.tmdb_id, data.content_type, key);
+    }
     const { data: request, error } = await supabase
       .from("requests")
       .insert({
@@ -125,6 +132,7 @@ export const createRequest = createServerFn({ method: "POST" })
         overview: data.overview ?? null,
         notes: data.notes ?? null,
         image_path: data.image_path ?? null,
+        origin,
 
       })
       .select()

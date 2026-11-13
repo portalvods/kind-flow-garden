@@ -14,7 +14,7 @@ import { getRequestTimeline } from "@/lib/admin-extras.functions";
 import { suggestAlternatives } from "@/lib/suggest.functions";
 
 import { checkAvailability } from "@/lib/catalog.functions";
-import { getTmdbCast } from "@/lib/tmdb.functions";
+import { getTmdbCast, getTmdbOrigin } from "@/lib/tmdb.functions";
 import { findCommunityDuplicate, toggleRequestVote } from "@/lib/community.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -515,6 +515,14 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
     staleTime: 10 * 60_000,
   });
 
+  const originFn = useServerFn(getTmdbOrigin);
+  const { data: originData } = useQuery({
+    queryKey: ["tmdb-origin", selected?.type, selected?.id],
+    queryFn: () => originFn({ data: { id: selected!.id, type: selected!.type } }),
+    enabled: !!selected,
+    staleTime: 10 * 60_000,
+  });
+
   const create = useMutation({
     mutationFn: async () => {
       const seasonsNote =
@@ -614,6 +622,9 @@ function NewRequestDialog({ onDone }: { onDone: () => void }) {
             </div>
             {selected.overview && (
               <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{selected.overview}</p>
+            )}
+            {originData?.origin && (
+              <p className="text-[11px] text-primary mt-2 line-clamp-2">{originData.origin}</p>
             )}
             {castData && castData.cast.length > 0 && (
               <div className="mt-2">
