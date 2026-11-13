@@ -1,0 +1,1 @@
+ALTER TABLE public.requests ADD COLUMN IF NOT EXISTS origin text;
