@@ -979,6 +979,7 @@ export type Database = {
         }[]
       }
       find_profile_by_wa: { Args: { _phone: string }; Returns: string }
+      get_message_template: { Args: { _key: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
