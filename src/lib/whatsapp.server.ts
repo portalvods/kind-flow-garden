@@ -153,8 +153,15 @@ export async function sendWhatsapp(to: string, message: string, options?: Whatsa
 export async function getTemplate(key: string, client?: SupabaseReader): Promise<string | null> {
   try {
     const activeClient = client ?? (await import("@/integrations/supabase/client.server")).supabaseAdmin;
-    const query = templateQuery(activeClient).eq?.("key", key);
-    const { data, error } = query?.maybeSingle ? await query.maybeSingle() : { data: null, error: null };
+    let { data, error } = await (async () => {
+      const query = templateQuery(activeClient).eq?.("key", key);
+      return query?.maybeSingle ? await query.maybeSingle() : { data: null, error: null };
+    })();
+    if (!error && !data && client) {
+      const rpc = await (client as unknown as { rpc: (f: string, a: unknown) => Promise<{ data: unknown; error: { message?: string } | null }> }).rpc("get_message_template", { _key: key });
+      data = typeof rpc.data === "string" ? { content: rpc.data } : null;
+      error = rpc.error;
+    }
     if (error) {
       console.warn(`[whatsapp] template "${key}" fetch error:`, error.message);
     }
