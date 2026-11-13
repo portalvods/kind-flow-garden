@@ -114,7 +114,7 @@ export const createRequest = createServerFn({ method: "POST" })
     let origin: string | null = null;
     if (data.tmdb_id) {
       const { fetchTmdbOrigin } = await import("./tmdb.functions");
-      const { getServerEnv } = await import("./env.server").catch(() => ({ getServerEnv: (k: string) => process.env[k] }));
+      const { getServerEnv } = await import("./env.server");
       const key = getServerEnv("TMDB_API_KEY");
       if (key) origin = await fetchTmdbOrigin(data.tmdb_id, data.content_type, key);
     }
