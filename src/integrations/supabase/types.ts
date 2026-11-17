@@ -124,6 +124,30 @@ export type Database = {
           },
         ]
       }
+      client_daily_access: {
+        Row: {
+          access_date: string
+          last_active_at: string
+          page: string
+          user_id: string
+          views: number
+        }
+        Insert: {
+          access_date?: string
+          last_active_at?: string
+          page: string
+          user_id: string
+          views?: number
+        }
+        Update: {
+          access_date?: string
+          last_active_at?: string
+          page?: string
+          user_id?: string
+          views?: number
+        }
+        Relationships: []
+      }
       content_reviews: {
         Row: {
           body: string | null
@@ -779,6 +803,7 @@ export type Database = {
         Args: { _body: string; _request_id: string }
         Returns: string
       }
+      admin_access_summary: { Args: { _days?: number }; Returns: Json }
       admin_active_whatsapps: {
         Args: never
         Returns: {
@@ -1019,6 +1044,7 @@ export type Database = {
         Args: { _bucket: string; _key: string; _window_seconds: number }
         Returns: number
       }
+      record_client_access: { Args: { _page: string }; Returns: undefined }
       request_timeline: {
         Args: { _request_id: string }
         Returns: {
