@@ -1,0 +1,3 @@
+- [ ] Adicionar instalação no celular com manifesto e ícones, sem modo offline.
+- [ ] Mostrar acessos diários e páginas mais acessadas dos clientes no monitoramento administrativo.
+- [ ] Verificar instalação e monitoramento.

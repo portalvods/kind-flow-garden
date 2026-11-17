@@ -43,6 +43,13 @@
       "when": 1794611288361,
       "tag": "0005_requests_origin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794878176259,
+      "tag": "0006_client_access_monitoring",
+      "breakpoints": true
     }
   ]
 }
