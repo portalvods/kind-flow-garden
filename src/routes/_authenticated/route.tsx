@@ -11,6 +11,7 @@ import { TutorialDialog } from "@/components/TutorialDialog";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import { useState, useEffect } from "react";
+import { monitoredPage } from "@/lib/access-monitoring";
 
 
 export const Route = createFileRoute("/_authenticated")({
@@ -29,6 +30,13 @@ function AuthedLayout() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // App-owned account activity, separate from Lovable visitor analytics.
+  useEffect(() => {
+    const page = monitoredPage(pathname);
+    if (!page) return;
+    void supabase.rpc("record_client_access", { _page: page });
+  }, [pathname, user.id]);
 
   // Track activity (client-side so auth.uid() is available in the RPC)
   useQuery({

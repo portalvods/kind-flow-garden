@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallApp } from "@/components/InstallApp";
 
 function NotFoundComponent() {
   return (
@@ -79,6 +80,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0c0d10" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { title: "Portal VOD — Pedidos de Filmes e Séries" },
       {
         name: "description",
@@ -92,15 +96,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Sistema premium de solicitação e gerenciamento de conteúdos VOD.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://gpcine.shop/og-image.jpg" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "640" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://gpcine.shop/og-image.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -145,6 +147,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <div className="fixed bottom-4 right-4 z-40 rounded-md border border-border bg-background shadow-sm"><InstallApp /></div>
       <Toaster position="top-right" richColors closeButton />
     </QueryClientProvider>
   );
