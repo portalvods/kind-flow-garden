@@ -7,6 +7,14 @@ import { MaintenanceBanner } from "@/components/MaintenanceBanner";
 import { getPublicSettings } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/")({
+  head: () => ({ meta: [
+    { title: "Portal VODS — Filmes e séries" },
+    { name: "description", content: "Peça filmes e séries e acompanhe a entrega dos seus conteúdos no Portal VODS." },
+    { property: "og:title", content: "Portal VODS — Filmes e séries" },
+    { property: "og:description", content: "Peça filmes e séries e acompanhe a entrega dos seus conteúdos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Landing,
 });
 
