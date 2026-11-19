@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { test, expect } from "vitest";
 import { monitoredPage } from "./access-monitoring";
 
 test("daily page groups include the customer order page", () => {

@@ -50,6 +50,20 @@
       "when": 1794878176259,
       "tag": "0006_client_access_monitoring",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795063413074,
+      "tag": "0007_reliable_catalog_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795063685117,
+      "tag": "0008_catalog_commit_timeout",
+      "breakpoints": true
     }
   ]
 }

@@ -7,7 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 async function runSync(secret: string) {
   const { supabase } = await import("@/integrations/supabase/client");
-  const { parseM3u } = await import("@/lib/m3u.server");
+  const { synchronizeCatalog } = await import("@/lib/catalog-sync.server");
 
   const { data: due, error } = await supabase.rpc("catalog_cron_due_sources", {
     _secret: secret,
@@ -19,54 +19,10 @@ async function runSync(secret: string) {
 
   for (const src of sources) {
     try {
-      const res = await fetch(src.url, {
-        headers: { "User-Agent": "VLC/3.0.20 LibVLC/3.0.20" },
-        signal: AbortSignal.timeout(120_000),
-        redirect: "follow",
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ao baixar a lista (URL inválida ou servidor fora do ar)`);
-      const text = await res.text();
-      if (!/#EXTM3U|#EXTINF/i.test(text.slice(0, 5000))) {
-        throw new Error("A URL não retornou uma lista M3U válida (resposta HTML/erro do servidor)");
-      }
-      const items = parseM3u(text);
-      const movies = items.filter((i) => i.kind === "movie").length;
-      const series = items.filter((i) => i.kind === "series").length;
-
-      const CHUNK = 2000;
-      // primeiro lote substitui tudo; os demais são acrescentados
-      let first = true;
-      let inserted = 0;
-      for (let i = 0; i < items.length || first; i += CHUNK) {
-        const slice = items.slice(i, i + CHUNK);
-        const { data: count, error: rpcErr } = await supabase.rpc(
-          first ? "catalog_cron_replace" : "catalog_cron_append",
-          { _secret: secret, _source_id: src.id, _items: slice as unknown as never },
-        );
-        if (rpcErr) throw new Error(rpcErr.message);
-        inserted += Number(count ?? 0);
-        first = false;
-      }
-
-      await supabase.rpc("catalog_cron_finish", {
-        _secret: secret,
-        _source_id: src.id,
-        _status: "ok",
-        _error: null as unknown as string,
-        _movies: movies,
-        _series: series,
-      });
-      results.push({ source: src.name, ok: true, inserted, movies, series });
+      const result = await synchronizeCatalog(supabase, src, secret);
+      results.push({ source: src.name, ...result });
     } catch (err) {
       const msg = (err as Error).message ?? "erro desconhecido";
-      await supabase.rpc("catalog_cron_finish", {
-        _secret: secret,
-        _source_id: src.id,
-        _status: "error",
-        _error: msg,
-        _movies: null as unknown as number,
-        _series: null as unknown as number,
-      });
       results.push({ source: src.name, ok: false, error: msg });
     }
   }
@@ -88,7 +44,7 @@ async function handle(request: Request) {
   }
   try {
     const out = await runSync(secret);
-    return Response.json({ ok: true, ...out });
+    return Response.json({ ok: out.results.every((result) => result.ok === true), ...out });
   } catch (err) {
     const msg = (err as Error).message ?? "erro";
     const unauthorized = /unauthorized/i.test(msg);

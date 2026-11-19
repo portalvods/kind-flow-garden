@@ -63,6 +63,7 @@ function EmAltaPage() {
             key: `${i.type}-${i.id}`,
             tmdb_id: i.id,
             title: i.title,
+            year: i.year,
             kind: i.type === "movie" ? ("movie" as const) : ("series" as const),
           })),
         },

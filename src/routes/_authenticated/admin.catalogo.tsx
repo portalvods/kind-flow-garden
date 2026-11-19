@@ -18,6 +18,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/admin/catalogo")({
+  head: () => ({ meta: [
+    { title: "Fontes do catálogo | Portal VODS" },
+    { name: "description", content: "Administração e sincronização das fontes do catálogo Portal VODS." },
+    { property: "og:title", content: "Fontes do catálogo | Portal VODS" },
+    { property: "og:description", content: "Administração e sincronização das fontes do catálogo Portal VODS." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   ssr: false,
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -48,6 +56,7 @@ function CatalogoPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["m3u-sources"],
     queryFn: () => listFn(),
+    refetchInterval: 10_000,
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["m3u-sources"] });
@@ -82,7 +91,10 @@ function CatalogoPage() {
     onSuccess: (res) => {
       toast.success(`Sincronizado: ${res.movies} filmes e ${res.series} séries`);
       invalidate();
+      qc.invalidateQueries({ queryKey: ["trending-availability"] });
+      qc.invalidateQueries({ queryKey: ["catalog-availability"] });
     },
+    onSettled: invalidate,
     onError: (err) => toast.error(err instanceof Error ? err.message : "Falha na sincronização"),
   });
 
@@ -141,7 +153,7 @@ function CatalogoPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {data!.sources.map((s) => (
+          {(data?.sources ?? []).map((s) => (
             <div key={s.id} className="glass-card rounded-2xl p-4 space-y-3">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="min-w-0 flex-1">
@@ -151,6 +163,9 @@ function CatalogoPage() {
                       <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Ativa</Badge>
                     ) : (
                       <Badge variant="outline" className="text-muted-foreground">Inativa</Badge>
+                    )}
+                    {s.last_status === "syncing" && (
+                      <Badge variant="outline"><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Sincronizando</Badge>
                     )}
                     {s.last_status === "ok" && (
                       <Badge variant="outline" className="text-emerald-400 border-emerald-500/30">
@@ -181,7 +196,7 @@ function CatalogoPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => sync.mutate(s.id)}
-                    disabled={sync.isPending}
+                    disabled={sync.isPending || s.last_status === "syncing"}
                   >
                     {sync.isPending && sync.variables === s.id ? (
                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />

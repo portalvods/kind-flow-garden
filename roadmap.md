@@ -1,3 +1,5 @@
+- [ ] Corrigir sincronização manual e automática, preservando o catálogo em falhas.
+- [ ] Melhorar identificação dos títulos e verificar com listas reais e testes.
 - [ ] Adicionar instalação no celular com manifesto e ícones, sem modo offline.
 - [ ] Mostrar acessos diários e páginas mais acessadas dos clientes no monitoramento administrativo.
 - [ ] Verificar instalação e monitoramento.

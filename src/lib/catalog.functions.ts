@@ -78,7 +78,7 @@ export const syncSource = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => idSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const { parseM3u } = await import("./m3u.server");
+    const { synchronizeCatalog } = await import("./catalog-sync.server");
 
     const { data: src, error: fetchErr } = await context.supabase
       .from("m3u_sources")
@@ -87,57 +87,7 @@ export const syncSource = createServerFn({ method: "POST" })
       .maybeSingle();
     if (fetchErr || !src) throw new Error("Fonte não encontrada");
 
-    try {
-      const res = await fetch(src.url, {
-        headers: { "User-Agent": "VLC/3.0.20 LibVLC/3.0.20" },
-        signal: AbortSignal.timeout(120_000),
-        redirect: "follow",
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ao baixar a lista (URL inválida ou servidor fora do ar)`);
-      const text = await res.text();
-      if (!/#EXTM3U|#EXTINF/i.test(text.slice(0, 5000))) {
-        throw new Error("A URL não retornou uma lista M3U válida (resposta HTML/erro do servidor)");
-      }
-      const items = parseM3u(text);
-      const movies = items.filter((i) => i.kind === "movie").length;
-      const series = items.filter((i) => i.kind === "series").length;
-
-      // Replace all items for this source
-      await context.supabase.from("catalog_items").delete().eq("source_id", src.id);
-
-      const rows = items.map((i) => ({ ...i, source_id: src.id }));
-      const CHUNK = 500;
-      for (let i = 0; i < rows.length; i += CHUNK) {
-        const { error: insErr } = await context.supabase
-          .from("catalog_items")
-          .insert(rows.slice(i, i + CHUNK));
-        if (insErr) throw new Error(insErr.message);
-      }
-
-      await context.supabase
-        .from("m3u_sources")
-        .update({
-          last_synced_at: new Date().toISOString(),
-          last_status: "ok",
-          last_error: null,
-          movies_count: movies,
-          series_count: series,
-        })
-        .eq("id", src.id);
-
-      return { ok: true, movies, series, total: items.length };
-    } catch (err) {
-      const msg = (err as Error).message ?? "erro desconhecido";
-      await context.supabase
-        .from("m3u_sources")
-        .update({
-          last_status: "error",
-          last_error: msg,
-          last_synced_at: new Date().toISOString(),
-        })
-        .eq("id", src.id);
-      throw new Error(`Sincronização falhou: ${msg}`);
-    }
+    return synchronizeCatalog(context.supabase, src);
   });
 
 const checkSchema = z.object({
@@ -158,41 +108,12 @@ export const checkAvailability = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => checkSchema.parse(d))
   .handler(async ({ data, context }): Promise<AvailabilityResult> => {
     const { normalizeTitle } = await import("./m3u.server");
-    const norm = normalizeTitle(data.title);
+    const { data: results, error } = await context.supabase.rpc("catalog_lookup", {
+      _items: [{ ...data, key: "single", normalized: normalizeTitle(data.title) }],
+    });
+    if (error) throw new Error("Não foi possível consultar a disponibilidade. Tente novamente.");
+    return (results as unknown as Record<string, AvailabilityResult>).single;
 
-    if (data.tmdb_id) {
-      const { data: byTmdb } = await context.supabase
-        .from("catalog_items")
-        .select("category, title")
-        .eq("tmdb_id", data.tmdb_id)
-        .eq("kind", data.kind)
-        .limit(1);
-      if (byTmdb && byTmdb.length) {
-        return { exists: true, category: byTmdb[0].category, match: byTmdb[0].title };
-      }
-    }
-    if (data.year) {
-      const { data: byBoth } = await context.supabase
-        .from("catalog_items")
-        .select("category, title")
-        .eq("title_normalized", norm)
-        .eq("year", data.year)
-        .eq("kind", data.kind)
-        .limit(1);
-      if (byBoth && byBoth.length) {
-        return { exists: true, category: byBoth[0].category, match: byBoth[0].title };
-      }
-    }
-    const { data: byTitle } = await context.supabase
-      .from("catalog_items")
-      .select("category, title")
-      .eq("title_normalized", norm)
-      .eq("kind", data.kind)
-      .limit(1);
-    if (byTitle && byTitle.length) {
-      return { exists: true, category: byTitle[0].category, match: byTitle[0].title };
-    }
-    return { exists: false, category: null, match: null };
   });
 
 // Verifica vários títulos de uma vez (usado na aba "Em alta")
@@ -201,6 +122,7 @@ const batchSchema = z.object({
     .array(
       z.object({
         key: z.string().max(60),
+        year: z.number().int().nullable().optional(),
         tmdb_id: z.number().int().nullable().optional(),
         title: z.string().trim().min(1).max(200),
         kind: z.enum(["movie", "series"]),
@@ -217,45 +139,12 @@ export const checkAvailabilityBatch = createServerFn({ method: "POST" })
     const results: Record<string, { exists: boolean; category: string | null }> = {};
     if (!data.items.length) return { results };
 
-    const norms = data.items.map((i) => normalizeTitle(i.title));
-    const tmdbIds = data.items.map((i) => i.tmdb_id).filter((x): x is number => typeof x === "number");
-
-    const { data: byTitle } = await context.supabase
-      .from("catalog_items")
-      .select("title_normalized, tmdb_id, kind, category")
-      .in("title_normalized", [...new Set(norms)])
-      .limit(2000);
-
-    let rows = (byTitle ?? []) as Array<{ title_normalized: string; tmdb_id: number | null; kind: string; category: string | null }>;
-
-    if (tmdbIds.length) {
-      const { data: byTmdb } = await context.supabase
-        .from("catalog_items")
-        .select("title_normalized, tmdb_id, kind, category")
-        .in("tmdb_id", [...new Set(tmdbIds)])
-        .limit(2000);
-      rows = rows.concat((byTmdb ?? []) as typeof rows);
-    }
-
-    let overrides: Array<{ tmdb_id: number; kind: string; available: boolean }> = [];
-    if (tmdbIds.length) {
-      const { data: ov } = await context.supabase
-        .from("availability_overrides")
-        .select("tmdb_id, kind, available")
-        .in("tmdb_id", [...new Set(tmdbIds)]);
-      overrides = (ov ?? []) as typeof overrides;
-    }
-
-    data.items.forEach((item, idx) => {
-      const norm = norms[idx];
-      const hit = rows.find(
-        (r) => r.kind === item.kind && (r.title_normalized === norm || (item.tmdb_id != null && r.tmdb_id === item.tmdb_id)),
-      );
-      const ov = overrides.find((o) => o.kind === item.kind && o.tmdb_id === item.tmdb_id);
-      results[item.key] = { exists: ov ? ov.available : !!hit, category: hit?.category ?? null };
+    const { data: lookup, error } = await context.supabase.rpc("catalog_lookup", {
+      _items: data.items.map((item) => ({ ...item, normalized: normalizeTitle(item.title) })),
     });
+    if (error) throw new Error("Não foi possível consultar a disponibilidade. Tente novamente.");
+    return { results: lookup as unknown as typeof results };
 
-    return { results };
   });
 
 // ---- Ajuste manual de disponibilidade (admin) ----

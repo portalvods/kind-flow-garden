@@ -85,6 +85,7 @@ export type Database = {
           kind: string
           source_id: string
           stream_url: string | null
+          sync_generation: string | null
           title: string
           title_normalized: string
           tmdb_id: number | null
@@ -97,6 +98,7 @@ export type Database = {
           kind: string
           source_id: string
           stream_url?: string | null
+          sync_generation?: string | null
           title: string
           title_normalized: string
           tmdb_id?: number | null
@@ -109,6 +111,7 @@ export type Database = {
           kind?: string
           source_id?: string
           stream_url?: string | null
+          sync_generation?: string | null
           title?: string
           title_normalized?: string
           tmdb_id?: number | null
@@ -117,6 +120,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "catalog_items_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "m3u_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_sync_batches: {
+        Row: {
+          batch: number
+          created_at: string
+          items: Json
+          run_id: string
+          source_id: string
+        }
+        Insert: {
+          batch: number
+          created_at?: string
+          items: Json
+          run_id: string
+          source_id: string
+        }
+        Update: {
+          batch?: number
+          created_at?: string
+          items?: Json
+          run_id?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_sync_batches_source_id_fkey"
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "m3u_sources"
@@ -205,6 +240,8 @@ export type Database = {
           name: string
           series_count: number
           sync_interval_hours: number
+          sync_run: string | null
+          sync_started_at: string | null
           updated_at: string
           url: string
         }
@@ -219,6 +256,8 @@ export type Database = {
           name: string
           series_count?: number
           sync_interval_hours?: number
+          sync_run?: string | null
+          sync_started_at?: string | null
           updated_at?: string
           url: string
         }
@@ -233,6 +272,8 @@ export type Database = {
           name?: string
           series_count?: number
           sync_interval_hours?: number
+          sync_run?: string | null
+          sync_started_at?: string | null
           updated_at?: string
           url?: string
         }
@@ -952,6 +993,41 @@ export type Database = {
       catalog_cron_replace: {
         Args: { _items: Json; _secret: string; _source_id: string }
         Returns: number
+      }
+      catalog_lookup: { Args: { _items: Json }; Returns: Json }
+      catalog_sync_authorize: { Args: { _secret: string }; Returns: undefined }
+      catalog_sync_commit: {
+        Args: {
+          _batches: number
+          _run: string
+          _secret?: string
+          _source_id: string
+          _total: number
+        }
+        Returns: Json
+      }
+      catalog_sync_fail: {
+        Args: {
+          _error: string
+          _run: string
+          _secret?: string
+          _source_id: string
+        }
+        Returns: undefined
+      }
+      catalog_sync_stage: {
+        Args: {
+          _batch: number
+          _items: Json
+          _run: string
+          _secret?: string
+          _source_id: string
+        }
+        Returns: number
+      }
+      catalog_sync_start: {
+        Args: { _run: string; _secret?: string; _source_id: string }
+        Returns: undefined
       }
       claim_reseller_referral: { Args: { _reseller: string }; Returns: Json }
       community_requests: {

@@ -5,14 +5,25 @@ export function normalizeTitle(s: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\b(19|20)\d{2}\b/g, " ")
-    .replace(/\b(hd|fhd|4k|sd|dublado|legendado|dual|leg|dub)\b/g, " ")
+    .replace(/\((?:19|20)\d{2}\)/g, " ")
+    .replace(/\b(hd|fhd|uhd|4k|1080p|720p|2160p|sd|dublado|legendado|dual|leg|dub)\b/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
     .replace(/\s+/g, " ");
 }
 
-const SERIES_RE = /\bS\s*(\d{1,2})\s*E\s*(\d{1,3})\b/i;
+const SERIES_RE = /\b(?:S\s*\d{1,2}\s*[- .]?\s*E\s*\d{1,3}|\d{1,2}x\d{1,3}|T(?:emp(?:orada)?)?\s*\d{1,2}\s*[- .]?\s*(?:EP?|epis[oó]dio)\s*\d{1,3}|temporada\s*\d{1,2})\b/i;
+
+// The separator is the first comma outside quoted attributes; titles may contain commas.
+function displayTitle(line: string): string {
+  let quote = "";
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if ((c === '"' || c === "'") && (!quote || quote === c)) quote = quote ? "" : c;
+    if (c === "," && !quote) return line.slice(i + 1).trim();
+  }
+  return "";
+}
 
 export type ParsedItem = {
   kind: "movie" | "series";
@@ -27,15 +38,16 @@ export type ParsedItem = {
 export function parseM3u(text: string): ParsedItem[] {
   const lines = text.split(/\r?\n/);
   const out: ParsedItem[] = [];
-  const seenSeries = new Set<string>();
+  const seen = new Set<string>();
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.startsWith("#EXTINF")) continue;
+    const line = lines[i].replace(/^\uFEFF/, "").trim();
+    if (!/^#EXTINF\b/i.test(line)) continue;
 
     let url = "";
-    for (let j = i + 1; j < lines.length && j < i + 5; j++) {
+    for (let j = i + 1; j < lines.length; j++) {
       const n = lines[j].trim();
+      if (/^#EXTINF\b/i.test(n)) break;
       if (!n || n.startsWith("#")) continue;
       url = n;
       break;
@@ -43,40 +55,42 @@ export function parseM3u(text: string): ParsedItem[] {
     if (!url) continue;
 
     const attrs: Record<string, string> = {};
-    for (const m of line.matchAll(/([\w-]+)="([^"]*)"/g)) {
-      attrs[m[1]] = m[2];
+    for (const m of line.matchAll(/([\w-]+)\s*=\s*(["'])(.*?)\2/g)) {
+      attrs[m[1].toLowerCase()] = m[3];
     }
-    const commaIdx = line.lastIndexOf(",");
-    const displayName = (commaIdx >= 0 ? line.slice(commaIdx + 1) : attrs["tvg-name"] ?? "").trim();
+    const displayName = displayTitle(line) || attrs["tvg-name"]?.trim();
     if (!displayName) continue;
 
     const category = attrs["group-title"]?.trim() || null;
     const categoryLower = (category ?? "").toLowerCase();
 
     const seriesMatch = displayName.match(SERIES_RE);
-    const isSeries = !!seriesMatch || /s[eé]ries?\b/.test(categoryLower);
+    const isSeries = !!seriesMatch || /\b(s[eé]ries?|series|novelas?|animes?|temporadas?)\b/.test(categoryLower) || /\/series\//i.test(url);
+    const isMovie = /\b(filmes?|movies?|vod|cinema)\b/.test(categoryLower) || /\/movie\//i.test(url);
+    const isLive = /\b(canais|channels?|live|ao vivo|abertos|esportes|noticias)\b/.test(categoryLower) || /\/live\//i.test(url);
+    if (isLive && !isSeries && !isMovie) continue;
 
     let cleanTitle = displayName;
     if (seriesMatch && typeof seriesMatch.index === "number") {
       cleanTitle = displayName.slice(0, seriesMatch.index).trim().replace(/[-–—:|]+$/, "").trim();
     }
 
-    const yearMatch = displayName.match(/\((19|20)\d{2}\)/) || displayName.match(/\b(19|20)\d{2}\b/);
+    const yearMatch = cleanTitle.match(/\((?:19|20)\d{2}\)/) || cleanTitle.match(/\s(?:19|20)\d{2}\s*$/);
     const year = yearMatch ? Number(yearMatch[0].replace(/[()]/g, "")) : null;
     cleanTitle = cleanTitle.replace(/\s*\((19|20)\d{2}\)\s*/g, " ").trim();
+    if (yearMatch && !yearMatch[0].includes("(")) cleanTitle = cleanTitle.replace(/\s(?:19|20)\d{2}\s*$/, "").trim();
     if (!cleanTitle) continue;
 
     const normalized = normalizeTitle(cleanTitle);
     if (!normalized) continue;
 
-    const tvgId = attrs["tvg-id"];
-    const tmdbId = tvgId && /^\d+$/.test(tvgId) ? Number(tvgId) : null;
+    // Numeric tvg-id usually identifies a provider stream, NOT a TMDB title.
+    const explicitId = attrs["tmdb-id"] ?? attrs["tmdb_id"] ?? attrs["tvg-id"]?.match(/^tmdb[:/-](\d+)$/i)?.[1];
+    const tmdbId = explicitId && /^\d+$/.test(explicitId) && Number(explicitId) > 0 ? Number(explicitId) : null;
 
-    if (isSeries) {
-      const key = `${normalized}|${year ?? ""}`;
-      if (seenSeries.has(key)) continue;
-      seenSeries.add(key);
-    }
+    const key = `${isSeries ? "series" : "movie"}|${normalized}|${year ?? ""}|${tmdbId ?? ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
 
     out.push({
       kind: isSeries ? "series" : "movie",
